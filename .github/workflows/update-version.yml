@@ -1,0 +1,37 @@
+name: Auto Version & Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version_build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(cat version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Increment build number
+        id: build
+        run: |
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "RooMate/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(( $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' RooMate/Info.plist) + 1 ))" "RooMate/Info.plist"
+
+      - name: Set version number
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" "RooMate/Info.plist"
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add RooMate/Info.plist
+          git commit -m "Update version & build number"
+          git push
