@@ -1,564 +1,947 @@
 import SwiftUI
+import Combine
+#if canImport(AppKit)
+import AppKit
+#endif
+import UserNotifications
 
+// Fully redesigned Settings view with tab-based organization
 struct SettingsView: View {
     @ObservedObject var store: UserScheduleStore
-
-    @State private var isClassesExpanded: Bool = true
-    @State private var showToken: Bool = false
-    @State private var testResult: String?
-    @State private var showTokenHelp: Bool = false
-
-    @State private var isCustomizationExpanded: Bool = true
-    @State private var isNotificationsExpanded: Bool = true
-
-    private var editableLevels: [Level] {
-        [.level1, .level2, .level3, .level4, .level5, .level6, .level7, .music]
-    }
-
-    private var notificationStatusText: String {
-        #if canImport(UserNotifications)
-        switch store.notificationAuthStatus {
-        case .notDetermined: return "Not Determined"
-        case .denied: return "Denied"
-        case .authorized: return "Authorized"
-        case .provisional: return "Provisional"
-        case .ephemeral: return "Ephemeral"
-        @unknown default: return "Unknown"
+    
+    // Local UI state
+    @State private var selectedTab: SettingsTab = .customize
+    @State private var selectedLevelIndex: Int = 0
+    
+    enum SettingsTab: String, CaseIterable {
+        case customize = "Customize"
+        case classes = "Classes"
+        case clubs = "Clubs"
+        case schedule = "Schedule"
+        
+        var icon: String {
+            switch self {
+            case .customize: return "sparkles"
+            case .classes: return "text.book.closed.fill"
+            case .clubs: return "person.3.fill"
+            case .schedule: return "calendar"
+            }
         }
-        #else
-        return "Unavailable"
-        #endif
     }
-
+    
+    private var editableLevels: [Level] {
+        [.level1, .level2, .level3, .level4, .level5, .level6, .level7]
+    }
+    
     private var appName: String {
         let dict = Bundle.main.infoDictionary
-        return dict?["CFBundleDisplayName"] as? String
-            ?? dict?["CFBundleName"] as? String
-            ?? "App"
+        return dict?["CFBundleDisplayName"] as? String ?? dict?["CFBundleName"] as? String ?? "App"
     }
+    
     private var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
         return b.isEmpty ? v : "\(v) (\(b))"
     }
-
-    private let feedbackEmail = "29makaio@abingtonfriends.net"
-    private let websiteURL = URL(string: "https://roomateafs.net")
-
+    
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Spacer().frame(height: 4)
-
-                Button {
-                    withAnimation(.snappy) { isCustomizationExpanded.toggle() }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "chevron.right")
-                            .rotationEffect(.degrees(isCustomizationExpanded ? 90 : 0))
-                            .modifier(SecondaryForeground())
-                            .animation(.snappy, value: isCustomizationExpanded)
-                        Image(systemName: "paintbrush.pointed").foregroundStyle(.secondary)
-                        Text("Customization").font(.title2.bold())
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Customization")
-                .accessibilityAddTraits(.isButton)
-                .accessibilityValue(isCustomizationExpanded ? "Expanded" : "Collapsed")
-
-                if isCustomizationExpanded {
-                    VStack(alignment: .leading, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Appearance").font(.headline)
-                            Text("Choose light, dark, or follow the system.")
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-
-                            Picker("Appearance", selection: $store.appearance) {
-                                ForEach(AppearancePreference.allCases) { option in
-                                    Label(option.title, systemImage: option.systemImage).tag(option)
-                                }
+        VStack(spacing: 0) {
+            // Tab navigation
+            VStack(spacing: 0) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    ForEach(SettingsTab.allCases, id: \.rawValue) { tab in
+                        Button(action: {
+                            withAnimation(DesignTokens.Animation.snappy) {
+                                selectedTab = tab
                             }
-                            .pickerStyle(.segmented)
-                            .tint(.blue)
-                            .accessibilityLabel("Appearance")
-                        }
-
-                        Divider().opacity(0.2)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Class Card Colors").font(.headline)
-                            Text("Pick how colorful class cards should look.")
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-
-                            Picker("Class Card Colors", selection: $store.cardColorStyle) {
-                                ForEach(CardColorStyle.allCases) { style in
-                                    Label(style.title, systemImage: style.systemImage).tag(style)
-                                }
+                        }) {
+                            VStack(spacing: DesignTokens.Spacing.xs) {
+                                Image(systemName: tab.icon)
+                                    .font(.title3)
+                                Text(tab.rawValue)
+                                    .font(DesignTokens.Typography.caption)
+                                    .fontWeight(.medium)
                             }
-                            .pickerStyle(.segmented)
-                            .tint(.blue)
-                            .accessibilityLabel("Class Card Colors")
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .contentShape(Rectangle())
                         }
-                    }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(CompatibleBackgroundSecondary())
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(.quaternary, lineWidth: 0.8)
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-
-                #if canImport(AppKit)
-                Button {
-                    withAnimation(.snappy) { isNotificationsExpanded.toggle() }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "chevron.right")
-                            .rotationEffect(.degrees(isNotificationsExpanded ? 90 : 0))
-                            .modifier(SecondaryForeground())
-                            .animation(.snappy, value: isNotificationsExpanded)
-                        Image(systemName: "bell.badge.fill").foregroundStyle(.secondary)
-                        Text("Notifications").font(.title2.bold())
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
-                .tint(.blue)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Notifications")
-                .accessibilityAddTraits(.isButton)
-                .accessibilityValue(isNotificationsExpanded ? "Expanded" : "Collapsed")
-
-                if isNotificationsExpanded {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Toggle(isOn: $store.notificationsEnabled) {
-                            Text("Enable notifications")
-                        }
-                        .toggleStyle(.switch)
-                        .tint(.blue)
-
-                        HStack {
-                            Label("Status: \(notificationStatusText)", systemImage: "info.circle")
-                                .modifier(SecondaryForeground())
-                            Spacer()
-                            Button {
-                                Task { @MainActor in await store.refreshNotificationStatus() }
-                            } label: {
-                                Label("Refresh", systemImage: "arrow.clockwise")
-                            }
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Class Alerts").font(.headline).tint(.blue)
-
-                            Toggle(isOn: $store.notifyClassStartingSoon) {
-                                Label("Notify when a class is starting soon", systemImage: "bell.and.waveform.fill")
-                            }
-                            .disabled(!store.notificationsEnabled)
-                            .tint(.blue)
-
-                            Toggle(isOn: $store.notifyClassEndingSoon) {
-                                Label("Notify when a class is ending soon", systemImage: "bell.circle.fill")
-                            }
-                            .disabled(!store.notificationsEnabled)
-                            .tint(.blue)
-
-                            Text("These settings control which class alerts we schedule. You can adjust timing and permissions in System Settings.")
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-                        }
-
-                        HStack(spacing: 10) {
-                            Button {
-                                Task { @MainActor in await store.requestNotificationPermission() }
-                            } label: {
-                                Label("Request Permission", systemImage: "bell.badge")
-                            }
-
-                            Button { store.openSystemNotificationSettings() } label: {
-                                Label("Open System Settings", systemImage: "gearshape")
-                            }
-
-                            Button {
-                                Task { @MainActor in await store.sendTestNotification() }
-                            } label: {
-                                Label("Send Test", systemImage: "paperplane.fill")
-                            }
-                            .disabled(!(store.notificationAuthStatus == .authorized || store.notificationAuthStatus == .provisional))
-                        }
-                    }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(CompatibleBackgroundSecondary())
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(.quaternary, lineWidth: 0.8)
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-                #endif
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Canvas Key (For Homework And Grades) (Optional)")
-                        .font(.title2.bold())
-
-                    HStack {
-                        Text("Domain").frame(width: 80, alignment: .leading)
-                        TextField("afs.instructure.com", text: $store.canvasDomain)
-                            .textFieldStyle(.roundedBorder)
-                            #if canImport(UIKit)
-                            .textContentType(.URL)
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.never)
-                            #else
-                            .autocorrectionDisabled()
-                            .modifier(MacURLContentTypeIfAvailable())
-                            #endif
-                    }
-
-                    HStack(alignment: .center, spacing: 8) {
-                        Text("API Token").frame(width: 80, alignment: .leading)
-
-                        if showToken {
-                            TextField("Paste token", text: $store.canvasToken)
-                                .textFieldStyle(.roundedBorder)
-                                .textContentType(.password)
-                                .autocorrectionDisabled()
-                            #if canImport(UIKit)
-                                .textInputAutocapitalization(.never)
-                            #endif
-                        } else {
-                            SecureField("Paste token", text: $store.canvasToken)
-                                .textFieldStyle(.roundedBorder)
-                                .textContentType(.password)
-                        }
-
-                        Button { showToken.toggle() } label: {
-                            Image(systemName: showToken ? "eye.slash.fill" : "eye.fill")
-                        }
-                        .help(showToken ? "Hide Token" : "Show Token")
-
-                        Button { showTokenHelp = true } label: {
-                            Image(systemName: "questionmark.circle")
-                        }
-                        .help("How to get your Canvas API token")
-                        .popover(isPresented: $showTokenHelp, arrowEdge: .top) {
-                            TokenHelpView(domain: store.canvasDomain, isPresented: $showTokenHelp)
-                                .frame(minWidth: 320)
-                                .padding()
-                        }
-
-                        Button(role: .destructive) {
-                            Task { @MainActor in store.clearCanvasToken() }
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .help("Clear saved API token")
-                    }
-
-                    HStack {
-                        Button {
-                            Task {
-                                async let t1: Void = store.refreshCanvasTodos()
-                                async let t2: Void = store.refreshCanvasCoursesAndGrades()
-                                _ = await (t1, t2)
-
-                                if let err = store.fetchError ?? store.gradesError {
-                                    testResult = "Failed: \(err)"
-                                } else {
-                                    testResult = "Success: \(store.canvasTodos.count) todos, \(store.courses.count) courses"
-                                }
-                            }
-                        } label: {
-                            Label("Test Connection", systemImage: "wifi")
-                        }
-
-                        if store.isFetchingTodos || store.isFetchingGrades {
-                            ProgressView().controlSize(.small)
-                        }
-
-                        if let testResult {
-                            Text(testResult)
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-                        }
+                        .buttonStyle(.plain)
+                        .background(
+                            RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                                .fill(
+                                    selectedTab == tab
+                                        ? DesignTokens.Colors.primary.opacity(0.12)
+                                        : Color.clear
+                                )
+                        )
+                        .foregroundStyle(selectedTab == tab ? DesignTokens.Colors.primary : .secondary)
                     }
                 }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(CompatibleBackgroundSecondary())
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(.quaternary, lineWidth: 0.8)
-                )
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Updates").font(.title2.bold())
-                    Text("Click Check For Updates To Check For New Features Or Bug Fixes.")
-                        .font(.footnote)
-                        .modifier(SecondaryForeground())
-
-                    HStack(spacing: 10) {
-                        Button {
-                            Task { @MainActor in await store.refreshUpdateAnnouncement() }
-                        } label: {
-                            Label("Check for Updates", systemImage: "arrow.triangle.2.circlepath")
-                        }
-
-                        if let pending = store.pendingAnnouncement {
-                            Text("Pending: \(pending.updateNumber)")
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-                        } else {
-                            Text("No pending announcements")
-                                .font(.footnote)
-                                .modifier(SecondaryForeground())
-                        }
-                    }
-                }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(CompatibleBackgroundSecondary())
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(.quaternary, lineWidth: 0.8)
-                )
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 0)
+                .padding(DesignTokens.Spacing.md)
                 
-                Button {
-                    withAnimation(.snappy) { isClassesExpanded.toggle() }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "chevron.right")
-                            .rotationEffect(.degrees(isClassesExpanded ? 90 : 0))
-                            .modifier(SecondaryForeground())
-                            .animation(.snappy, value: isClassesExpanded)
-                        Text("Your Classes").font(.title2.bold())
-                        Spacer()
-                    }
-                    .contentShape(Rectangle())
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
-                .tint(.blue)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Your Classes")
-                .accessibilityAddTraits(.isButton)
-                .accessibilityValue(isClassesExpanded ? "Expanded" : "Collapsed")
-
-                if isClassesExpanded {
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(editableLevels, id: \.self) { level in
-                            LevelEditorRow(level: level, assignment: store.binding(for: level))
-                                .padding(12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(CompatibleBackgroundSecondary())
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .strokeBorder(.quaternary, lineWidth: 0.8)
-                                )
-                        }
-                    }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Special Blocks").font(.title2.bold())
-
-                        SpecialColorRow(title: SpecialBlock.lunch.title, systemImage: SpecialBlock.lunch.systemImage, color: store.colorBinding(for: .lunch))
-                        SpecialColorRow(title: SpecialBlock.officeHours.title, systemImage: SpecialBlock.officeHours.systemImage, color: store.colorBinding(for: .officeHours))
-                        SpecialColorRow(title: SpecialBlock.worship.title, systemImage: SpecialBlock.worship.systemImage, color: store.colorBinding(for: .worship))
-                        SpecialColorRow(title: SpecialBlock.consciousCommunities.title, systemImage: SpecialBlock.consciousCommunities.systemImage, color: store.colorBinding(for: .consciousCommunities))
-                        SpecialColorRow(title: SpecialBlock.advisory.title, systemImage: SpecialBlock.advisory.systemImage, color: store.colorBinding(for: .advisory))
-                        SpecialColorRow(title: SpecialBlock.assembly.title, systemImage: SpecialBlock.assembly.systemImage, color: store.colorBinding(for: .assembly))
-                    }
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(CompatibleBackgroundSecondary())
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(.quaternary, lineWidth: 0.8)
-                    )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-
-                VStack(spacing: 6) {
-                    Text("\(appName) — Version \(appVersion)")
-                        .font(.footnote.weight(.semibold))
-                        .multilineTextAlignment(.center)
-                    Text("RooMate helps you track your schedule, homework, and grades with a clean, customizable interface.")
-                        .font(.footnote)
-                        .multilineTextAlignment(.center)
-                        .modifier(SecondaryForeground())
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 24)
-                .padding(.bottom, 8)
-
-                Spacer(minLength: 12)
+                Divider()
+                    .opacity(0.08)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                    .fill(compatibleBackgroundSecondary())
+            )
+            .padding(DesignTokens.Spacing.md)
+            
+            // Content
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: DesignTokens.Spacing.lg) {
+                    switch selectedTab {
+                    case .customize:
+                        customizeTabContent
+                    case .classes:
+                        classesTabContent
+                    case .clubs:
+                        clubsTabContent
+                    case .schedule:
+                        scheduleTabContent
+                    }
+                    
+                    // Footer
+                    VStack(alignment: .center, spacing: DesignTokens.Spacing.xs) {
+                        Text("\(appName) v\(appVersion)")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("Track your schedule with a clean, customizable interface.")
+                            .font(DesignTokens.Typography.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.vertical, DesignTokens.Spacing.lg)
+                }
+                .padding(DesignTokens.Spacing.lg)
+            }
         }
-        .modifier(SafeAreaTopPadding(6))
+        .navigationTitle("Settings")
+        .modifier(SafeAreaTopPadding(4))
         .task { await store.refreshNotificationStatus() }
     }
-
-    // About helpers
-    private func openMail(to address: String, subject: String, body: String) {
-        let subjectEncoded = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let bodyEncoded = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "mailto:\(address)?subject=\(subjectEncoded)&body=\(bodyEncoded)"
-        guard let url = URL(string: urlString) else { return }
-        #if canImport(AppKit)
-        NSWorkspace.shared.open(url)
-        #elseif canImport(UIKit)
-        UIApplication.shared.open(url)
-        #endif
+    
+    // MARK: - Tab Contents
+    
+    private var customizeTabContent: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            // Theme Section
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "paintbrush.pointed")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("Theme")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                .padding(.bottom, DesignTokens.Spacing.sm)
+                
+                Text("Choose how RooMate looks")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: DesignTokens.Spacing.md), GridItem(.flexible(), spacing: DesignTokens.Spacing.md), GridItem(.flexible(), spacing: DesignTokens.Spacing.md)], spacing: DesignTokens.Spacing.md) {
+                    ForEach(AppearancePreference.allCases) { option in
+                        ThemeButton(option: option, isSelected: option == store.appearance) {
+                            withAnimation(DesignTokens.Animation.snappy) { store.appearance = option }
+                        }
+                    }
+                }
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+            
+            // Card Style Section
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.accent)
+                    Text("Card Style")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                .padding(.bottom, DesignTokens.Spacing.sm)
+                
+                Text("Customize how cards are displayed")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: DesignTokens.Spacing.md), GridItem(.flexible(), spacing: DesignTokens.Spacing.md), GridItem(.flexible(), spacing: DesignTokens.Spacing.md)], spacing: DesignTokens.Spacing.md) {
+                    ForEach(CardColorStyle.allCases) { style in
+                        CardStyleButton(style: style, isSelected: style == store.cardColorStyle) {
+                            withAnimation(DesignTokens.Animation.snappy) { store.cardColorStyle = style }
+                        }
+                    }
+                }
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+        }
     }
+    
+    private var classesTabContent: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "text.book.closed.fill")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("Your Classes")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                
+                Text("Edit your class schedule and details")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(DesignTokens.Spacing.lg)
+            
+            // Level selector
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    ForEach(Array(editableLevels.enumerated()), id: \.offset) { idx, level in
+                        LevelTabButton(level: level, isSelected: idx == selectedLevelIndex) {
+                            withAnimation(DesignTokens.Animation.snappy) { selectedLevelIndex = idx }
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+            }
+            
+            // Level editor
+            let currentLevel = editableLevels[selectedLevelIndex]
+            LevelEditorRow(level: currentLevel, assignment: store.binding(for: currentLevel))
+                .padding(DesignTokens.Spacing.lg)
+                .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+                .designShadow(DesignTokens.Shadows.small)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+        }
+    }
+    
+    private var clubsTabContent: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "person.3.fill")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("Manage Clubs")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                
+                Text("Add and organize your clubs and meetings")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(DesignTokens.Spacing.lg)
+            
+            Button(action: {
+                withAnimation(DesignTokens.Animation.snappy) { store.clubs.append(Club()) }
+            }) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                    Text("Add New Club")
+                        .font(DesignTokens.Typography.body)
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(DesignTokens.Spacing.lg)
+                .background(DesignTokens.Colors.primary.opacity(0.1))
+                .cornerRadius(DesignTokens.Radius.lg)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            
+            if store.clubs.isEmpty {
+                VStack(spacing: DesignTokens.Spacing.md) {
+                    Image(systemName: "star.slash.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("No Clubs Yet")
+                        .font(DesignTokens.Typography.headline3)
+                    
+                    Text("Add your first club to get started")
+                        .font(DesignTokens.Typography.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(DesignTokens.Spacing.xl)
+                .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg).fill(compatibleBackgroundSecondary()))
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+            } else {
+                VStack(spacing: DesignTokens.Spacing.md) {
+                    ForEach(store.clubs.indices, id: \.self) { index in
+                        let clubID = store.clubs[index].id
+                        ClubEditorRow(club: $store.clubs[index]) {
+                            withAnimation(DesignTokens.Animation.snappy) {
+                                store.clubs.removeAll { $0.id == clubID }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                
+                Button(role: .destructive) {
+                    withAnimation(DesignTokens.Animation.snappy) { store.clubs.removeAll() }
+                } label: {
+                    Text("Remove All Clubs")
+                        .frame(maxWidth: .infinity)
+                        .padding(DesignTokens.Spacing.lg)
+                        .background(DesignTokens.Colors.destructive.opacity(0.1))
+                        .cornerRadius(DesignTokens.Radius.lg)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+            }
+        }
+    }
+    
+    private var scheduleTabContent: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("Special Blocks")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                
+                Text("Mark special schedule blocks as free time")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(DesignTokens.Spacing.lg)
 
-    private func defaultFeedbackBody() -> String {
-        #if canImport(AppKit)
-        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
-        #else
-        let osVersion = UIDevice.current.systemVersion
-        #endif
-        return """
+            let musicAssignment = store.assignment(for: .music)
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        Image(systemName: "music.note")
+                            .font(.title3)
+                            .foregroundStyle(DesignTokens.Colors.primary)
+                        Text("Music Block")
+                            .font(DesignTokens.Typography.headline2)
+                    }
 
-        Please write your feedback above this line.
+                    Text("Is Music Block free sometimes? If so, choose the days it isn’t free.")
+                        .font(DesignTokens.Typography.subheadline)
+                        .foregroundStyle(.secondary)
 
-        —
-        App: \(appName)
-        Version: \(appVersion)
-        OS: \(osVersion)
-        """
+                    Toggle("Music Block is free sometimes", isOn: Binding(
+                        get: { store.assignment(for: .music).isFree },
+                        set: { newValue in
+                            var music = store.assignment(for: .music)
+                            music.isFree = newValue
+                            if !newValue {
+                                music.musicDaysNotFree = []
+                            }
+                            store.assignments[.music] = music
+                            store.specialFree[.musicClubs] = music.displayIsFree(on: .monday)
+                        }
+                    ))
+                    .tint(DesignTokens.Colors.primary)
+                }
+
+                if musicAssignment.isFree {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                        Text("What days isn’t it free?")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)], spacing: DesignTokens.Spacing.sm) {
+                            ForEach(Weekday.allCases) { weekday in
+                                let isNotFree = musicAssignment.musicDaysNotFree.contains(weekday.calendarWeekdayIndex)
+                                WeekdayToggleButton(weekday: weekday, isSelected: isNotFree) {
+                                    withAnimation(DesignTokens.Animation.snappy) {
+                                        var music = store.assignment(for: .music)
+                                        if isNotFree {
+                                            music.musicDaysNotFree.remove(weekday.calendarWeekdayIndex)
+                                        } else {
+                                            music.musicDaysNotFree.insert(weekday.calendarWeekdayIndex)
+                                        }
+                                        store.assignments[.music] = music
+                                        store.specialFree[.musicClubs] = music.displayIsFree(on: .monday)
+                                    }
+                                }
+                            }
+                        }
+
+                        Text("Selected days will count as class time in the schedule.")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+            
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                SpecialBlockToggleRow(
+                    title: "Conscious Communities is free",
+                    icon: "heart.circle.fill",
+                    isOn: Binding(
+                        get: { store.specialFree[.consciousCommunities] ?? false },
+                        set: { store.specialFree[.consciousCommunities] = $0 }
+                    )
+                )
+                
+                SpecialBlockToggleRow(
+                    title: "Lunch is free",
+                    icon: "fork.knife",
+                    isOn: Binding(
+                        get: { store.specialFree[.lunch] ?? false },
+                        set: { store.specialFree[.lunch] = $0 }
+                    )
+                )
+                
+                SpecialBlockToggleRow(
+                    title: "Music Block is free",
+                    icon: "music.note",
+                    isOn: Binding(
+                        get: { store.assignments[.music]?.isFree ?? true },
+                        set: {
+                            var musicAssignment = store.assignments[.music] ?? ClassAssignment.default(for: .music)
+                            musicAssignment.isFree = $0
+                            store.assignments[.music] = musicAssignment
+                            // Also mark the special "Music Block + Clubs" as free so special schedule entries
+                            // like Monday's `musicClubs` are treated as free time when this toggle is set.
+                            store.specialFree[.musicClubs] = $0
+                        }
+                    )
+                )
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+        }
     }
 }
+// ...existing code...
+
+// MARK: - Helper Components
+
+struct ThemeButton: View {
+    let option: AppearancePreference
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: option.systemImage)
+                    .font(.system(size: 18))
+                    .frame(height: 24)
+
+                Text(option.title)
+                    .font(DesignTokens.Typography.caption)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 70)
+            .padding(DesignTokens.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .fill(isSelected ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.2)) : AnyShapeStyle(compatibleBackgroundSecondary()))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .strokeBorder(isSelected ? DesignTokens.Colors.primary : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+            )
+            .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct CardStyleButton: View {
+    let style: CardColorStyle
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: style.systemImage)
+                    .font(.system(size: 18))
+                    .frame(height: 24)
+
+                Text(style.title)
+                    .font(DesignTokens.Typography.caption)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 70)
+            .padding(DesignTokens.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .fill(isSelected ? AnyShapeStyle(DesignTokens.Colors.accent.opacity(0.2)) : AnyShapeStyle(compatibleBackgroundSecondary()))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .strokeBorder(isSelected ? DesignTokens.Colors.accent : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+            )
+            .foregroundStyle(isSelected ? DesignTokens.Colors.accent : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct LevelTabButton: View {
+    let level: Level
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.body)
+
+                Text(level.displayName)
+                    .font(DesignTokens.Typography.subheadline)
+                    .fontWeight(.medium)
+            }
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .fill(isSelected ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.15)) : AnyShapeStyle(compatibleBackgroundSecondary()))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .strokeBorder(isSelected ? DesignTokens.Colors.primary : Color.clear, lineWidth: 1.5)
+            )
+            .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .secondary)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct WeekdayToggleButton: View {
+    let weekday: Weekday
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : weekday.systemImage)
+                    .font(.system(size: 18))
+                    .frame(height: 24)
+
+                Text(weekday.title)
+                    .font(DesignTokens.Typography.caption)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 70)
+            .padding(DesignTokens.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .fill(isSelected ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.2)) : AnyShapeStyle(compatibleBackgroundSecondary()))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                    .strokeBorder(isSelected ? DesignTokens.Colors.primary : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+            )
+            .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Special Block Toggle Component
+
+struct SpecialBlockToggleRow: View {
+    let title: String
+    let icon: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.md) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(DesignTokens.Colors.primary)
+            
+            Text(title)
+                .font(DesignTokens.Typography.body)
+            
+            Spacer()
+            
+            Toggle("", isOn: $isOn)
+                .tint(DesignTokens.Colors.primary)
+        }
+        .padding(DesignTokens.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .strokeBorder(Color.secondary.opacity(0.1), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Existing Editor Components
 
 struct LevelEditorRow: View {
     let level: Level
     @Binding var assignment: ClassAssignment
 
+    // Removed local ephemeral state: rely on the persisted properties on ClassAssignment
+
+    // ...existing code...
+
+    // Compute which days this level meets according to the bell schedule
+    private var daysLevelMeets: Set<Int> {
+        var days: Set<Int> = []
+        let weekdayMap: [Weekday: Int] = [.monday: 2, .tuesday: 3, .wednesday: 4, .thursday: 5, .friday: 6]
+        
+        for (weekday, dayIndex) in weekdayMap {
+            if let blocks = BellSchedule.weekly[weekday] {
+                for block in blocks {
+                    if case .level(let blockLevel) = block.kind, blockLevel == level {
+                        days.insert(dayIndex)
+                        break
+                    }
+                }
+            }
+        }
+        return days
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(level.displayName).font(.headline)
+        let daySymbols = Calendar.current.weekdaySymbols
+        let allIndices: [Int] = [2, 3, 4, 5, 6]
+        // Only show days the class meets on in the bell schedule
+        let orderedIndices = allIndices.filter { daysLevelMeets.contains($0) }
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
 
-            TextField("Class title", text: $assignment.title)
-                .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "text.book.closed")
+                    .foregroundStyle(DesignTokens.Colors.primary)
+                Text(level.displayName)
+                    .font(DesignTokens.Typography.headline3)
+            }
 
-            HStack {
-                TextField("Teacher", text: $assignment.teacher)
-                    .textFieldStyle(.roundedBorder)
+            Toggle(isOn: Binding(
+                get: { assignment.isFree },
+                set: { assignment.isFree = $0 }
+            )) {
+                Label("Is this class free?", systemImage: "sparkles")
+            }
+            .tint(DesignTokens.Colors.primary)
 
-                TextField("Room", text: $assignment.room)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 180)
+            if assignment.isFree {
+                Text("Free blocks count toward your free time.")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !assignment.isFree {
+                TextField("Class title", text: $assignment.title)
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, DesignTokens.Spacing.xs)
+                    .background(compatibleBackgroundSecondary())
+                    .cornerRadius(DesignTokens.Radius.sm)
+                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+
+                if level != .music {
+                    HStack(spacing: DesignTokens.Spacing.md) {
+                        TextField("Teacher", text: $assignment.teacher)
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, DesignTokens.Spacing.sm)
+                            .padding(.vertical, DesignTokens.Spacing.xs)
+                            .background(compatibleBackgroundSecondary())
+                            .cornerRadius(DesignTokens.Radius.sm)
+                            .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                        
+                        TextField("Room", text: $assignment.room)
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: 140)
+                            .padding(.horizontal, DesignTokens.Spacing.sm)
+                            .padding(.vertical, DesignTokens.Spacing.xs)
+                            .background(compatibleBackgroundSecondary())
+                            .cornerRadius(DesignTokens.Radius.sm)
+                            .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                    }
+                }
             }
 
             ColorPicker("Color", selection: Binding(
                 get: { assignment.color.swiftUIColor },
                 set: { assignment.color = CodableColor($0) }
             ))
+
+            Divider().opacity(0.1)
+
+            Toggle(isOn: Binding(
+                get: { assignment.meetsEveryDay },
+                set: { assignment.meetsEveryDay = $0 }
+            )) {
+                Label("Meets every day", systemImage: "calendar")
+            }
+            .tint(DesignTokens.Colors.primary)
+
+                    if !assignment.meetsEveryDay {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text("What days does it meet on?")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                        LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
+                            ForEach(orderedIndices, id: \.self) { idx in
+                                let label = daySymbols[idx - 1]
+                                let isSelected = !assignment.daysNotMeeting.contains(idx)
+
+                                Button {
+                                    withAnimation(DesignTokens.Animation.snappy) {
+                                        if isSelected {
+                                            assignment.daysNotMeeting.insert(idx)
+                                        } else {
+                                            assignment.daysNotMeeting.remove(idx)
+                                        }
+                                    }
+                                } label: {
+                                    Text(label)
+                                        .font(DesignTokens.Typography.caption)
+                                        .fontWeight(.medium)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, DesignTokens.Spacing.sm)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: DesignTokens.Radius.sm, style: .continuous)
+                                                .fill(isSelected ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.15)) : compatibleBackgroundSecondary())
+                                        )
+                                        .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .primary)
+                                }
+                                .buttonStyle(.plain)
+                                .contentShape(Rectangle())
+                            }
+                        }
+
+                    Text("Class meets on the selected days above")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    // Show single replacement class input
+                    if !assignment.daysNotMeeting.isEmpty {
+                        Divider().opacity(0.1)
+                        
+                        Text("What happens on the other days?")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+
+                                Toggle(isOn: Binding(
+                                    get: { assignment.replacementClass?.isFree ?? false },
+                                    set: {
+                                        var replacement = assignment.replacementClass ?? ClassAssignment.ReplacementClass(title: "", teacher: "", room: "")
+                                        replacement.isFree = $0
+                                        assignment.replacementClass = replacement
+                                    }
+                                )) {
+                                    Label("Is the replacement free?", systemImage: "sparkles")
+                                }
+                                .tint(DesignTokens.Colors.primary)
+
+                                if assignment.replacementClass?.isFree == true {
+                                    Text("Free replacements also count toward your free time.")
+                                        .font(DesignTokens.Typography.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                        
+                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                                    if assignment.replacementClass?.isFree != true {
+                                        TextField("Class name", text: Binding(
+                                            get: { assignment.replacementClass?.title ?? "" },
+                                            set: {
+                                                var replacement = assignment.replacementClass ?? ClassAssignment.ReplacementClass(title: "", teacher: "", room: "")
+                                                replacement.title = $0
+                                                assignment.replacementClass = replacement
+                                            }
+                                        ))
+                                        .foregroundStyle(.primary)
+                                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                                        .padding(.vertical, DesignTokens.Spacing.xs)
+                                        .background(compatibleBackgroundSecondary())
+                                        .cornerRadius(DesignTokens.Radius.sm)
+                                        .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                                
+                                        if level != .music {
+                                            HStack(spacing: DesignTokens.Spacing.md) {
+                                                TextField("Teacher", text: Binding(
+                                                    get: { assignment.replacementClass?.teacher ?? "" },
+                                                    set: {
+                                                        var replacement = assignment.replacementClass ?? ClassAssignment.ReplacementClass(title: "", teacher: "", room: "")
+                                                        replacement.teacher = $0
+                                                        assignment.replacementClass = replacement
+                                                    }
+                                                ))
+                                                .foregroundStyle(.primary)
+                                                .padding(.horizontal, DesignTokens.Spacing.sm)
+                                                .padding(.vertical, DesignTokens.Spacing.xs)
+                                                .background(compatibleBackgroundSecondary())
+                                                .cornerRadius(DesignTokens.Radius.sm)
+                                                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                                        
+                                                TextField("Room", text: Binding(
+                                                    get: { assignment.replacementClass?.room ?? "" },
+                                                    set: {
+                                                        var replacement = assignment.replacementClass ?? ClassAssignment.ReplacementClass(title: "", teacher: "", room: "")
+                                                        replacement.room = $0
+                                                        assignment.replacementClass = replacement
+                                                    }
+                                                ))
+                                                .foregroundStyle(.primary)
+                                                .frame(maxWidth: 140)
+                                                .padding(.horizontal, DesignTokens.Spacing.sm)
+                                                .padding(.vertical, DesignTokens.Spacing.xs)
+                                                .background(compatibleBackgroundSecondary())
+                                                .cornerRadius(DesignTokens.Radius.sm)
+                                                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                                            }
+                                        }
+                            }
+                        }
+                    }
+                }
+                // Use a fade transition only so content appears/disappears without shifting other views
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.22), value: assignment.meetsEveryDay)
+            }
         }
     }
 }
 
-struct SpecialColorRow: View {
-    let title: String
-    let systemImage: String
-    @Binding var color: Color
+struct ClubEditorRow: View {
+    @Binding var club: Club
+    let onDelete: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Label(title, systemImage: systemImage).font(.headline)
-            Spacer()
-            ColorPicker("", selection: $color)
-                .labelsHidden()
-                .frame(maxWidth: 220)
-        }
-        .padding(.vertical, 4)
-    }
-}
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.md) {
+                TextField("Club name", text: $club.name)
+                    .textFieldStyle(.roundedBorder)
+                    .font(DesignTokens.Typography.body)
 
-struct TokenHelpView: View {
-    let domain: String
-    @Binding var isPresented: Bool
-
-    private var domainURL: URL? { URL(string: "https://\(domain)") }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Label("Get your Canvas API Token", systemImage: "questionmark.circle.fill")
-                    .font(.headline)
-                Spacer()
-                Button { isPresented = false } label: {
-                    Image(systemName: "xmark.circle.fill").modifier(SecondaryForeground())
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close")
             }
 
-            Text("Steps")
-                .font(.subheadline.weight(.semibold))
-                .modifier(SecondaryForeground())
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("1. Open Canvas in a web browser and sign in.")
-                Text("2. Go to Account > Settings.")
-                Text("3. Scroll to the Approved Integrations or New Access Token section.")
-                Text("4. Create a new token, give it a purpose, make the expiry date the maximum (120 days) and copy the token value.")
-                Text("5. Paste the token here. Keep it secret.")
-                Text("! Make sure to write down your token, you won't be able to get it again.")
-            }
-            .font(.callout)
-
-            if let url = domainURL {
-                Button {
-                    #if canImport(AppKit)
-                    NSWorkspace.shared.open(url)
-                    #elseif canImport(UIKit)
-                    UIApplication.shared.open(url)
-                    #endif
-                } label: {
-                    Label("Open \(domain)", systemImage: "safari")
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                Toggle(isOn: $club.meetsMondayClub) {
+                    Text("Monday club period")
+                        .font(DesignTokens.Typography.body)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .padding(.top, 4)
+                .tint(DesignTokens.Colors.primary)
+
+                Toggle(isOn: $club.meetsWednesdayClub) {
+                    Text("Wednesday club period")
+                        .font(DesignTokens.Typography.body)
+                }
+                .tint(DesignTokens.Colors.primary)
             }
 
-            Text("Note: You can revoke this token anytime from Canvas settings.")
-                .font(.footnote)
-                .modifier(SecondaryForeground())
-                .padding(.top, 6)
+            if !$club.otherMeetings.isEmpty {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    HStack {
+                        Text("Other Meeting Days")
+                            .font(DesignTokens.Typography.title)
+
+                        Spacer()
+
+                        Button {
+                            withAnimation(DesignTokens.Animation.snappy) {
+                                club.otherMeetings.append(Club.OtherMeeting())
+                            }
+                        } label: {
+                            Label("Add", systemImage: "plus.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    ForEach($club.otherMeetings) { $meeting in
+                        HStack(spacing: DesignTokens.Spacing.sm) {
+                            Picker("Day", selection: $meeting.weekday) {
+                                ForEach(1...7, id: \.self) { idx in
+                                    Text(Calendar.current.weekdaySymbols[idx - 1]).tag(idx)
+                                }
+                            }
+                            .frame(maxWidth: 120)
+
+                            DatePicker("", selection: $meeting.startTime, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+
+                            Text("–").foregroundStyle(.secondary)
+
+                            DatePicker("", selection: $meeting.endTime, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+
+                            Button(role: .destructive) {
+                                withAnimation(DesignTokens.Animation.snappy) {
+                                    if let idx = club.otherMeetings.firstIndex(where: { $0.id == meeting.id }) {
+                                        club.otherMeetings.remove(at: idx)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "trash.fill")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(DesignTokens.Spacing.sm)
+                        .background(compatibleBackgroundSecondary())
+                        .cornerRadius(DesignTokens.Radius.sm)
+                    }
+                }
+            } else {
+                Button {
+                    withAnimation(DesignTokens.Animation.snappy) {
+                        club.otherMeetings.append(Club.OtherMeeting())
+                    }
+                } label: {
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add an extra meeting time")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(DesignTokens.Spacing.sm)
+                }
+                .buttonStyle(.plain)
+            }
+
+            TextField("Notes (optional)", text: $club.otherDaysNote)
+                .textFieldStyle(.roundedBorder)
+                .font(DesignTokens.Typography.body)
         }
-        .padding()
-    }
-}
+        .padding(DesignTokens.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1)
+        )
+     }
+ }

@@ -5,6 +5,8 @@ struct NextBlockCard: View {
     let startText: String
     let color: Color
     let style: CardColorStyle
+    let level: Level?
+    let specialLabel: String?
 
     private var softGradient: LinearGradient {
         LinearGradient(
@@ -21,38 +23,45 @@ struct NextBlockCard: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(LinearGradient(colors: [color.opacity(0.7), color.opacity(0.35)], startPoint: .top, endPoint: .bottom))
-                .frame(width: 8, height: 36)
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Label("Up Next", systemImage: "forward.fill")
-                        .font(.caption)
-                        .modifier(SecondaryForeground())
-                    Spacer()
-                }
-                HStack(alignment: .firstTextBaseline) {
-                    Text(title)
-                        .font(.headline)
-                    Spacer()
-                    Label(startText, systemImage: "clock")
-                        .font(.subheadline)
-                        .modifier(SecondaryForeground())
-                        .labelStyle(.titleAndIcon)
-                }
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Label("Up Next", systemImage: "forward.fill")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
-            .padding(.vertical, 8)
+            
+            HStack(alignment: .center, spacing: DesignTokens.Spacing.md) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(DesignTokens.Typography.body)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+                    
+                    if let level = level, title != "Free" {
+                        Text(level.displayName)
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    } else if let specialLabel = specialLabel, !specialLabel.isEmpty, title != "Free" {
+                        Text(specialLabel)
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                Label(startText, systemImage: "clock.fill")
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+                    .labelStyle(.titleAndIcon)
+            }
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.lg)
         .background(backgroundForStyle)
         .overlay(strokeForStyle)
         .overlay(glowForStyle)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(.quaternary, lineWidth: 0.6)
-        )
+        .cornerRadius(DesignTokens.Radius.md)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Up next: \(title), \(startText)")
     }
@@ -61,22 +70,22 @@ struct NextBlockCard: View {
     private var backgroundForStyle: some View {
         switch style {
         case .none:
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(CompatibleBackgroundSecondary())
-                .shadow(color: Color.black.opacity(0.06), radius: 6, x: 0, y: 3)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+                .designShadow(DesignTokens.Shadows.small)
         case .subtle:
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(CompatibleBackgroundSecondary())
-                .shadow(color: color.opacity(0.12), radius: 10, x: 0, y: 0)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+                .designShadow(DesignTokens.Shadows.small)
         case .colors:
             ZStack {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
                     .fill(color.opacity(0.12))
                     .blur(radius: 10)
                     .scaleEffect(1.01)
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
                     .fill(softGradient)
-                    .shadow(color: color.opacity(0.18), radius: 8, x: 0, y: 0)
+                    .designShadow(DesignTokens.Shadows.medium)
             }
         }
     }
@@ -87,10 +96,10 @@ struct NextBlockCard: View {
         case .none:
             EmptyView()
         case .subtle:
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
                 .stroke(softStrokeGradient, lineWidth: 1.2)
         case .colors:
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
                 .stroke(softStrokeGradient, lineWidth: 1.4)
         }
     }
@@ -101,13 +110,14 @@ struct NextBlockCard: View {
         case .none:
             EmptyView()
         case .subtle:
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
                 .stroke(color.opacity(0.10), lineWidth: 4)
                 .blur(radius: 7)
         case .colors:
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
                 .stroke(color.opacity(0.06), lineWidth: 2)
                 .blur(radius: 4)
         }
     }
 }
+

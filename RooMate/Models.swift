@@ -7,6 +7,31 @@ import AppKit
 import UIKit
 #endif
 
+// MARK: - Card color style used across UI
+enum CardColorStyle: String, CaseIterable, Identifiable, Codable, Equatable {
+    case none
+    case subtle
+    case colors
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .none: "Minimal"
+        case .subtle: "Subtle"
+        case .colors: "Vibrant"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .none: "square"
+        case .subtle: "square.dashed"
+        case .colors: "square.fill"
+        }
+    }
+}
+
 // MARK: - Models
 
 enum Level: String, CaseIterable, Identifiable, Codable, Hashable {
@@ -17,7 +42,7 @@ enum Level: String, CaseIterable, Identifiable, Codable, Hashable {
     var displayName: String {
         switch self {
         case .level1: "Level 1"
-        case .level2: "Level  2"
+        case .level2: "Level 2"
         case .level3: "Level 3"
         case .level4: "Level 4"
         case .level5: "Level 5"
@@ -133,6 +158,38 @@ struct BellBlock: Identifiable, Hashable {
     let end: DateComponents
 }
 
+struct Club: Identifiable, Hashable, Codable {
+    struct OtherMeeting: Identifiable, Hashable, Codable {
+        let id: UUID
+        var weekday: Int
+        var startTime: Date
+        var endTime: Date
+
+        init(id: UUID = UUID(), weekday: Int = 2, startTime: Date = Date(), endTime: Date = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()) {
+            self.id = id
+            self.weekday = weekday
+            self.startTime = startTime
+            self.endTime = endTime
+        }
+    }
+
+    let id: UUID
+    var name: String
+    var meetsMondayClub: Bool
+    var meetsWednesdayClub: Bool
+    var otherDaysNote: String
+    var otherMeetings: [OtherMeeting]
+
+    init(id: UUID = UUID(), name: String = "", meetsMondayClub: Bool = false, meetsWednesdayClub: Bool = false, otherDaysNote: String = "", otherMeetings: [OtherMeeting] = []) {
+        self.id = id
+        self.name = name
+        self.meetsMondayClub = meetsMondayClub
+        self.meetsWednesdayClub = meetsWednesdayClub
+        self.otherDaysNote = otherDaysNote
+        self.otherMeetings = otherMeetings
+    }
+}
+
 struct ClassItem: Identifiable, Hashable {
     let id = UUID()
     let title: String
@@ -188,14 +245,202 @@ struct ClassAssignment: Codable, Hashable {
     var teacher: String
     var room: String
     var color: CodableColor
+    var isFree: Bool = false
+    var musicDaysNotFree: Set<Int> = []
+
+    // Persisted meeting configuration
+    var meetsEveryDay: Bool = true
+    var daysNotMeeting: Set<Int> = []
+    
+    // Replacement class for days when this class doesn't meet
+    var replacementClass: ReplacementClass? = nil
+    
+    struct ReplacementClass: Codable, Hashable {
+        var title: String
+        var teacher: String
+        var room: String
+        var isFree: Bool = false
+
+        enum CodingKeys: String, CodingKey {
+            case title, teacher, room, isFree
+        }
+
+        init(title: String, teacher: String, room: String, isFree: Bool = false) {
+            self.title = title
+            self.teacher = teacher
+            self.room = room
+            self.isFree = isFree
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+            self.teacher = try container.decodeIfPresent(String.self, forKey: .teacher) ?? ""
+            self.room = try container.decodeIfPresent(String.self, forKey: .room) ?? ""
+            self.isFree = try container.decodeIfPresent(Bool.self, forKey: .isFree) ?? false
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(title, forKey: .title)
+            try container.encode(teacher, forKey: .teacher)
+            try container.encode(room, forKey: .room)
+            try container.encode(isFree, forKey: .isFree)
+        }
+    }
 
     static func `default`(for level: Level) -> ClassAssignment {
         ClassAssignment(
-            title: level == .music ? "Free / Music" : level.displayName,
+            title: level.displayName,
             teacher: "",
             room: "",
-            color: .init(level.defaultColor)
+            color: .init(level.defaultColor),
+            isFree: level == .music,
+            musicDaysNotFree: [],
+            meetsEveryDay: true,
+            daysNotMeeting: [],
+            replacementClass: nil
         )
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case title, teacher, room, color, isFree, musicDaysNotFree, meetsEveryDay, daysNotMeeting, replacementClass
+    }
+
+    init(title: String, teacher: String, room: String, color: CodableColor, isFree: Bool = false, musicDaysNotFree: Set<Int> = [], meetsEveryDay: Bool = true, daysNotMeeting: Set<Int> = [], replacementClass: ReplacementClass? = nil) {
+        self.title = title
+        self.teacher = teacher
+        self.room = room
+        self.color = color
+        self.isFree = isFree
+        self.musicDaysNotFree = musicDaysNotFree
+        self.meetsEveryDay = meetsEveryDay
+        self.daysNotMeeting = daysNotMeeting
+        self.replacementClass = replacementClass
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        self.teacher = try container.decodeIfPresent(String.self, forKey: .teacher) ?? ""
+        self.room = try container.decodeIfPresent(String.self, forKey: .room) ?? ""
+        self.color = try container.decodeIfPresent(CodableColor.self, forKey: .color) ?? CodableColor(Color.accentColor)
+        self.isFree = try container.decodeIfPresent(Bool.self, forKey: .isFree) ?? false
+        if let arr = try container.decodeIfPresent([Int].self, forKey: .musicDaysNotFree) {
+            self.musicDaysNotFree = Set(arr)
+        } else {
+            self.musicDaysNotFree = []
+        }
+        self.meetsEveryDay = try container.decodeIfPresent(Bool.self, forKey: .meetsEveryDay) ?? true
+        if let arr = try container.decodeIfPresent([Int].self, forKey: .daysNotMeeting) {
+            self.daysNotMeeting = Set(arr)
+        } else {
+            self.daysNotMeeting = []
+        }
+        
+        self.replacementClass = try container.decodeIfPresent(ReplacementClass.self, forKey: .replacementClass)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(title, forKey: .title)
+        try container.encode(teacher, forKey: .teacher)
+        try container.encode(room, forKey: .room)
+        try container.encode(color, forKey: .color)
+        try container.encode(isFree, forKey: .isFree)
+        try container.encode(Array(musicDaysNotFree), forKey: .musicDaysNotFree)
+        try container.encode(meetsEveryDay, forKey: .meetsEveryDay)
+        try container.encode(Array(daysNotMeeting), forKey: .daysNotMeeting)
+        try container.encode(replacementClass, forKey: .replacementClass)
+    }
+}
+
+extension ClassAssignment {
+    private func isActuallyFree(on weekday: Weekday? = nil) -> Bool {
+        guard isFree else { return false }
+        guard let weekday, !musicDaysNotFree.isEmpty else { return true }
+        return !musicDaysNotFree.contains(weekday.calendarWeekdayIndex)
+    }
+
+    private func replacementClass(for weekday: Weekday?) -> ReplacementClass? {
+        guard let weekday, !meetsEveryDay, let replacementClass, daysNotMeeting.contains(weekday.calendarWeekdayIndex) else {
+            return nil
+        }
+        return replacementClass
+    }
+
+    func displayTitle(for level: Level, on weekday: Weekday? = nil) -> String {
+        if let replacement = replacementClass(for: weekday) {
+            return replacement.displayTitle
+        }
+
+        if isActuallyFree(on: weekday) { return "Free Period" }
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? level.displayName : trimmed
+    }
+
+    func displaySubtitle(on weekday: Weekday? = nil) -> String {
+        if let replacement = replacementClass(for: weekday) {
+            return replacement.displaySubtitle
+        }
+
+        guard !isActuallyFree(on: weekday) else { return "" }
+        return [teacher, room].filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.joined(separator: " • ")
+    }
+
+    func displayTeacher(on weekday: Weekday? = nil) -> String? {
+        if let replacement = replacementClass(for: weekday) {
+            let trimmed = replacement.teacher.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
+        guard !isActuallyFree(on: weekday) else { return nil }
+        let trimmed = teacher.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    func displayRoom(on weekday: Weekday? = nil) -> String? {
+        if let replacement = replacementClass(for: weekday) {
+            let trimmed = replacement.room.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
+        guard !isActuallyFree(on: weekday) else { return nil }
+        let trimmed = room.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    func displayColor(on weekday: Weekday? = nil) -> Color {
+        if let replacement = replacementClass(for: weekday) {
+            return replacement.displayColor
+        }
+
+        return isActuallyFree(on: weekday) ? .secondary : color.swiftUIColor
+    }
+
+    func displayIsFree(on weekday: Weekday? = nil) -> Bool {
+        if let replacement = replacementClass(for: weekday) {
+            return replacement.isFree
+        }
+
+        return isActuallyFree(on: weekday)
+    }
+}
+
+extension ClassAssignment.ReplacementClass {
+    var displayTitle: String {
+        if isFree { return "Free Period" }
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Replacement Class" : trimmed
+    }
+
+    var displaySubtitle: String {
+        guard !isFree else { return "" }
+        return [teacher, room].filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.joined(separator: " • ")
+    }
+
+    var displayColor: Color {
+        isFree ? .secondary : .accentColor
     }
 }
 
@@ -303,6 +548,15 @@ struct CanvasAssignment: Codable, Hashable {
     let courseID: Int?
     let pointsPossible: Double?
 
+    // New fields to show richer info on Homework page
+    let submissionTypes: [String]?
+    let description: String?
+    let lockedForUser: Bool?
+    let lockExplanation: String?
+    let unlockAt: String?
+    let lockAt: String?
+    let gradingType: String?
+
     enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -310,6 +564,14 @@ struct CanvasAssignment: Codable, Hashable {
         case htmlURL = "html_url"
         case courseID = "course_id"
         case pointsPossible = "points_possible"
+
+        case submissionTypes = "submission_types"
+        case description
+        case lockedForUser = "locked_for_user"
+        case lockExplanation = "lock_explanation"
+        case unlockAt = "unlock_at"
+        case lockAt = "lock_at"
+        case gradingType = "grading_type"
     }
 }
 
@@ -513,3 +775,16 @@ enum Weekday: CaseIterable, Identifiable {
         }
     }
 }
+
+extension Weekday {
+    var calendarWeekdayIndex: Int {
+        switch self {
+        case .monday: 2
+        case .tuesday: 3
+        case .wednesday: 4
+        case .thursday: 5
+        case .friday: 6
+        }
+    }
+}
+

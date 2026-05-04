@@ -1,5 +1,7 @@
 import Foundation
 
+// MARK: - Dated Special Schedule
+
 struct DatedSpecialSchedule: Identifiable, Hashable {
     let id = UUID()
     let date: Date
@@ -8,11 +10,32 @@ struct DatedSpecialSchedule: Identifiable, Hashable {
     let blocks: [BellBlock]
 }
 
+// MARK: - Feed
+
 actor SpecialScheduleFeed {
 
-    // Public entry: fetch everything from the index sheet URL.
+    // Index sheet: Date, Event, CSV URL
+    struct IndexRow: Hashable {
+        let date: Date
+        let title: String
+        let url: URL
+    }
+
+    // Dedicated URLSession for these CSV fetches
+    private let session: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.waitsForConnectivity = true
+        config.timeoutIntervalForRequest = 12
+        config.timeoutIntervalForResource = 25
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.httpMaximumConnectionsPerHost = 4
+        return URLSession(configuration: config)
+    }()
+
+    // Public: fetch all dated specials from the index URL
     func fetchAll(from indexURL: URL) async throws -> [DatedSpecialSchedule] {
         let rows = try await fetchIndex(from: indexURL)
+
         var results: [DatedSpecialSchedule] = []
         results.reserveCapacity(rows.count)
 
@@ -21,11 +44,11 @@ actor SpecialScheduleFeed {
                 group.addTask { [weak self] in
                     guard let self else { return nil }
                     do {
-                        let blocks = try await self.fetchBlocks(from: row.csvURL)
-                        return DatedSpecialSchedule(date: row.date, title: row.title, url: row.csvURL, blocks: blocks)
+                        let blocks = try await self.fetchBlocks(from: row.url)
+                        return DatedSpecialSchedule(date: row.date, title: row.title, url: row.url, blocks: blocks)
                     } catch {
                         #if DEBUG
-                        print("[SpecialScheduleFeed] Failed blocks for \(row.title) at \(row.csvURL): \(error)")
+                        print("[SpecialScheduleFeed] Failed blocks for \(row.title) @ \(row.url): \(error)")
                         #endif
                         return nil
                     }
@@ -41,29 +64,14 @@ actor SpecialScheduleFeed {
         return results
     }
 
-    // MARK: - Index sheet parsing (Date, Event, CSV URL)
+    // MARK: Index CSV parsing (Date, Event, CSV URL)
 
-    private struct IndexRow {
-        let date: Date
-        let title: String
-        let csvURL: URL
-    }
-
-    private let indexSession: URLSession = {
-        let config = URLSessionConfiguration.ephemeral
-        config.waitsForConnectivity = true
-        config.timeoutIntervalForRequest = 12
-        config.timeoutIntervalForResource = 25
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        return URLSession(configuration: config)
-    }()
-
-    private func fetchIndex(from url: URL) async throws -> [IndexRow] {
+    func fetchIndex(from url: URL) async throws -> [IndexRow] {
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         req.setValue("text/csv, text/plain; q=0.8, */*; q=0.5", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await indexSession.data(for: req)
+        let (data, response) = try await session.data(for: req)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }
@@ -76,74 +84,46 @@ actor SpecialScheduleFeed {
         guard !lines.isEmpty else { return [] }
 
         let header = splitCSVRow(lines[0])
-
-        func index(of name: String) -> Int? {
-            header.firstIndex { $0.caseInsensitiveCompare(name) == .orderedSame }
+        func idx(_ name: String) -> Int? {
+            header.firstIndex { $0.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(name) == .orderedSame }
         }
+        let dateIdx = idx("Date")
+        let eventIdx = idx("Event") ?? idx("Name")
+        let urlIdx = idx("CSV URL") ?? idx("URL")
 
-        let dateIdx = index(of: "Date")
-        let titleIdx = index(of: "Event")
-        let urlIdx = index(of: "CSV URL")
+        let dateParser = makeDateParser()
 
-        var rows: [IndexRow] = []
-        rows.reserveCapacity(max(0, lines.count - 1))
-
-        for row in lines.dropFirst() {
+        return lines.dropFirst().compactMap { row in
             let cols = splitCSVRow(row)
-            if let di = dateIdx, let ti = titleIdx, let ui = urlIdx, cols.count > max(di, max(ti, ui)) {
-                let dateString = cols[di].trimmingCharacters(in: .whitespacesAndNewlines)
-                let title = cols[ti].trimmingCharacters(in: .whitespacesAndNewlines)
-                let urlString = cols[ui].trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !dateString.isEmpty, !title.isEmpty, let url = URL(string: urlString) else { continue }
-                if let date = parseIndexDate(dateString) {
-                    rows.append(IndexRow(date: date, title: title, csvURL: url))
-                }
-            } else if cols.count >= 3 {
-                // Fallback by position
-                let dateString = cols[0].trimmingCharacters(in: .whitespacesAndNewlines)
-                let title = cols[1].trimmingCharacters(in: .whitespacesAndNewlines)
-                let urlString = cols[2].trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !dateString.isEmpty, !title.isEmpty, let url = URL(string: urlString) else { continue }
-                if let date = parseIndexDate(dateString) {
-                    rows.append(IndexRow(date: date, title: title, csvURL: url))
-                }
+            guard
+                let di = dateIdx, di < cols.count,
+                let ei = eventIdx, ei < cols.count,
+                let ui = urlIdx, ui < cols.count
+            else { return nil }
+
+            let dateString = cols[di].trimmingCharacters(in: .whitespacesAndNewlines)
+            let title = cols[ei].trimmingCharacters(in: .whitespacesAndNewlines)
+            let urlString = cols[ui].trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !dateString.isEmpty, !title.isEmpty, let url = URL(string: urlString) else { return nil }
+            guard let date = dateParser(dateString) else {
+                #if DEBUG
+                print("[SpecialScheduleFeed] Unparseable date: \(dateString)")
+                #endif
+                return nil
             }
+            return IndexRow(date: date, title: title, url: url)
         }
-        return rows
     }
 
-    private func parseIndexDate(_ s: String) -> Date? {
-        // Support common sheet formats: M/D/YYYY, M/D/YY, MMM D, YYYY
-        let fmts = ["M/d/yyyy", "M/d/yy", "MMM d, yyyy", "MMMM d, yyyy", "yyyy-MM-dd"]
-        for f in fmts {
-            let df = DateFormatter()
-            df.locale = Locale(identifier: "en_US_POSIX")
-            df.timeZone = TimeZone(secondsFromGMT: 0)
-            df.dateFormat = f
-            if let d = df.date(from: s) {
-                return d
-            }
-        }
-        return nil
-    }
-
-    // MARK: - Per-event CSV parsing (Start Time, End Time, Block)
-
-    private let blocksSession: URLSession = {
-        let config = URLSessionConfiguration.ephemeral
-        config.waitsForConnectivity = true
-        config.timeoutIntervalForRequest = 10
-        config.timeoutIntervalForResource = 20
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        return URLSession(configuration: config)
-    }()
+    // MARK: Per-event CSV parsing (Start Time, End Time, Block)
 
     func fetchBlocks(from url: URL) async throws -> [BellBlock] {
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         req.setValue("text/csv, text/plain; q=0.8, */*; q=0.5", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await blocksSession.data(for: req)
+        let (data, response) = try await session.data(for: req)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }
@@ -156,159 +136,54 @@ actor SpecialScheduleFeed {
         guard !lines.isEmpty else { return [] }
 
         let header = splitCSVRow(lines[0])
-
-        func index(of name: String) -> Int? {
-            header.firstIndex { $0.caseInsensitiveCompare(name) == .orderedSame }
+        func idx(_ name: String) -> Int? {
+            header.firstIndex { $0.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(name) == .orderedSame }
         }
+        let startIdx = idx("Start Time") ?? idx("Start")
+        let endIdx = idx("End Time") ?? idx("End")
+        let blockIdx = idx("Block") ?? idx("Title") ?? idx("Kind")
 
-        let startIdx = index(of: "Start Time")
-        let endIdx = index(of: "End Time")
-        let blockIdx = index(of: "Block")
+        guard let si = startIdx, let ei = endIdx, let bi = blockIdx else { return [] }
+
+        let parseTime = makeTimeParser()
 
         var blocks: [BellBlock] = []
-        blocks.reserveCapacity(max(0, lines.count - 1))
+        blocks.reserveCapacity(lines.count - 1)
 
         for row in lines.dropFirst() {
             let cols = splitCSVRow(row)
+            guard cols.count > max(si, max(ei, bi)) else { continue }
 
-            let sVal: String?
-            let eVal: String?
-            let bVal: String?
+            let startRaw = cols[si].trimmingCharacters(in: .whitespacesAndNewlines)
+            let endRaw = cols[ei].trimmingCharacters(in: .whitespacesAndNewlines)
+            let titleRaw = cols[bi].trimmingCharacters(in: .whitespacesAndNewlines)
 
-            if let si = startIdx, let ei = endIdx, let bi = blockIdx, cols.count > max(si, max(ei, bi)) {
-                sVal = cols[si]
-                eVal = cols[ei]
-                bVal = cols[bi]
-            } else if cols.count >= 3 {
-                sVal = cols[0]
-                eVal = cols[1]
-                bVal = cols[2]
+            guard !startRaw.isEmpty, !endRaw.isEmpty, !titleRaw.isEmpty else { continue }
+            guard let start = parseTime(startRaw), let end = parseTime(endRaw) else {
+                #if DEBUG
+                print("[SpecialScheduleFeed] Bad times: \(startRaw) - \(endRaw)")
+                #endif
+                continue
+            }
+
+            if let kind = mapBlock(titleRaw) {
+                blocks.append(BellBlock(kind: kind, start: start, end: end))
             } else {
-                continue
-            }
-
-            let startStr = (sVal ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let endStr = (eVal ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let blockStr = (bVal ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-
-            guard !startStr.isEmpty, !endStr.isEmpty, !blockStr.isEmpty else { continue }
-            guard let kind = mapBlockKind(blockStr) else {
                 #if DEBUG
-                print("[SpecialScheduleFeed] Unknown block '\(blockStr)'")
+                print("[SpecialScheduleFeed] Unknown Block: \(titleRaw)")
                 #endif
-                continue
-            }
-            guard let startComps = parseTime(startStr), let endComps = parseTime(endStr) else {
-                #if DEBUG
-                print("[SpecialScheduleFeed] Time parse failed: \(startStr) - \(endStr)")
-                #endif
-                continue
-            }
-
-            blocks.append(BellBlock(kind: kind, start: startComps, end: endComps))
-        }
-
-        // Ensure chronological order just in case
-        return blocks.sorted { (a, b) in
-            let ah = a.start.hour ?? 0, am = a.start.minute ?? 0
-            let bh = b.start.hour ?? 0, bm = b.start.minute ?? 0
-            return (ah, am) < (bh, bm)
-        }
-    }
-
-    // Accept several time formats commonly seen in sheets.
-    private func parseTime(_ s: String) -> DateComponents? {
-        let candidates = [
-            "h:mm a", "h:mma", "hh:mm a", "hh:mma",
-            "H:mm", "HH:mm",
-            "h a", "ha"
-        ]
-        for f in candidates {
-            let df = DateFormatter()
-            df.locale = Locale(identifier: "en_US_POSIX")
-            df.dateFormat = f
-            if let date = df.date(from: s) {
-                let cal = Calendar.current
-                return cal.dateComponents([.hour, .minute], from: date)
             }
         }
-        return nil
+
+        // Ensure chronological order
+        blocks.sort { a, b in
+            (a.start.hour ?? 0, a.start.minute ?? 0) < (b.start.hour ?? 0, b.start.minute ?? 0)
+        }
+        return blocks
     }
 
-    // Map “Block” strings to Level or SpecialBlock.
-    private func mapBlockKind(_ raw: String) -> BlockKind? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        let lower = trimmed.lowercased()
+    // MARK: Helpers
 
-        // Levels – allow variations like "level 1", "l1", "1"
-        if let level = parseLevel(from: lower) {
-            return .level(level)
-        }
-
-        // Specials – normalize a few synonyms
-        switch lower {
-        case "assembly":
-            return .special(.assembly)
-        case "office hours", "officehours":
-            return .special(.officeHours)
-        case "advisory":
-            return .special(.advisory)
-        case "worship", "meeting for worship", "meetingforworship":
-            return .special(.worship)
-        case "conscious communities", "conscious-communities", "consciouscommunities":
-            return .special(.consciousCommunities)
-        case "lunch":
-            return .special(.lunch)
-        case "lunch & clubs", "lunch and clubs", "lunchandclubs":
-            return .special(.lunchAndClubs)
-        case "music block + clubs", "music block and clubs", "musicblock+clubs", "musicblockandclubs", "music clubs":
-            return .special(.musicClubs)
-        default:
-            return nil
-        }
-    }
-
-    private func parseLevel(from lower: String) -> Level? {
-        // Try exact "music"
-        if lower == "music" || lower == "music block" || lower == "musicblock" {
-            return .music
-        }
-
-        // Extract a trailing digit for "level X", "lX", or just "X"
-        // e.g., "level 1", "l1", "1"
-        if lower.hasPrefix("level ") || lower.hasPrefix("level") {
-            if let num = numberSuffix(in: lower) { return levelFrom(num) }
-        }
-        if lower.hasPrefix("l") {
-            if let num = numberSuffix(in: lower) { return levelFrom(num) }
-        }
-        if let num = Int(lower) {
-            return levelFrom(num)
-        }
-        return nil
-    }
-
-    private func numberSuffix(in s: String) -> Int? {
-        let digits = s.compactMap { $0.isNumber ? Int(String($0)) : nil }
-        guard let first = digits.first else { return nil }
-        return first
-    }
-
-    private func levelFrom(_ n: Int) -> Level? {
-        switch n {
-        case 1: return .level1
-        case 2: return .level2
-        case 3: return .level3
-        case 4: return .level4
-        case 5: return .level5
-        case 6: return .level6
-        case 7: return .level7
-        default: return nil
-        }
-    }
-
-    // RFC4180-ish CSV row splitter handling quotes and commas
     private func splitCSVRow(_ row: String) -> [String] {
         var result: [String] = []
         var current = ""
@@ -333,5 +208,120 @@ actor SpecialScheduleFeed {
         }
         result.append(current)
         return result
+    }
+
+    private func makeDateParser() -> (String) -> Date? {
+        // Accept common spreadsheet formats
+        let fmts = [
+            "M/d/yyyy", "M/d/yy",
+            "MM/dd/yyyy", "MM/dd/yy",
+            "yyyy-MM-dd"
+        ]
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        // Important: interpret sheet dates in the user's current time zone,
+        // then normalize to local noon so same-day comparisons are stable.
+        df.timeZone = TimeZone.current
+
+        let cal = Calendar.current
+
+        return { s in
+            let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            for f in fmts {
+                df.dateFormat = f
+                if let d = df.date(from: trimmed) {
+                    var comps = cal.dateComponents([.year, .month, .day], from: d)
+                    comps.hour = 12; comps.minute = 0; comps.second = 0
+                    return cal.date(from: comps)
+                }
+            }
+            return nil
+        }
+    }
+
+    private func makeTimeParser() -> (String) -> DateComponents? {
+        // Accept a handful of time styles
+        let fmts = [
+            "h:mm a", "h:mma", "hh:mm a", "hh:mma",
+            "H:mm", "HH:mm",
+            "h a", "ha" // e.g., "8 AM"
+        ]
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+
+        return { s in
+            let trimmed = s.replacingOccurrences(of: ".", with: ":")
+                .replacingOccurrences(of: "  ", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            for f in fmts {
+                df.dateFormat = f
+                if let date = df.date(from: trimmed) {
+                    let cal = Calendar.current
+                    var comps = cal.dateComponents([.hour, .minute], from: date)
+                    comps.second = 0
+                    return comps
+                }
+            }
+            return nil
+        }
+    }
+
+    private func mapBlock(_ raw: String) -> BlockKind? {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.isEmpty { return nil }
+        let lower = s.lowercased()
+
+        // Levels: accept "level 1", "l1", "1" (only if explicitly "level" or "l")
+        // Prefer explicit forms; avoid mapping bare numbers that might be something else.
+        if lower.hasPrefix("level ") {
+            let num = lower.replacingOccurrences(of: "level ", with: "")
+            return levelFromNumber(num)
+        }
+        if lower.hasPrefix("l") {
+            let num = String(lower.dropFirst())
+            return levelFromNumber(num)
+        }
+        if lower == "music" || lower == "music block" {
+            return .level(.music)
+        }
+
+        // Specials (accept a few synonyms)
+        switch lower {
+        case "assembly":
+            return .special(.assembly)
+        case "office hours", "officehrs", "office-hrs", "office hour":
+            return .special(.officeHours)
+        case "advisory":
+            return .special(.advisory)
+        case "worship", "meeting for worship", "meeting for worship (mfw)":
+            return .special(.worship)
+        case "conscious communities", "cc":
+            return .special(.consciousCommunities)
+        case "lunch":
+            return .special(.lunch)
+        case "lunch & clubs", "lunch and clubs":
+            return .special(.lunchAndClubs)
+        case "music block + clubs", "music & clubs", "music/clubs":
+            return .special(.musicClubs)
+        default:
+            // Try exact Level N as a last attempt: "1", "2", ... "7"
+            if let kind = levelFromNumber(lower) { return kind }
+            return nil
+        }
+    }
+
+    private func levelFromNumber(_ raw: String) -> BlockKind? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch trimmed {
+        case "1", "01": return .level(.level1)
+        case "2", "02": return .level(.level2)
+        case "3", "03": return .level(.level3)
+        case "4", "04": return .level(.level4)
+        case "5", "05": return .level(.level5)
+        case "6", "06": return .level(.level6)
+        case "7", "07": return .level(.level7)
+        default: return nil
+        }
     }
 }

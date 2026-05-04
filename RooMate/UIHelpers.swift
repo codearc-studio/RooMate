@@ -13,72 +13,72 @@ struct BackgroundView: View {
 }
 
 struct UpdateAnnouncementSection: View {
-    let announcement: UpdateAnnouncement
+     let announcement: UpdateAnnouncement
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "sparkles")
-                    .font(.title3)
-                    .foregroundColor(.orange)
-                Text("RooMate \(announcement.updateNumber) Is Available!")
-                    .font(.title3.bold())
-                Spacer()
-            }
+     var body: some View {
+         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+             HStack(spacing: DesignTokens.Spacing.md) {
+                 Image(systemName: "sparkles")
+                     .font(.title2)
+                     .foregroundColor(.orange)
+                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                     Text("RooMate \(announcement.updateNumber) Available!")
+                         .font(DesignTokens.Typography.title)
+                         .fontWeight(.semibold)
+                     Text("Update now to get the latest features")
+                         .font(DesignTokens.Typography.caption)
+                         .foregroundStyle(.secondary)
+                 }
+                 Spacer()
+             }
 
-            if !announcement.changelog.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text(announcement.changelog)
-                    .font(.body)
-                    .lineLimit(6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Text("No details provided.")
-                    .font(.body)
-                    .modifier(SecondaryForeground())
-            }
+             if !announcement.changelog.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                 Text(announcement.changelog)
+                     .font(DesignTokens.Typography.body)
+                     .lineLimit(4)
+                     .frame(maxWidth: .infinity, alignment: .leading)
+                     .foregroundStyle(.secondary)
+             }
 
-            HStack(spacing: 10) {
-                if let url = announcement.url {
-                    Button {
-                        #if canImport(AppKit)
-                        NSWorkspace.shared.open(url)
-                        #elseif canImport(UIKit)
-                        UIApplication.shared.open(url)
-                        #endif
-                    } label: {
-                        Label("Download", systemImage: "square.and.arrow.down")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
-                } else {
-                    Text("No download link provided.")
-                        .font(.footnote)
-                        .modifier(SecondaryForeground())
-                }
-                Spacer()
-            }
-        }
-        .padding(14)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [Color.orange.opacity(0.14), Color.orange.opacity(0.06)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.orange.opacity(0.35), lineWidth: 1.2)
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(.quaternary, lineWidth: 0.8)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("RooMate \(announcement.updateNumber) is available. \(announcement.changelog)")
-    }
-}
+             HStack(spacing: DesignTokens.Spacing.md) {
+                 if let url = announcement.url {
+                     Button {
+                         #if canImport(AppKit)
+                         NSWorkspace.shared.open(url)
+                         #elseif canImport(UIKit)
+                         UIApplication.shared.open(url)
+                         #endif
+                     } label: {
+                         Label("Download", systemImage: "square.and.arrow.down")
+                     }
+                     .buttonStyle(.borderedProminent)
+                     .tint(.blue)
+                 }
+                 Spacer()
+             }
+         }
+         .padding(DesignTokens.Spacing.lg)
+         .background(
+             ZStack {
+                 RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                     .fill(
+                         LinearGradient(
+                             gradient: Gradient(colors: [
+                                 Color.orange.opacity(0.15),
+                                 Color.orange.opacity(0.08)
+                             ]),
+                             startPoint: .topLeading,
+                             endPoint: .bottomTrailing
+                         )
+                     )
+                 RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                     .stroke(Color.orange.opacity(0.25), lineWidth: 1.5)
+             }
+         )
+         .accessibilityElement(children: .combine)
+         .accessibilityLabel("RooMate \(announcement.updateNumber) is available. \(announcement.changelog)")
+     }
+ }
 
 // MARK: - Modifiers and helpers
 
@@ -114,34 +114,31 @@ struct SecondaryForeground: ViewModifier {
     }
 }
 
-struct CompatibleGradient: ShapeStyle {
-    let color: Color
-    init(_ color: Color) { self.color = color }
-
-    func _apply(to shape: inout _ShapeStyle_Shape) {
-        if #available(iOS 15.0, macOS 12.0, *) {
-            color.gradient._apply(to: &shape)
-        } else {
+// Replaces `struct CompatibleGradient: ShapeStyle`
+func compatibleGradient(_ color: Color) -> AnyShapeStyle {
+    if #available(iOS 15.0, macOS 12.0, *) {
+        return AnyShapeStyle(color.gradient)
+    } else {
+        return AnyShapeStyle(
             LinearGradient(
                 gradient: Gradient(colors: [color.opacity(0.9), color]),
                 startPoint: .top,
                 endPoint: .bottom
-            )._apply(to: &shape)
-        }
+            )
+        )
     }
 }
 
-struct CompatibleBackgroundSecondary: ShapeStyle {
-    func _apply(to shape: inout _ShapeStyle_Shape) {
-        if #available(macOS 14.0, iOS 17.0, *) {
-            Color.secondary.opacity(0.15)._apply(to: &shape)
-        } else {
-            #if canImport(AppKit)
-            Color(nsColor: NSColor.windowBackgroundColor).opacity(0.6)._apply(to: &shape)
-            #else
-            Color(white: 0.95)._apply(to: &shape)
-            #endif
-        }
+// Replaces `struct CompatibleBackgroundSecondary: ShapeStyle`
+func compatibleBackgroundSecondary() -> AnyShapeStyle {
+    if #available(macOS 14.0, iOS 17.0, *) {
+        return AnyShapeStyle(Color.secondary.opacity(0.15))
+    } else {
+        #if canImport(AppKit)
+        return AnyShapeStyle(Color(nsColor: NSColor.windowBackgroundColor).opacity(0.6))
+        #else
+        return AnyShapeStyle(Color(white: 0.95))
+        #endif
     }
 }
 
@@ -180,3 +177,285 @@ struct CompatibleUnavailableView: View {
         }
     }
 }
+
+// MARK: - Modern Tab Bar
+
+struct ModernTabBar<Tab>: View where Tab: Hashable {
+    @Binding var selectedTab: Tab
+    
+    let tabs: [(tab: Tab, label: String, systemImage: String)]
+    
+    init(selectedTab: Binding<Tab>, tabs: [(tab: Tab, label: String, systemImage: String)] = []) {
+        self._selectedTab = selectedTab
+        self.tabs = tabs.isEmpty ? {
+            // Default tabs for ContentView
+            if let tabs = [
+                (tab: ContentView.Tab.dashboard as? Tab, label: "Dashboard", systemImage: "square.grid.2x2"),
+                (tab: ContentView.Tab.schedule as? Tab, label: "Schedule", systemImage: "calendar"),
+                (tab: ContentView.Tab.settings as? Tab, label: "Settings", systemImage: "gearshape")
+            ].compactMap({ $0 }) as? [(tab: Tab, label: String, systemImage: String)] {
+                tabs
+            } else {
+                []
+            }
+        }() : tabs
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .opacity(0.1)
+            
+            HStack(spacing: 0) {
+                // For default ContentView.Tab usage
+                if selectedTab is ContentView.Tab {
+                    TabBarItem(
+                        isSelected: (selectedTab as? ContentView.Tab) == .dashboard,
+                        label: "Dashboard",
+                        systemImage: "square.grid.2x2"
+                    )
+                    .onTapGesture {
+                        withAnimation(DesignTokens.Animation.snappy) {
+                            selectedTab = ContentView.Tab.dashboard as! Tab
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    TabBarItem(
+                        isSelected: (selectedTab as? ContentView.Tab) == .schedule,
+                        label: "Schedule",
+                        systemImage: "calendar"
+                    )
+                    .onTapGesture {
+                        withAnimation(DesignTokens.Animation.snappy) {
+                            selectedTab = ContentView.Tab.schedule as! Tab
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    TabBarItem(
+                        isSelected: (selectedTab as? ContentView.Tab) == .settings,
+                        label: "Settings",
+                        systemImage: "gearshape"
+                    )
+                    .onTapGesture {
+                        withAnimation(DesignTokens.Animation.snappy) {
+                            selectedTab = ContentView.Tab.settings as! Tab
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.md)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.95, green: 0.95, blue: 0.95).opacity(0.95),
+                        Color(red: 0.95, green: 0.95, blue: 0.95)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
+    }
+}
+
+struct TabBarItem: View {
+    let isSelected: Bool
+    let label: String
+    let systemImage: String
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .secondary)
+            
+            Text(label)
+                .font(DesignTokens.Typography.caption)
+                .foregroundStyle(isSelected ? DesignTokens.Colors.primary : .secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(isSelected ? DesignTokens.Colors.primary.opacity(0.08) : Color.clear)
+                .animation(.snappy(duration: 0.2), value: isSelected)
+        )
+    }
+}
+// MARK: - Settings Building Blocks
+
+struct SettingsSection<Content: View>: View {
+    let title: String?
+    let footer: String?
+    @ViewBuilder var content: Content
+
+    init(title: String? = nil, footer: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.footer = footer
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            if let title = title, !title.isEmpty {
+                Text(title.uppercased())
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, DesignTokens.Spacing.md)
+            }
+
+            VStack(spacing: 0) {
+                content
+            }
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                    .fill(compatibleBackgroundSecondary())
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                    .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1)
+            )
+            .padding(.horizontal, DesignTokens.Spacing.md)
+
+            if let footer = footer, !footer.isEmpty {
+                Text(footer)
+                    .font(DesignTokens.Typography.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, DesignTokens.Spacing.md)
+            }
+        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+}
+
+struct SettingsRow<Accessory: View>: View {
+    let icon: String?
+    let title: String
+    let subtitle: String?
+    @ViewBuilder var accessory: Accessory
+    var action: (() -> Void)?
+
+    init(icon: String? = nil,
+         title: String,
+         subtitle: String? = nil,
+         action: (() -> Void)? = nil,
+         @ViewBuilder accessory: () -> Accessory = { EmptyView() }) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.action = action
+        self.accessory = accessory()
+    }
+
+    var body: some View {
+        Group {
+            if let action = action {
+                Button(action: action) { content }
+                    .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, DesignTokens.Spacing.md)
+        .background(
+            Rectangle()
+                .fill(Color.clear)
+        )
+        .overlay(alignment: .bottom) {
+            Divider().opacity(0.1)
+                .padding(.leading, icon == nil ? 0 : 44)
+        }
+    }
+
+    private var content: some View {
+        HStack(spacing: DesignTokens.Spacing.md) {
+            if let icon = icon {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                        .fill(compatibleGradient(DesignTokens.Colors.primary as Color))
+                        .opacity(0.18)
+                    Image(systemName: icon)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                        .font(.body)
+                }
+                .frame(width: 32, height: 32)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(DesignTokens.Typography.body)
+                    .foregroundStyle(.primary)
+                if let subtitle = subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+            Spacer()
+            accessory
+                .alignmentGuide(.firstTextBaseline) { d in d[.firstTextBaseline] }
+        }
+    }
+}
+
+// Convenience toggles and navigation chevrons matching the style
+struct SettingsToggle: View {
+    let icon: String?
+    let title: String
+    @Binding var isOn: Bool
+    var subtitle: String?
+
+    var body: some View {
+        SettingsRow(icon: icon, title: title, subtitle: subtitle) {
+            Toggle("", isOn: $isOn)
+                .labelsHidden()
+        }
+    }
+}
+
+struct SettingsNavigationRow<Destination: View>: View {
+    let icon: String?
+    let title: String
+    let subtitle: String?
+    @ViewBuilder var destination: Destination
+
+    init(icon: String? = nil, title: String, subtitle: String? = nil, @ViewBuilder destination: () -> Destination) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.destination = destination()
+    }
+
+    var body: some View {
+        NavigationLink {
+            destination
+                .navigationTitle(title)
+        } label: {
+            SettingsRow(icon: icon, title: title, subtitle: subtitle) {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - ModernTabBar enhancements for custom tabs
+extension ModernTabBar {
+    // Provide an initializer for custom tabs without relying on ContentView.Tab
+    init(selectedTab: Binding<Tab>, items: [(tab: Tab, label: String, systemImage: String)]) {
+        self._selectedTab = selectedTab
+        self.tabs = items
+    }
+}
+

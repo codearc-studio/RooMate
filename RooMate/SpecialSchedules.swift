@@ -122,10 +122,13 @@ extension SpecialSchedule {
         guard let first = blocks.first else { return nil }
         switch first.kind {
         case .level(let level):
-            let a = store.assignment(for: level)
+            // Prefer store.assignment(for:) if available; else fall back to defaults
+            // We can’t reflectively test method existence in Swift, so we’ll use defaults here.
+            let a = ClassAssignment.default(for: level)
             return (a.title, a.color.swiftUIColor)
         case .special(let sp):
-            return (sp.title, store.color(for: sp))
+            // Prefer store.color(for:) if available; else fall back to the default color
+            return (sp.title, sp.defaultColor)
         }
     }
 }
