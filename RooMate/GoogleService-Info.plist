@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAp4BTiy4DBi-ASOZ-JUQp73cVeaZmcX6U</string>
+	<key>GCM_SENDER_ID</key>
+	<string>113366158379</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.legopandastudios.RooMate</string>
+	<key>PROJECT_ID</key>
+	<string>roomate-afs</string>
+	<key>STORAGE_BUCKET</key>
+	<string>roomate-afs.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:113366158379:ios:8abf9a734d88a2d5d16e6e</string>
+</dict>
+</plist>
