@@ -1,4 +1,4 @@
-# RooMate – Your Smart AFS Companion (Beta)
+# RooMate – Your Smart AFS Companion
 
 RooMate is a **macOS app** designed for **AFS students** to stay on top of classes, assignments, and deadlines. 
 
