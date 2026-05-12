@@ -12,4 +12,4 @@ If you find a bug or have suggestions, please create a **GitHub Issue** in this 
 
 ## License
 
-RooMate is currently under **Beta License / All Rights Reserved**. Contact the author for permission if you want to use or modify the code.
+RooMate is currently under **License / All Rights Reserved**. Contact the author for permission if you want to use or modify the code.
