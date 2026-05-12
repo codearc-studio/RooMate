@@ -9,7 +9,7 @@
       <pubDate>Tue, 12 May 2026 14:05:22 -0400</pubDate>
 
       <!-- IMPORTANT: build number (used for update detection) -->
-      <sparkle:version>4</sparkle:version>
+      <sparkle:version>1</sparkle:version>
 
       <!-- User-facing version -->
       <sparkle:shortVersionString>4.0</sparkle:shortVersionString>
