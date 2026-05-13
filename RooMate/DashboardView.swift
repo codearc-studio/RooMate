@@ -61,15 +61,9 @@ struct DashboardView: View {
         return todayWeekday
     }
 
-    // Today’s blocks: honor dated specials when the toggle is ON; otherwise fall back to weekly
+    // Today’s blocks come from the weekly bell schedule
     private var todayBlocks: [BellBlock] {
-        let blocks: [BellBlock]
-        if store.showSpecialSchedules {
-            blocks = store.overrideBlocks(for: now, weekday: todayWeekday)
-        } else {
-            blocks = BellSchedule.weekly[todayWeekday] ?? []
-        }
-        return blocks
+        BellSchedule.weekly[todayWeekday] ?? []
     }
 
     // Lightweight copy of DayScheduleView’s date mapping for “today”
@@ -107,10 +101,15 @@ struct DashboardView: View {
         switch block.kind {
         case .level(let level):
             let a = store.assignment(for: level)
-            return (a.displayTitle(for: level, on: todayWeekday), a.displayColor(on: todayWeekday), a.displaySubtitle(on: todayWeekday), level, nil)
+            // For Music Block, check for special block replacements and color
+            let title = level == .music ? (store.displayMusicTitle(on: todayWeekday) ?? a.displayTitle(for: level, on: todayWeekday)) : a.displayTitle(for: level, on: todayWeekday)
+            let color = level == .music ? store.color(for: .musicClubs) : a.displayColor(on: todayWeekday)
+            // Don't show subtitle for Music Block (it's a special block and doesn't need description)
+            let subtitle = level == .music ? "" : a.displaySubtitle(on: todayWeekday)
+            return (title, color, subtitle, level, nil)
         case .special(let sp):
-            // Use the user-customizable color for special blocks
-            return (sp.title, store.color(for: sp), "", nil, sp.title)
+            // Use the user-customizable color and display methods for special blocks
+            return (store.displayTitle(for: sp, on: todayWeekday), store.color(for: sp), "", nil, sp.title)
         }
     }
 
@@ -295,11 +294,16 @@ struct DashboardView: View {
                     
                     VStack(spacing: DesignTokens.Spacing.sm) {
                         ForEach(actualClassesOnly) { block in
+                            // Find the dated version of this block for today so we can tell if it's already happened
+                            let dated = datedBlocks(for: now).first(where: { $0.original.kind == block.kind })
+                            let isPast = dated.map { now >= $0.endDate } ?? false
+
                             SchedulePreviewRow(
                                 block: block,
                                 store: store,
                                 weekday: todayWeekday,
-                                time: formatBlockTime(block: block)
+                                time: formatBlockTime(block: block),
+                                isPast: isPast
                             )
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
@@ -398,12 +402,13 @@ struct DashboardView: View {
                         
                         VStack(spacing: DesignTokens.Spacing.sm) {
                             ForEach(nextDayActualClassesOnly) { block in
-                                SchedulePreviewRow(
-                                    block: block,
-                                    store: store,
-                                    weekday: nextSchoolDay,
-                                    time: formatBlockTime(block: block)
-                                )
+                                    SchedulePreviewRow(
+                                            block: block,
+                                            store: store,
+                                            weekday: nextSchoolDay,
+                                            time: formatBlockTime(block: block),
+                                            isPast: false
+                                        )
                             }
                         }
                         .padding(.horizontal, DesignTokens.Spacing.lg)
@@ -489,7 +494,8 @@ struct DashboardView: View {
                                     block: block,
                                     store: store,
                                     weekday: nextSchoolDay,
-                                    time: formatBlockTime(block: block)
+                                    time: formatBlockTime(block: block),
+                                    isPast: false
                                 )
                             }
                         }
@@ -555,9 +561,9 @@ struct DashboardView: View {
                 let assignment = store.assignment(for: level)
                 return !assignment.displayIsFree(on: todayWeekday)
             case .special(let sp):
-                // Exclude lunch, assembly, office hours, and similar non-class blocks
+                // Exclude lunch, advisory, assembly, office hours, worship, and similar non-class blocks
                 switch sp {
-                case .lunch, .lunchAndClubs, .assembly, .officeHours:
+                case .lunch, .lunchAndClubs, .assembly, .officeHours, .advisory, .worship:
                     return false
                 default:
                     // Check if it's marked as free
@@ -575,9 +581,9 @@ struct DashboardView: View {
                 let assignment = store.assignment(for: level)
                 return !assignment.displayIsFree(on: nextSchoolDay)
             case .special(let sp):
-                // Exclude lunch, assembly, office hours, and similar non-class blocks
+                // Exclude lunch, advisory, assembly, office hours, worship, and similar non-class blocks
                 switch sp {
-                case .lunch, .lunchAndClubs, .assembly, .officeHours:
+                case .lunch, .lunchAndClubs, .assembly, .officeHours, .advisory, .worship:
                     return false
                 default:
                     // Check if it's marked as free
@@ -592,148 +598,172 @@ struct DashboardView: View {
     }
 
     private func calculateFreeTimeForDay(_ weekday: Weekday) -> String {
-        let total: TimeInterval = 8 * 3600 // 8 hours
-        let dayBlocks = BellSchedule.weekly[weekday] ?? []
-        let used = dayBlocks.reduce(0) { acc, block in
-            if case .level(let level) = block.kind, store.assignment(for: level).displayIsFree(on: weekday) {
-                return acc
-            }
-            if case .special(let sp) = block.kind, store.specialFree[sp] == true {
-                return acc
-            }
-            let start = Calendar.current.date(
-                bySettingHour: block.start.hour ?? 0,
-                minute: block.start.minute ?? 0,
-                second: 0,
-                of: Date()
-            ) ?? Date()
-            let end = Calendar.current.date(
-                bySettingHour: block.end.hour ?? 0,
-                minute: block.end.minute ?? 0,
-                second: 0,
-                of: Date()
-            ) ?? Date()
-            return acc + max(0, end.timeIntervalSince(start))
-        }
-        let free = max(0, total - used)
-        let totalSeconds = Int(round(free))
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
+         let total: TimeInterval = 8 * 3600 // 8 hours
+         let dayBlocks = BellSchedule.weekly[weekday] ?? []
+         let used = dayBlocks.reduce(0) { acc, block in
+             // Only count blocks that are NOT free
+             var isFreeBlock = false
+             if case .level(let level) = block.kind, store.assignment(for: level).displayIsFree(on: weekday) {
+                 isFreeBlock = true
+             }
+             if case .special(let sp) = block.kind, store.specialFree[sp] == true {
+                 isFreeBlock = true
+             }
+             
+             // If it's not free, count its duration as used time
+             guard !isFreeBlock else { return acc }
+             
+             let start = Calendar.current.date(
+                 bySettingHour: block.start.hour ?? 0,
+                 minute: block.start.minute ?? 0,
+                 second: 0,
+                 of: Date()
+             ) ?? Date()
+             let end = Calendar.current.date(
+                 bySettingHour: block.end.hour ?? 0,
+                 minute: block.end.minute ?? 0,
+                 second: 0,
+                 of: Date()
+             ) ?? Date()
+             return acc + max(0, end.timeIntervalSince(start))
+         }
+         let free = max(0, total - used)
+         let totalSeconds = Int(round(free))
+         let hours = totalSeconds / 3600
+         let minutes = (totalSeconds % 3600) / 60
+         let seconds = totalSeconds % 60
 
-        if hours > 0 {
-            if minutes > 0 {
-                return "\(hours)h \(minutes)m"
-            } else {
-                return "\(hours)h"
-            }
-        } else if minutes > 0 {
-            return "\(minutes)m"
-        } else if seconds > 0 {
-            return "\(seconds)s"
-        } else {
-            return "—"
-        }
-    }
+         if hours > 0 {
+             if minutes > 0 {
+                 return "\(hours)h \(minutes)m"
+             } else {
+                 return "\(hours)h"
+             }
+         } else if minutes > 0 {
+             return "\(minutes)m"
+         } else if seconds > 0 {
+             return "\(seconds)s"
+         } else {
+             return "—"
+         }
+     }
 
     private func calculateFreeTime() -> String {
-        let total: TimeInterval = 8 * 3600 // 8 hours
-        let used = todayBlocks.reduce(0) { acc, block in
-            if case .level(let level) = block.kind, store.assignment(for: level).displayIsFree(on: todayWeekday) {
-                return acc
-            }
-            if case .special(let sp) = block.kind, store.specialFree[sp] == true {
-                return acc
-            }
-            let start = Calendar.current.date(
-                bySettingHour: block.start.hour ?? 0,
-                minute: block.start.minute ?? 0,
-                second: 0,
-                of: Date()
-            ) ?? Date()
-            let end = Calendar.current.date(
-                bySettingHour: block.end.hour ?? 0,
-                minute: block.end.minute ?? 0,
-                second: 0,
-                of: Date()
-            ) ?? Date()
-            return acc + max(0, end.timeIntervalSince(start))
-        }
-        let free = max(0, total - used)
-        // Show free time with minute precision (e.g. "1h 23m" or "45m")
-        let totalSeconds = Int(round(free))
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
+         let used = todayBlocks.reduce(0) { acc, block in
+             // Only count blocks that are NOT free
+             var isFreeBlock = false
+             if case .level(let level) = block.kind, store.assignment(for: level).displayIsFree(on: todayWeekday) {
+                 isFreeBlock = true
+             }
+             if case .special(let sp) = block.kind, store.specialFree[sp] == true {
+                 isFreeBlock = true
+             }
+             
+             // If it's not free, count its duration as used time
+             guard !isFreeBlock else { return acc }
+             
+             let start = Calendar.current.date(
+                 bySettingHour: block.start.hour ?? 0,
+                 minute: block.start.minute ?? 0,
+                 second: 0,
+                 of: Date()
+             ) ?? Date()
+             let end = Calendar.current.date(
+                 bySettingHour: block.end.hour ?? 0,
+                 minute: block.end.minute ?? 0,
+                 second: 0,
+                 of: Date()
+             ) ?? Date()
+             return acc + max(0, end.timeIntervalSince(start))
+         }
+         
+         let total: TimeInterval = 8 * 3600 // 8 hours
+         let free = max(0, total - used)
+         // Show free time with minute precision (e.g. "1h 23m" or "45m")
+         let totalSeconds = Int(round(free))
+         let hours = totalSeconds / 3600
+         let minutes = (totalSeconds % 3600) / 60
+         let seconds = totalSeconds % 60
 
-        if hours > 0 {
-            if minutes > 0 {
-                return "\(hours)h \(minutes)m"
-            } else {
-                return "\(hours)h"
-            }
-        } else if minutes > 0 {
-            return "\(minutes)m"
-        } else if seconds > 0 {
-            return "\(seconds)s"
-        } else {
-            return "—"
-        }
-    }
+         if hours > 0 {
+             if minutes > 0 {
+                 return "\(hours)h \(minutes)m"
+             } else {
+                 return "\(hours)h"
+             }
+         } else if minutes > 0 {
+             return "\(minutes)m"
+         } else if seconds > 0 {
+             return "\(seconds)s"
+         } else {
+             return "—"
+         }
+     }
 
     private func calculateFreeTimeLeft() -> String {
-        let datedBlocks = datedBlocks(for: now)
-        guard !datedBlocks.isEmpty else { return "—" }
-        
-        // Calculate remaining free time from now onwards
-        var remaining: TimeInterval = 0
-        
-        for datedBlock in datedBlocks {
-            // Only count blocks that haven't finished yet
-            if now < datedBlock.endDate {
-                let block = datedBlock.original
-                
-                // Skip if this is a free period/class
-                var isFreeBlock = false
-                if case .level(let level) = block.kind {
-                    let assignment = store.assignment(for: level)
-                    isFreeBlock = assignment.displayIsFree(on: todayWeekday)
-                } else if case .special(let sp) = block.kind {
-                    switch sp {
-                    case .lunch, .lunchAndClubs, .assembly, .officeHours:
-                        isFreeBlock = true
-                    default:
-                        isFreeBlock = store.specialFree[sp] ?? false
+         let datedBlocks = datedBlocks(for: now)
+         guard !datedBlocks.isEmpty else { return "0m" }
+         
+         // Calculate remaining free time from now onwards
+         var remaining: TimeInterval = 0
+         
+         for datedBlock in datedBlocks {
+             // Only count blocks that haven't finished yet
+             if now < datedBlock.endDate {
+                 let block = datedBlock.original
+                 
+                 // Determine if this is a free period/block
+                 var isFreeBlock = false
+                 if case .level(let level) = block.kind {
+                     let assignment = store.assignment(for: level)
+                     isFreeBlock = assignment.displayIsFree(on: todayWeekday)
+                 } else if case .special(let sp) = block.kind {
+                     // Only lunch and special free blocks count as free time
+                     switch sp {
+                     case .lunch, .lunchAndClubs:
+                         isFreeBlock = store.specialFree[sp] ?? false
+                     default:
+                         isFreeBlock = store.specialFree[sp] ?? false
+                     }
+                 }
+                 
+                 if isFreeBlock {
+                    // If the free block is currently in progress, add remaining time in it (end - now).
+                    // If the free block hasn't started yet, add only the block's duration (end - start).
+                    let blockStart = datedBlock.startDate
+                    let blockEnd = datedBlock.endDate
+                    if now >= blockStart {
+                        // currently in the free block
+                        let blockRemaining = max(0, blockEnd.timeIntervalSince(now))
+                        remaining += blockRemaining
+                    } else {
+                        // future free block: add the full block duration, not end - now
+                        let blockDuration = max(0, blockEnd.timeIntervalSince(blockStart))
+                        remaining += blockDuration
                     }
-                }
-                
-                if !isFreeBlock {
-                    // This is a non-free block, so add the time from now to its end
-                    let blockRemaining = max(0, datedBlock.endDate.timeIntervalSince(now))
-                    remaining += blockRemaining
-                }
-            }
-        }
-        
-        let totalSeconds = Int(round(remaining))
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
+                 }
+             }
+         }
+         
+         let totalSeconds = Int(round(remaining))
+         let hours = totalSeconds / 3600
+         let minutes = (totalSeconds % 3600) / 60
+         let seconds = totalSeconds % 60
 
-        if hours > 0 {
-            if minutes > 0 {
-                return "\(hours)h \(minutes)m"
-            } else {
-                return "\(hours)h"
-            }
-        } else if minutes > 0 {
-            return "\(minutes)m"
-        } else if seconds > 0 {
-            return "\(seconds)s"
-        } else {
-            return "—"
-        }
-    }
+         if hours > 0 {
+             if minutes > 0 {
+                 return "\(hours)h \(minutes)m"
+             } else {
+                 return "\(hours)h"
+             }
+         } else if minutes > 0 {
+             return "\(minutes)m"
+         } else if seconds > 0 {
+             return "\(seconds)s"
+         } else {
+             return "0m"
+         }
+     }
 
     private func formatBlockTime(block: BellBlock) -> String {
         let fmt = DateFormatter()
@@ -830,21 +860,27 @@ struct SchedulePreviewRow: View {
      @ObservedObject var store: UserScheduleStore
      let weekday: Weekday
      let time: String
+     let isPast: Bool
      
-     private var blockInfo: (title: String, color: Color, subtitle: String, level: Level?, isFree: Bool) {
-         switch block.kind {
-         case .level(let level):
-             let a = store.assignment(for: level)
-             return (a.displayTitle(for: level, on: weekday), a.displayColor(on: weekday), a.displaySubtitle(on: weekday), level, a.displayIsFree(on: weekday))
-         case .special(let sp):
-             return (sp.title, store.color(for: sp), "", nil, false)
-         }
-     }
+      private var blockInfo: (title: String, color: Color, subtitle: String, level: Level?, isFree: Bool) {
+          switch block.kind {
+          case .level(let level):
+              let a = store.assignment(for: level)
+              // For Music Block, check for special block replacements and color
+              let title = level == .music ? (store.displayMusicTitle(on: weekday) ?? a.displayTitle(for: level, on: weekday)) : a.displayTitle(for: level, on: weekday)
+              let color = level == .music ? store.color(for: .musicClubs) : a.displayColor(on: weekday)
+              // Don't show subtitle for Music Block (it's a special block and doesn't need description)
+              let subtitle = level == .music ? "" : a.displaySubtitle(on: weekday)
+              return (title, color, subtitle, level, a.displayIsFree(on: weekday))
+          case .special(let sp):
+              return (store.displayTitle(for: sp, on: weekday), store.color(for: sp), "", nil, false)
+          }
+      }
      
      var body: some View {
          HStack(spacing: DesignTokens.Spacing.md) {
              RoundedRectangle(cornerRadius: 6)
-                 .fill(blockInfo.color.opacity(0.6))
+                 .fill(isPast ? Color.secondary.opacity(0.6) : blockInfo.color.opacity(0.6))
                  .frame(width: 5, height: 48)
              
              VStack(alignment: .leading, spacing: 2) {
@@ -852,6 +888,7 @@ struct SchedulePreviewRow: View {
                      Text(blockInfo.title)
                          .font(DesignTokens.Typography.body)
                          .fontWeight(.medium)
+                         .foregroundStyle(isPast ? .secondary : .primary)
                      
                      if let level = blockInfo.level, !blockInfo.isFree {
                          Text(level.displayName)
@@ -873,17 +910,17 @@ struct SchedulePreviewRow: View {
              Text(time)
                  .font(DesignTokens.Typography.caption)
                  .foregroundStyle(.secondary)
+                 .opacity(isPast ? 0.8 : 1.0)
          }
          .padding(DesignTokens.Spacing.md)
          .background(
              RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
-                 .fill(blockInfo.color.opacity(0.06))
+                 .fill(blockInfo.color.opacity(isPast ? 0.03 : 0.06))
          )
          .overlay(
              RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
-                 .stroke(blockInfo.color.opacity(0.12), lineWidth: 1)
+                 .stroke(blockInfo.color.opacity(isPast ? 0.06 : 0.12), lineWidth: 1)
          )
          .designShadow(DesignTokens.Shadows.subtle)
-     }
- }
-
+      }
+  }

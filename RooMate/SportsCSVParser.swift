@@ -12,13 +12,13 @@ enum SportsCSVParser {
         var currentField = ""
         var currentRow: [String] = []
         var inQuotes = false
-        let characters = Array(str)
+        let chars = Array(str)
         var i = 0
-        while i < characters.count {
-            let c = characters[i]
+        while i < chars.count {
+            let c = chars[i]
             if c == Character("\"") {
                 // If quote and next is quote, it's an escaped quote
-                if inQuotes && i + 1 < characters.count && characters[i + 1] == Character("\"") {
+                if inQuotes && i + 1 < chars.count && chars[i + 1] == Character("\"") {
                     currentField.append("\"")
                     i += 1
                 } else {
@@ -32,7 +32,7 @@ enum SportsCSVParser {
                 // End of row
                 // Only push non-empty row separator once
                 // If CR followed by LF skip the LF
-                if c == Character("\r") && i + 1 < characters.count && characters[i + 1] == Character("\n") {
+                if c == Character("\r") && i + 1 < chars.count && chars[i + 1] == Character("\n") {
                     i += 1
                 }
                 currentRow.append(currentField)
