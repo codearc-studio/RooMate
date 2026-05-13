@@ -32,6 +32,40 @@ enum CardColorStyle: String, CaseIterable, Identifiable, Codable, Equatable {
     }
 }
 
+// MARK: - Appearance
+
+enum AppearancePreference: String, CaseIterable, Identifiable, Codable, Equatable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .system: "circle.lefthalf.filled"
+        case .light: "sun.max.fill"
+        case .dark: "moon.fill"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+}
+
 // MARK: - Models
 
 enum Level: String, CaseIterable, Identifiable, Codable, Hashable {
@@ -260,16 +294,18 @@ struct ClassAssignment: Codable, Hashable {
         var teacher: String
         var room: String
         var isFree: Bool = false
+        var daysNotFree: Set<Int> = []
 
         enum CodingKeys: String, CodingKey {
-            case title, teacher, room, isFree
+            case title, teacher, room, isFree, daysNotFree
         }
 
-        init(title: String, teacher: String, room: String, isFree: Bool = false) {
+        init(title: String, teacher: String, room: String, isFree: Bool = false, daysNotFree: Set<Int> = []) {
             self.title = title
             self.teacher = teacher
             self.room = room
             self.isFree = isFree
+            self.daysNotFree = daysNotFree
         }
 
         init(from decoder: Decoder) throws {
@@ -278,6 +314,11 @@ struct ClassAssignment: Codable, Hashable {
             self.teacher = try container.decodeIfPresent(String.self, forKey: .teacher) ?? ""
             self.room = try container.decodeIfPresent(String.self, forKey: .room) ?? ""
             self.isFree = try container.decodeIfPresent(Bool.self, forKey: .isFree) ?? false
+            if let arr = try container.decodeIfPresent([Int].self, forKey: .daysNotFree) {
+                self.daysNotFree = Set(arr)
+            } else {
+                self.daysNotFree = []
+            }
         }
 
         func encode(to encoder: Encoder) throws {
@@ -286,6 +327,7 @@ struct ClassAssignment: Codable, Hashable {
             try container.encode(teacher, forKey: .teacher)
             try container.encode(room, forKey: .room)
             try container.encode(isFree, forKey: .isFree)
+            try container.encode(Array(daysNotFree), forKey: .daysNotFree)
         }
     }
 
@@ -444,257 +486,7 @@ extension ClassAssignment.ReplacementClass {
     }
 }
 
-// MARK: - Canvas Todo Models
-
-struct CanvasTodoItem: Codable, Identifiable, Hashable {
-    let id: String
-
-    let type: String?
-    let assignment: CanvasAssignment?
-    let contextType: String?
-    let courseID: Int?
-    let contextName: String?
-    let htmlURL: String?
-    let needsGradingCount: Int?
-
-    enum CodingKeys: String, CodingKey {
-        case type
-        case assignment
-        case contextType = "context_type"
-        case courseID = "course_id"
-        case contextName = "context_name"
-        case htmlURL = "html_url"
-        case needsGradingCount = "needs_grading_count"
-    }
-
-    init(id: String? = nil,
-         type: String?,
-         assignment: CanvasAssignment?,
-         contextType: String?,
-         courseID: Int?,
-         contextName: String?,
-         htmlURL: String?,
-         needsGradingCount: Int?) {
-        self.type = type
-        self.assignment = assignment
-        self.contextType = contextType
-        self.courseID = courseID
-        self.contextName = contextName
-        self.htmlURL = htmlURL
-        self.needsGradingCount = needsGradingCount
-
-        if let id = id, !id.isEmpty {
-            self.id = id
-        } else if let aid = assignment?.id {
-            self.id = "assign:\(aid)"
-        } else if let aurl = assignment?.htmlURL {
-            self.id = "aurl:\(aurl)"
-        } else if let url = htmlURL {
-            self.id = "url:\(url)"
-        } else {
-            let composite = [
-                type ?? "",
-                contextType ?? "",
-                String(courseID ?? -1),
-                contextName ?? ""
-            ].joined(separator: "|")
-            if composite.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                self.id = UUID().uuidString
-            } else {
-                self.id = "comp:\(composite)"
-            }
-        }
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let type = try container.decodeIfPresent(String.self, forKey: .type)
-        let assignment = try container.decodeIfPresent(CanvasAssignment.self, forKey: .assignment)
-        let contextType = try container.decodeIfPresent(String.self, forKey: .contextType)
-        let courseID = try container.decodeIfPresent(Int.self, forKey: .courseID)
-        let contextName = try container.decodeIfPresent(String.self, forKey: .contextName)
-        let htmlURL = try container.decodeIfPresent(String.self, forKey: .htmlURL)
-        let needsGradingCount = try container.decodeIfPresent(Int.self, forKey: .needsGradingCount)
-
-        self.init(
-            id: nil,
-            type: type,
-            assignment: assignment,
-            contextType: contextType,
-            courseID: courseID,
-            contextName: contextName,
-            htmlURL: htmlURL,
-            needsGradingCount: needsGradingCount
-        )
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(assignment, forKey: .assignment)
-        try container.encode(contextType, forKey: .contextType)
-        try container.encode(courseID, forKey: .courseID)
-        try container.encode(contextName, forKey: .contextName)
-        try container.encode(htmlURL, forKey: .htmlURL)
-        try container.encode(needsGradingCount, forKey: .needsGradingCount)
-    }
-}
-
-struct CanvasAssignment: Codable, Hashable {
-    let id: Int?
-    let name: String?
-    let dueAt: String?
-    let htmlURL: String?
-    let courseID: Int?
-    let pointsPossible: Double?
-
-    // New fields to show richer info on Homework page
-    let submissionTypes: [String]?
-    let description: String?
-    let lockedForUser: Bool?
-    let lockExplanation: String?
-    let unlockAt: String?
-    let lockAt: String?
-    let gradingType: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case dueAt = "due_at"
-        case htmlURL = "html_url"
-        case courseID = "course_id"
-        case pointsPossible = "points_possible"
-
-        case submissionTypes = "submission_types"
-        case description
-        case lockedForUser = "locked_for_user"
-        case lockExplanation = "lock_explanation"
-        case unlockAt = "unlock_at"
-        case lockAt = "lock_at"
-        case gradingType = "grading_type"
-    }
-}
-
-// MARK: - Courses and Grades Models
-
-struct CanvasCourse: Codable, Identifiable, Hashable {
-    let id: Int
-    let name: String
-    let courseCode: String?
-    let htmlURL: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case courseCode = "course_code"
-        case htmlURL = "html_url"
-    }
-}
-
-struct CanvasEnrollment: Codable, Hashable {
-    let id: Int?
-    let userID: Int?
-    let courseID: Int?
-    let type: String?
-    let enrollmentState: String?
-
-    let computedCurrentScore: Double?
-    let computedFinalScore: Double?
-    let computedCurrentGrade: String?
-    let computedFinalGrade: String?
-
-    let currentScore: Double?
-    let finalScore: Double?
-    let currentGrade: String?
-    let finalGrade: String?
-
-    let grades: Grades?
-
-    struct Grades: Codable, Hashable {
-        let currentScore: Double?
-        let finalScore: Double?
-        let currentGrade: String?
-        let finalGrade: String?
-
-        enum CodingKeys: String, CodingKey {
-            case currentScore = "current_score"
-            case finalScore = "final_score"
-            case currentGrade = "current_grade"
-            case finalGrade = "final_grade"
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userID = "user_id"
-        case courseID = "course_id"
-        case type
-        case enrollmentState = "enrollment_state"
-        case computedCurrentScore = "computed_current_score"
-        case computedFinalScore = "computed_final_score"
-        case computedCurrentGrade = "computed_current_grade"
-        case computedFinalGrade = "computed_final_grade"
-        case currentScore = "current_score"
-        case finalScore = "final_score"
-        case currentGrade = "current_grade"
-        case finalGrade = "final_grade"
-        case grades
-    }
-
-    var summary: GradeSummary {
-        let currentScore = computedCurrentScore
-            ?? grades?.currentScore
-            ?? self.currentScore
-        let finalScore = computedFinalScore
-            ?? grades?.finalScore
-            ?? self.finalScore
-        let currentGrade = computedCurrentGrade
-            ?? grades?.currentGrade
-            ?? self.currentGrade
-        let finalGrade = computedFinalGrade
-            ?? grades?.finalGrade
-            ?? self.finalGrade
-        return GradeSummary(
-            currentScore: currentScore,
-            finalScore: finalScore,
-            currentLetter: currentGrade,
-            finalLetter: finalGrade
-        )
-    }
-}
-
-struct GradeSummary: Codable, Hashable {
-    let currentScore: Double?
-    let finalScore: Double?
-    let currentLetter: String?
-    let finalLetter: String?
-
-    var displayCurrent: String {
-        if let letter = currentLetter, !letter.isEmpty {
-            if let score = currentScore {
-                return String(format: "%@ (%.1f%%)", letter, score)
-            }
-            return letter
-        }
-        if let score = currentScore {
-            return String(format: "%.1f%%", score)
-        }
-        return "—"
-    }
-
-    var displayFinal: String {
-        if let letter = finalLetter, !letter.isEmpty {
-            if let score = finalScore {
-                return String(format: "%@ (%.1f%%)", letter, score)
-            }
-            return letter
-        }
-        if let score = finalScore {
-            return String(format: "%.1f%%", score)
-        }
-        return "—"
-    }
-}
+// Removed.
 
 // MARK: - Homework
 
@@ -788,3 +580,101 @@ extension Weekday {
     }
 }
 
+// MARK: - Calendar Event
+
+struct CalendarEvent: Identifiable, Codable, Hashable {
+    let id: UUID
+    let title: String
+    let startDate: Date
+    let endDate: Date?
+    let location: String?
+    
+    init(id: UUID = UUID(), title: String, startDate: Date, endDate: Date? = nil, location: String? = nil) {
+        self.id = id
+        self.title = title
+        self.startDate = startDate
+        self.endDate = endDate
+        self.location = location
+    }
+    
+    /// Returns formatted start date and time for display
+    var formattedStartDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: startDate)
+    }
+    
+    /// Returns formatted end date and time for display
+    var formattedEndDate: String? {
+        guard let endDate = endDate else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: endDate)
+    }
+    
+    /// Returns true if the event spans multiple days
+    var isMultiDay: Bool {
+        guard let endDate = endDate else { return false }
+        let calendar = Calendar.current
+        let startDay = calendar.component(.day, from: startDate)
+        let endDay = calendar.component(.day, from: endDate)
+        let startMonth = calendar.component(.month, from: startDate)
+        let endMonth = calendar.component(.month, from: endDate)
+        let startYear = calendar.component(.year, from: startDate)
+        let endYear = calendar.component(.year, from: endDate)
+        
+        return startYear != endYear || startMonth != endMonth || startDay != endDay
+    }
+}
+
+// MARK: - Calendar Source
+
+enum CalendarSource: String, CaseIterable, Identifiable, Codable, Hashable {
+    case allEvents = "All Events"
+    case allSchool = "All School"
+    case upperSchool = "Upper School"
+    case middleSchool = "Middle School"
+    case lowerSchool = "Lower School"
+    
+    var id: String { rawValue }
+    
+    var title: String { rawValue }
+    
+    var url: URL {
+        let baseURL = "https://www.abingtonfriends.net/fs/calendar-manager/events.ics"
+        let queryString: String
+        
+        switch self {
+        case .allEvents:
+            queryString = "?calendar_ids[]=7&calendar_ids[]=6&calendar_ids[]=5&calendar_ids[]=4"
+        case .allSchool:
+            queryString = "?calendar_ids=7"
+        case .upperSchool:
+            queryString = "?calendar_ids=6"
+        case .middleSchool:
+            queryString = "?calendar_ids=5"
+        case .lowerSchool:
+            queryString = "?calendar_ids=4"
+        }
+        
+        return URL(string: baseURL + queryString) ?? URL(fileURLWithPath: "")
+    }
+}
+
+enum CalendarGroupingMode: String, CaseIterable, Identifiable, Codable, Hashable {
+    case day
+    case week
+    case month
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .day: "Day"
+        case .week: "Week"
+        case .month: "Month"
+        }
+    }
+}

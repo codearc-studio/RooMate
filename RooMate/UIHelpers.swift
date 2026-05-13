@@ -12,74 +12,6 @@ struct BackgroundView: View {
     }
 }
 
-struct UpdateAnnouncementSection: View {
-     let announcement: UpdateAnnouncement
-
-     var body: some View {
-         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-             HStack(spacing: DesignTokens.Spacing.md) {
-                 Image(systemName: "sparkles")
-                     .font(.title2)
-                     .foregroundColor(.orange)
-                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                     Text("RooMate \(announcement.updateNumber) Available!")
-                         .font(DesignTokens.Typography.title)
-                         .fontWeight(.semibold)
-                     Text("Update now to get the latest features")
-                         .font(DesignTokens.Typography.caption)
-                         .foregroundStyle(.secondary)
-                 }
-                 Spacer()
-             }
-
-             if !announcement.changelog.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                 Text(announcement.changelog)
-                     .font(DesignTokens.Typography.body)
-                     .lineLimit(4)
-                     .frame(maxWidth: .infinity, alignment: .leading)
-                     .foregroundStyle(.secondary)
-             }
-
-             HStack(spacing: DesignTokens.Spacing.md) {
-                 if let url = announcement.url {
-                     Button {
-                         #if canImport(AppKit)
-                         NSWorkspace.shared.open(url)
-                         #elseif canImport(UIKit)
-                         UIApplication.shared.open(url)
-                         #endif
-                     } label: {
-                         Label("Download", systemImage: "square.and.arrow.down")
-                     }
-                     .buttonStyle(.borderedProminent)
-                     .tint(.blue)
-                 }
-                 Spacer()
-             }
-         }
-         .padding(DesignTokens.Spacing.lg)
-         .background(
-             ZStack {
-                 RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
-                     .fill(
-                         LinearGradient(
-                             gradient: Gradient(colors: [
-                                 Color.orange.opacity(0.15),
-                                 Color.orange.opacity(0.08)
-                             ]),
-                             startPoint: .topLeading,
-                             endPoint: .bottomTrailing
-                         )
-                     )
-                 RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
-                     .stroke(Color.orange.opacity(0.25), lineWidth: 1.5)
-             }
-         )
-         .accessibilityElement(children: .combine)
-         .accessibilityLabel("RooMate \(announcement.updateNumber) is available. \(announcement.changelog)")
-     }
- }
-
 // MARK: - Modifiers and helpers
 
 struct SafeAreaTopPadding: ViewModifier {
@@ -233,7 +165,16 @@ struct ModernTabBar<Tab>: View where Tab: Hashable {
                         }
                     }
                     
-                    Spacer()
+                    TabBarItem(
+                        isSelected: (selectedTab as? ContentView.Tab) == .events,
+                        label: "Events",
+                        systemImage: "calendar.circle"
+                    )
+                    .onTapGesture {
+                        withAnimation(DesignTokens.Animation.snappy) {
+                            selectedTab = ContentView.Tab.events as! Tab
+                        }
+                    }
                     
                     TabBarItem(
                         isSelected: (selectedTab as? ContentView.Tab) == .settings,
@@ -415,10 +356,10 @@ struct SettingsToggle: View {
     var subtitle: String?
 
     var body: some View {
-        SettingsRow(icon: icon, title: title, subtitle: subtitle) {
+        SettingsRow(icon: icon, title: title, subtitle: subtitle, accessory:  {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
-        }
+        })
     }
 }
 
@@ -440,11 +381,11 @@ struct SettingsNavigationRow<Destination: View>: View {
             destination
                 .navigationTitle(title)
         } label: {
-            SettingsRow(icon: icon, title: title, subtitle: subtitle) {
+            SettingsRow(icon: icon, title: title, subtitle: subtitle, accessory:  {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
-            }
+            })
         }
         .buttonStyle(.plain)
     }

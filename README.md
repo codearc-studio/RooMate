@@ -6,9 +6,8 @@ RooMate is a **macOS app in beta** designed for **AFS students** to stay on top 
 
 ## Features
 
-- Connects with **Canvas for AFS** to fetch courses and grades automatically  
 - Centralized dashboard for upcoming assignments and deadlines  
-- Task tracking for projects and homework  
+- Task tracking for projects and deadlines  
 - Simple, clean interface optimized for macOS  
 
 ---
