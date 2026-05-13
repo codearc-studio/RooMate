@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RooMate — Student Dashboard for AFS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="images/IconLight.png">
+<style>
+  :root {
+    --font-display: 'Avenir Next', 'Avenir', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    --afs-navy: #00263d;
+    --afs-blue: #5289c8;
+    --afs-blue-light: #7aaad6;
+    --afs-gray: #6b6969;
+    --afs-off: #f2f3f4;
+    --white: #ffffff;
+
+    --bg: #f2f3f4;
+    --bg-card: #ffffff;
+    --bg-nav: rgba(242,243,244,0.88);
+    --text-primary: #00263d;
+    --text-secondary: #4a5568;
+    --text-muted: #6b6969;
+    --border: rgba(0,38,61,0.1);
+    --border-strong: rgba(0,38,61,0.2);
+    --pill-bg: rgba(82,137,200,0.12);
+    --pill-text: #2a5fa0;
+    --hero-dot: rgba(82,137,200,0.15);
+    --shadow: 0 2px 16px rgba(0,38,61,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,38,61,0.12);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0a1520;
+    --bg-card: #0f1e2d;
+    --bg-nav: rgba(10,21,32,0.9);
+    --text-primary: #e8edf2;
+    --text-secondary: #9ab0c4;
+    --text-muted: #6b8099;
+    --border: rgba(82,137,200,0.12);
+    --border-strong: rgba(82,137,200,0.25);
+    --pill-bg: rgba(82,137,200,0.18);
+    --pill-text: #7aaad6;
+    --hero-dot: rgba(82,137,200,0.08);
+    --shadow: 0 2px 16px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-display);
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--bg-nav);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+  }
+
+  .nav-wordmark {
+    height: 18px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 14px; font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); }
+
+  .nav-right {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .theme-toggle {
+    background: none; border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 6px 10px;
+    cursor: pointer; color: var(--text-secondary);
+    font-size: 14px; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .theme-toggle:hover {
+    background: var(--border);
+    color: var(--text-primary);
+  }
+
+  .btn-nav {
+    background: var(--afs-blue);
+    color: white; border: none;
+    border-radius: 8px; padding: 7px 16px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-nav:hover { background: var(--afs-blue-light); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 120px 2rem 80px;
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 20%, var(--hero-dot) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.4;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, black 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    padding: 6px 16px; border-radius: 100px;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(82,137,200,0.2);
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--afs-blue);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero-logo-large {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease 0.1s both;
+    filter: drop-shadow(0 8px 32px rgba(82,137,200,0.3));
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 1.25rem;
+    animation: fadeUp 0.6s ease 0.15s both;
+  }
+
+  .hero h1 span {
+    font-style: normal;
+    font-weight: 800;
+    color: var(--afs-blue);
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: var(--text-secondary);
+    max-width: 540px;
+    margin: 0 auto 2.5rem;
+    font-weight: 300;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .hero-actions {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.6s ease 0.25s both;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--afs-navy);
+    color: white; border: none;
+    border-radius: 10px; padding: 12px 24px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  [data-theme="dark"] .btn-primary {
+    background: var(--afs-blue);
+  }
+
+  .btn-primary:hover { transform: translateY(-1px); opacity: 0.9; }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px; padding: 12px 24px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-secondary:hover { background: var(--border); }
+
+  .hero-platform-note {
+    margin-top: 2rem;
+    font-size: 13px; color: var(--text-muted);
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .hero-platform-note span {
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 110px 2rem;
+  }
+
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+
+  .section-label {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--afs-blue);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.5px;
+  }
+
+  .section-desc {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 520px;
+    font-weight: 300;
+  }
+
+  /* FEATURES GRID */
+  .features-header {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: center;
+    margin-bottom: 4rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: all 0.25s;
+    position: relative; overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--afs-blue), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .feature-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .feature-card:hover::before { opacity: 1; }
+
+  .feature-icon {
+    width: 44px; height: 44px;
+    background: var(--pill-bg);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem;
+    font-size: 20px;
+  }
+
+  .feature-card h3 {
+    font-size: 17px; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .feature-tags {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem;
+  }
+
+  .tag {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    letter-spacing: 0.2px;
+  }
+
+  /* SCREENSHOT GRID */
+
+  .screenshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 2rem;
+  }
+
+  .screenshot-grid img {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.2s ease;
+  }
+
+  .screenshot-grid img:hover {
+    transform: scale(1.03);
+  }
+
+  /* MOCKUP SCREENSHOT VIEWER */
+  .mockup-screenshot {
+    margin: 1rem 0 1.25rem;
+  }
+
+  .mockup-screenshot img {
+    width: 100%;
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 10px;
+    transition: transform 0.2s ease;
+  }
+
+  .screenshot-tabs {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+  }
+
+  .screenshot-tabs .tab {
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+  }
+
+  .screenshot-tabs .tab:hover {
+      background: var(--pill-bg);
+      color: var(--afs-blue);
+  }
+
+  .screenshot-tabs .tab.active {
+      background: var(--afs-blue);
+      color: white;
+      border-color: var(--afs-blue);
+  }
+
+  /* DASHBOARD MOCKUP */
+  .mockup-section {
+    background: linear-gradient(180deg, transparent 0%, rgba(82,137,200,0.04) 50%, transparent 100%);
+  }
+
+  .mockup-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    margin-top: 3rem;
+    backdrop-filter: blur(20px);
+  }
+
+  .mockup-titlebar {
+    background: var(--afs-navy);
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  [data-theme="dark"] .mockup-titlebar {
+    background: #060f18;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .traffic-lights {
+    display: flex; gap: 6px;
+  }
+
+  .traffic-lights span {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+
+  .tl-red { background: #ff5f57; }
+  .tl-yellow { background: #febc2e; }
+  .tl-green { background: #28c840; }
+
+  .titlebar-name {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .mockup-body {
+    display: grid; grid-template-columns: 200px 1fr;
+    height: 420px;
+  }
+
+  .mockup-sidebar {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 1rem;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 8px 4px;
+  }
+
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+
+  .sidebar-item:hover,
+  .sidebar-item.active {
+    background: var(--pill-bg);
+    color: var(--afs-blue);
+  }
+
+  .sidebar-item svg {
+    width: 16px; height: 16px; flex-shrink: 0;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .mockup-content {
+    padding: 1.25rem;
+    overflow: hidden;
+  }
+
+  .mockup-greeting {
+    font-size: 18px; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .mockup-date {
+    font-size: 12px; color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .mockup-cards {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-bottom: 1rem;
+  }
+
+  .mockup-stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+
+  .mockup-stat-label {
+    font-size: 10px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .mockup-stat-val {
+    font-size: 20px; font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .mockup-stat-sub {
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  .mockup-schedule-title {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .mockup-period {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    margin-bottom: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .mockup-period.current {
+    background: var(--pill-bg);
+    border-color: rgba(82,137,200,0.3);
+  }
+
+  .period-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-strong);
+    flex-shrink: 0;
+  }
+
+  .mockup-period.current .period-dot {
+    background: var(--afs-blue);
+  }
+
+  .period-info { flex: 1; }
+
+  .period-class {
+    font-size: 12px; font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .period-time {
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  .period-room {
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  /* ROADMAP */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem; margin-top: 3rem;
+  }
+
+  .roadmap-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .roadmap-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 100px;
+    margin-bottom: 1rem;
+  }
+
+  .status-live {
+    background: rgba(40,200,100,0.12);
+    color: #15803d;
+  }
+
+  [data-theme="dark"] .status-live { color: #4ade80; background: rgba(74,222,128,0.1); }
+
+  .status-soon {
+    background: rgba(82,137,200,0.12);
+    color: var(--pill-text);
+  }
+
+  .status-planned {
+    background: rgba(107,105,105,0.12);
+    color: var(--text-muted);
+  }
+
+  .roadmap-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .roadmap-card p {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* DATA SOURCES */
+  .sources-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem; margin-top: 3rem;
+  }
+
+  .source-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    display: flex; align-items: flex-start; gap: 1.25rem;
+  }
+
+  .source-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--pill-bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 22px;
+  }
+
+  .source-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: var(--text-primary); margin-bottom: 4px;
+  }
+
+  .source-card p {
+    font-size: 14px; color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6rem; align-items: center;
+  }
+
+  .about-visual {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .about-roo {
+    width: 260px;
+    height: 260px;
+    object-fit: contain;
+    filter: drop-shadow(0 16px 64px rgba(82,137,200,0.2));
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .about-ring {
+    position: absolute; inset: -20px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 50%;
+    animation: spin 30s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .about-ring-dot {
+    position: absolute; top: 0; left: 50%;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--afs-blue);
+    transform: translate(-50%, -50%);
+  }
+
+  .about-text .section-desc {
+    margin-bottom: 1.5rem;
+  }
+
+  .about-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem; margin-top: 2rem;
+  }
+
+  .about-stat {
+    text-align: center;
+    padding: 1rem;
+    background: var(--pill-bg);
+    border-radius: 12px;
+  }
+
+  .about-stat-num {
+    font-size: 28px; font-weight: 700;
+    color: var(--afs-blue);
+    font-family: var(--font-display);
+  }
+
+  .about-stat-label {
+    font-size: 12px; color: var(--text-muted); margin-top: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--afs-navy);
+    color: white;
+    padding: 60px 2rem 40px;
+  }
+
+  [data-theme="dark"] footer {
+    background: #060f18;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+  }
+
+  .footer-top {
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 4rem; margin-bottom: 3rem;
+  }
+
+  .footer-brand {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .footer-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  .footer-wordmark {
+    font-size: 18px; font-weight: 700;
+    color: white;
+  }
+
+  .footer-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.7;
+    max-width: 280px;
+  }
+
+  .footer-col h4 {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 1rem;
+  }
+
+  .footer-col ul { list-style: none; }
+
+  .footer-col ul li {
+    margin-bottom: 8px;
+  }
+
+  .footer-col ul li a {
+    text-decoration: none;
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    transition: color 0.2s;
+  }
+
+  .footer-col ul li a:hover { color: white; }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+
+  .footer-bottom p {
+    font-size: 13px; color: rgba(255,255,255,0.35);
+  }
+
+  .footer-afs-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .afs-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--afs-blue);
+  }
+
+  /* DIVIDER */
+  .divider {
+    max-width: 1100px; margin: 0 auto;
+    border: none; border-top: 1px solid var(--border);
+  }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .features-header { grid-template-columns: 1fr; gap: 2rem; }
+    .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .sources-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; gap: 2rem; }
+    .mockup-body { grid-template-columns: 140px 1fr; }
+    .mockup-cards { grid-template-columns: 1fr 1fr; }
+    .about-stats { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <img src="images/Darkroo.png" alt="RooMate Logo" class="nav-logo">
+    <img id="logo-text" src="images/Light.png" alt="RooMate" class="nav-wordmark">
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <span id="theme-sun">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </span>
+
+      <span id="theme-moon" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </span>
+
+      <span id="theme-label">Light</span>
+    </button>
+    <a href="#download" class="btn-nav">Download</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Now in active development
+  </div>
+
+  <img src="images/Darkroo.png" alt="RooMate Kangaroo" class="hero-logo-large">
+
+  <h1>Your school life,<br><span>all in one place.</span></h1>
+  <p class="hero-sub">RooMate is the student dashboard for Abington Friends School — unifying schedules, sports, events, and clubs into a single beautiful experience.</p>
+
+  <div class="hero-actions">
+    <a href="#download" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Get for macOS
+    </a>
+    <a href="#features" class="btn-secondary">
+      Explore features →
+    </a>
+  </div>
+
+  <p class="hero-platform-note">
+    <span>macOS — Free to use · Windows coming soon</span>
+  </p>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="features-header">
+      <div>
+        <span class="section-label">Features</span>
+        <h2 class="section-title">Everything you need,<br>nothing you don't.</h2>
+      </div>
+      <p class="section-desc">RooMate connects directly to school data sources like Google Sheets for athletics and calendar feeds for events, presenting everything in a clean, fast interface.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Class Schedule</h3>
+        <p>Track your full class schedule with custom setup per school level. Personalize your classes and get a clean daily view of what's next.</p>
+        <div class="feature-tags">
+          <span class="tag">Custom Setup</span>
+          <span class="tag">Daily View</span>
+          <span class="tag">Personalized</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <h3>Dashboard</h3>
+        <p>Your central home view — combines schedule, sports, and events at a glance. See everything happening today without switching apps.</p>
+        <div class="feature-tags">
+          <span class="tag">Today View</span>
+          <span class="tag">Unified</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        </div>
+        <h3>Sports Hub</h3>
+        <p>Live integration with AFS athletics via Google Sheets. Upcoming games, team schedules, home/away indicators, and coach notes — all updated automatically.</p>
+        <div class="feature-tags">
+          <span class="tag">Live Data</span>
+          <span class="tag">Home/Away</span>
+          <span class="tag">Notes</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.5 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.41 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.4a16 16 0 0 0 5.69 5.69l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h3>School Events</h3>
+        <p>Synced directly from AFS iCal feeds across all divisions — All School, Upper, Middle, and Lower School. Events parsed and sorted automatically, always up to date.</p>
+        <div class="feature-tags">
+          <span class="tag">iCal Sync</span>
+          <span class="tag">All Divisions</span>
+          <span class="tag">Auto-sorted</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Clubs & Extracurriculars</h3>
+        <p>Track your clubs and activities with meeting times and notes support. A growing foundation for a full extracurricular management system.</p>
+        <div class="feature-tags">
+          <span class="tag">Meeting Times</span>
+          <span class="tag">Notes</span>
+          <span class="tag">Expanding</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4m16 0h2M5.34 5.34L3.93 3.93m14.14 14.14l1.41 1.41M12 2v2m0 16v2"/></svg>
+        </div>
+        <h3>Customization</h3>
+        <p>Choose your theme, card style, and visual preferences. RooMate adapts to your taste — because school tools should look good too.</p>
+        <div class="feature-tags">
+          <span class="tag">Themes</span>
+          <span class="tag">Card Styles</span>
+          <span class="tag">Personalized</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- DASHBOARD SCREENSHOTS -->
+<section id="dashboard">
+  <div class="section-inner">
+    <span class="section-label">Dashboard Preview</span>
+    <h2 class="section-title">A day in the life.</h2>
+    <p class="section-desc">Here's what your RooMate dashboard looks like across key screens.</p>
+
+    <div class="mockup-screenshot">
+      <img id="dashboard-screenshot" src="images/dashboardlight.png" alt="Dashboard screen">
+
+      <div class="screenshot-tabs">
+        <button class="tab active" onclick="setScreenshot('dashboard.png', this)">Dashboard</button>
+        <button class="tab" onclick="setScreenshot('schedule.png', this)">Schedule</button>
+        <button class="tab" onclick="setScreenshot('sports.png', this)">Sports</button>
+        <button class="tab" onclick="setScreenshot('events.png', this)">Events</button>
+        <button class="tab" onclick="setScreenshot('settings.png', this)">Settings</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA SOURCES -->
+<section id="data">
+  <div class="section-inner">
+    <span class="section-label">Data Sources</span>
+    <h2 class="section-title">Powered by AFS data,<br>automatically.</h2>
+    <p class="section-desc">RooMate reads directly from the sources AFS already maintains. No manual entry, no lag.</p>
+    <div class="sources-grid">
+      <div class="source-card">
+        <div class="source-icon">📊</div>
+        <div>
+          <h3>Google Sheets</h3>
+          <p>Athletics schedules and coaching updates are read live from school-maintained Google Sheets. Home/away indicators and notes come through automatically.</p>
+        </div>
+      </div>
+      <div class="source-card">
+        <div class="source-icon">📅</div>
+        <div>
+          <h3>AFS iCal Feeds</h3>
+          <p>School events are pulled from official AFS calendar feeds across all school divisions — All School, Upper, Middle, and Lower — parsed and sorted without any setup.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-inner">
+    <span class="section-label">Roadmap</span>
+    <h2 class="section-title">What's coming next.</h2>
+    <p class="section-desc">RooMate is actively in development. Here's what's live, what's close, and what's on the horizon.</p>
+    <div class="roadmap-grid">
+      <div class="roadmap-card">
+        <div class="roadmap-status status-live">● Live</div>
+        <h3>Schedule & Dashboard</h3>
+        <p>Class schedule tracking, daily dashboard view, and customizable appearance settings are available now.</p>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-status status-live">● Live</div>
+        <h3>Sports Hub</h3>
+        <p>Live Google Sheets integration with game schedules, home/away indicators, and notes from athletics.</p>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-status status-live">● Live</div>
+        <h3>Events & Clubs</h3>
+        <p>AFS iCal calendar sync across all divisions, plus club tracking with meeting times and notes.</p>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-status status-soon">◎ Coming Soon</div>
+        <h3>Expanded Sports Hub</h3>
+        <p>Team pages, deeper season tracking, and stats support planned as the next major Sports Hub upgrade.</p>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-status status-soon">◎ Coming Soon</div>
+        <h3>RooPac Tracker</h3>
+        <p>A dedicated tracker for RooPac — expanding the platform into more areas of AFS student life.</p>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-status status-planned">○ Planned</div>
+        <h3>Windows Version</h3>
+        <p>RooMate is currently macOS-first. A Windows version is planned to bring the dashboard to all AFS students.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-text">
+        <span class="section-label">About</span>
+        <h2 class="section-title">Built for AFS,<br>by a student.</h2>
+        <p class="section-desc">RooMate started as a personal project to solve a real problem: too many places to check, not enough time between classes. It's a private project, not open source — built with SwiftUI and real AFS data sources.</p>
+        <p class="section-desc" style="margin-top: 1rem;">The goal is simple: one fast, clean place for everything that matters in your school day.</p>
+      </div>
+      <div class="about-visual">
+        <div class="about-ring"><div class="about-ring-dot"></div></div>
+        <img src="images/Darkroo.png" alt="RooMate Kangaroo" class="about-roo">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section id="download" style="padding: 80px 2rem; text-align: center;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <img src="images/Darkroo.png" alt="" style="width: 64px; height: 64px; object-fit: contain; margin-bottom: 1.5rem; filter: drop-shadow(0 8px 24px rgba(82,137,200,0.3));">
+    <h2 class="section-title">Ready to get organized?</h2>
+    <p class="section-desc" style="margin: 1rem auto 2rem;">Download RooMate for macOS and start your school day with clarity.</p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a href="https://drive.google.com/uc?export=download&id=1SQiqDQwSdsrJGB6ifMsShnG1kqWOjboh" class="btn-primary" style="font-size: 16px; padding: 14px 28px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download for macOS
+      </a>
+    </div>
+    <p style="margin-top: 1.25rem; font-size: 13px; color: var(--text-muted);">Free · macOS · Private project</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <img src="images/Darkroo.png" alt="" class="footer-logo">
+          <span class="footer-wordmark">RooMate</span>
+        </div>
+        <p class="footer-desc">Student dashboard for Abington Friends School. Unifying schedules, sports, events, and clubs in one fast, clean macOS app.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Features</h4>
+        <ul>
+          <li><a href="#features">Schedule</a></li>
+          <li><a href="#features">Dashboard</a></li>
+          <li><a href="#features">Sports Hub</a></li>
+          <li><a href="#features">Events</a></li>
+          <li><a href="#features">Clubs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Project</h4>
+        <ul>
+          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#download">Download</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 RooMate. A private student project — not affiliated with or endorsed by Abington Friends School.</p>
+      <div class="footer-afs-badge">
+        <span class="afs-dot"></span>
+        Made for AFS Students
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    html.setAttribute('data-theme', newTheme);
+
+    const sun = document.getElementById('theme-sun');
+    const moon = document.getElementById('theme-moon');
+    const label = document.getElementById('theme-label');
+    const logo = document.getElementById('logo-text');
+
+    // UI should reflect CURRENT theme (after toggle)
+    if (newTheme === 'light') {
+      sun.style.display = 'inline-block';
+      moon.style.display = 'none';
+      label.textContent = 'Dark';
+      logo.src = 'images/Light.png';
+    } else {
+      sun.style.display = 'none';
+      moon.style.display = 'inline-block';
+      label.textContent = 'Light';
+      logo.src = 'images/Dark.png';
+    }
+
+    // Update all Roo images based on theme
+    const rooSrc = newTheme === 'dark'
+      ? 'images/Darkroo.png'
+      : 'images/Lightroo.png';
+
+    document.querySelectorAll('.nav-logo, .hero-logo-large, .about-roo, .footer-logo').forEach(img => {
+      img.src = rooSrc;
+    });
+
+    // download section icon (first image in download section)
+    const downloadImg = document.querySelector('#download img');
+    if (downloadImg) {
+      downloadImg.src = rooSrc;
+    }
+
+    // Update active screenshot when theme changes
+    const activeBtn = document.querySelector('.screenshot-tabs .tab.active');
+
+    if (activeBtn) {
+      const map = {
+        Dashboard: 'dashboard.png',
+        Schedule: 'schedule.png',
+        Sports: 'sports.png',
+        Events: 'events.png',
+        Settings: 'settings.png'
+      };
+
+      const key = activeBtn.textContent.trim();
+      if (map[key]) {
+        setScreenshot(map[key], activeBtn);
+      }
+    }
+  }
+
+  // Animate cards on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .roadmap-card, .source-card').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = `opacity 0.5s ease ${i * 0.06}s, transform 0.5s ease ${i * 0.06}s`;
+    observer.observe(el);
+  });
+</script>
+<script>
+function setScreenshot(file, btn) {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+
+  const img = document.getElementById('dashboard-screenshot');
+
+  const src = isLight
+    ? file.replace('.png', 'light.png')
+    : file;
+
+  img.src = 'images/' + src;
+
+  document.querySelectorAll('.screenshot-tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
