@@ -3,11 +3,11 @@ import Combine
 #if canImport(AppKit)
 import AppKit
 #endif
-import UserNotifications
 
 // Fully redesigned Settings view with tab-based organization
 struct SettingsView: View {
     @ObservedObject var store: UserScheduleStore
+    @Environment(\.sparkleCheckForUpdates) private var sparkleCheckForUpdates: (() -> Void)?
     
     // Local UI state
     @State private var selectedTab: SettingsTab = .customize
@@ -112,6 +112,8 @@ struct SettingsView: View {
                             .font(DesignTokens.Typography.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
+
+                        // Footer
                     }
                     .padding(.vertical, DesignTokens.Spacing.lg)
                 }
@@ -180,6 +182,67 @@ struct SettingsView: View {
             .padding(DesignTokens.Spacing.lg)
             .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
             .designShadow(DesignTokens.Shadows.small)
+
+            // Updates card (styled like Theme / Card tiles)
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "sparkles")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("App Updates")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                .padding(.bottom, DesignTokens.Spacing.sm)
+
+                Text("Manually check for the latest RooMate release.")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+
+                // Full-width update button (spans the card)
+                Button(action: {
+                    if let action = sparkleCheckForUpdates {
+                        action()
+                    } else {
+                        #if canImport(AppKit)
+                        NSApp.sendAction(Selector(("checkForUpdates:")), to: nil, from: nil)
+                        #endif
+                    }
+                }) {
+                    HStack(spacing: DesignTokens.Spacing.md) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 18))
+                            .frame(width: 28, height: 28)
+                            .foregroundStyle(DesignTokens.Colors.primary)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Check for Updates…")
+                                .font(DesignTokens.Typography.subheadline)
+                                .fontWeight(.semibold)
+                            Text("Search for new versions now")
+                                .font(DesignTokens.Typography.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                    .padding(DesignTokens.Spacing.md)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                            .fill(compatibleBackgroundSecondary())
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
+                    .designShadow(DesignTokens.Shadows.small)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+            
         }
     }
     
@@ -426,7 +489,6 @@ struct SettingsView: View {
         }
     }
 }
-// ...existing code...
 
 // MARK: - Helper Components
 
@@ -943,5 +1005,5 @@ struct ClubEditorRow: View {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
                 .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1)
         )
-     }
- }
+    }
+}

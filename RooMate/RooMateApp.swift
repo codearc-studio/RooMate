@@ -11,12 +11,12 @@ import Sparkle
 
 @main
 struct RooMateApp: App {
-    private let updaterController = SPUStandardUpdaterController(
+    private let sparkleUpdaterController = SPUStandardUpdaterController(
         startingUpdater: true,
         updaterDelegate: nil,
         userDriverDelegate: nil
     )
-
+    
     init() {
         let config = TelemetryManagerConfiguration(appID: "AE90AD30-CD81-426F-80A3-22F3ECBCCFAB")
         config.defaultSignalPrefix = "RooMate."
@@ -54,11 +54,14 @@ struct RooMateApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.sparkleCheckForUpdates, { [sparkleUpdaterController] in
+                    sparkleUpdaterController.checkForUpdates(nil)
+                })
         }
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates…") {
-                    updaterController.checkForUpdates(nil)
+                    sparkleUpdaterController.checkForUpdates(nil)
                 }
             }
         }
