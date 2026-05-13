@@ -1,58 +1,117 @@
-# RooMate – Your Smart AFS Companion
+# RooMate
 
-<<<<<<< HEAD
-RooMate is a **macOS app** designed for **AFS students** to stay on top of classes, assignments, and deadlines. 
-=======
-RooMate is a **macOS app in beta** designed for **AFS students** to stay on top of classes, assignments, and deadlines. This early version is functional, but you may encounter small bugs — your feedback is welcome!
+Student dashboard for Abington Friends School
+
+RooMate is a SwiftUI-based macOS application designed to unify school schedules, sports, and events into a single, simple dashboard experience.
+
+It aggregates data from school-provided sources including Google Sheets and official calendar feeds to create a centralized view of student life.
 
 ---
 
 ## Features
 
-- Centralized dashboard for upcoming assignments and deadlines  
-- Task tracking for projects and deadlines  
-- Simple, clean interface optimized for macOS  
+### Schedule
+- Class schedule tracking
+- Custom class setup per level
+- Personalization support for classes and appearance
+- Clean daily structure for quick viewing
+
+### Dashboard
+- Central home view for daily activity
+- Combines schedule, sports, and events
+- Quick overview of what is happening today
+
+### Sports Hub
+- Live integration with athletics Google Sheets
+- Upcoming games and team schedules
+- Home and away indicators
+- Notes support from athletic updates
+- Expanded sports features planned
+
+### Events
+- School calendar integration using AFS iCal feeds
+- Multiple calendar sources:
+  - All Events
+  - All School
+  - Upper School
+  - Middle School
+  - Lower School
+- Automatic event parsing and sorting
+
+### Clubs & Extracurriculars
+- Club tracking and organization
+- Meeting times and notes support
+- Foundation for expanded extracurricular system
+
+### Customization
+- Theme selection
+- Card style customization
+- Personalized visual settings
 
 ---
 
-## Beta Notes
+## Data Sources
 
-- This is a beta release; some features may be incomplete or unstable.  
-- Feedback is appreciated — report any issues by creating a **GitHub Issue** in this repository.
-
----
-
-## Download Instructions
-
-1. Click the **Download** button below to get the `RooMate.dmg` file.  
-2. Once the download is complete, double-click the `.dmg` to open it.  
-3. You’ll see a window with `RooMate.app` and the **Applications** folder.  
-4. Drag `RooMate.app` into the **Applications** folder to install it.  
-
-### If macOS shows a warning such as:
-- “Unidentified Developer”  
-- “macOS could not verify the developer”  
-- “App cannot be opened”
-
-#### Option 1: If the “Open Anyway” button is visible
-- Click **Open Anyway**.  
-
-#### Option 2: If there is no “Open Anyway” button
-1. Click **Done** to close the warning.  
-2. Open the **Apple menu → Settings → Privacy & Security**.  
-3. Scroll to the bottom and click **Open Anyway** for RooMate.  
-
-RooMate should now open. You can also **pin it to the Dock** for quick access.
->>>>>>> @{-1}
+- Google Sheets (Athletics schedules and updates)
+- AFS Calendar Feeds (school events and schedules)
 
 ---
 
-## How to Report Issues
+## Tech Stack
 
-If you find a bug or have suggestions, please create a **GitHub Issue** in this repository with a clear description of the problem or feature request.  
+- SwiftUI (macOS application)
+- Google Sheets integration
+- iCal (.ics) calendar feeds
 
 ---
 
-## License
+## Roadmap
 
-RooMate is currently under **License / All Rights Reserved**. Contact the author for permission if you want to use or modify the code.
+- Expanded Sports Hub (team pages, deeper season tracking)
+- RooPac Tracker
+- Additional extracurricular support
+- Windows version (planned)
+
+---
+
+## Screenshots
+
+### Dashboard
+![Dashboard](Assets/Screenshots/dashboard.png)
+
+### Schedule
+![Schedule](Assets/Screenshots/schedule.png)
+
+### Sports
+![Sports](Assets/Screenshots/sports.png)
+
+### Events
+![Events](Assets/Screenshots/events.png)
+
+### Settings
+![Settings](Assets/Screenshots/settings.png)
+
+---
+
+## Project Status
+
+RooMate is actively in development and expanding into a unified student dashboard platform.
+
+---
+
+## Platforms
+
+- macOS (primary)
+- Windows (planned)
+
+---
+
+## Goal
+
+To create a unified, fast, and simple student hub that consolidates school schedules, athletics, and events into one streamlined experience.
+
+---
+
+## Notes
+
+This is a private project and not open source.
