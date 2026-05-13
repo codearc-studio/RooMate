@@ -7,109 +7,145 @@ struct DayScheduleView: View {
   @ObservedObject var store: UserScheduleStore
 
   @State private var now: Date = Date()
+  @State private var didAutoScrollToCurrentClass = false
   private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
   private struct DatedBlock: Identifiable {
-      let id = UUID()
+      let id: UUID
       let original: BellBlock
       let startDate: Date
       let endDate: Date
   }
 
   var body: some View {
-      ScrollView {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
-              VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                  Text(day.title)
-                      .font(DesignTokens.Typography.headline2)
-                      .foregroundStyle(.primary)
-                  
-                  Text("Your Schedule")
-                      .font(DesignTokens.Typography.subheadline)
-                      .foregroundStyle(.secondary)
-              }
-              .padding(.horizontal, DesignTokens.Spacing.lg)
-
-               if let currentInfo = currentBlockInfo(on: now) {
-                   CurrentBlockHeader(
-                       title: currentInfo.title,
-                       subtitle: currentInfo.subtitle,
-                       color: currentInfo.color,
-                       progress: currentInfo.progress,
-                       remainingText: currentInfo.remainingText,
-                       nextTitle: currentInfo.nextTitle,
-                       nextStartText: currentInfo.nextStartText,
-                       nextColor: currentInfo.nextColor,
-                       nextLevel: currentInfo.nextLevel,
-                       nextSpecialLabel: currentInfo.nextSpecialLabel,
-                       style: store.cardColorStyle,
-                       isCountdownMode: false
-                   )
-                   .padding(.horizontal, DesignTokens.Spacing.lg)
-                   .transition(.scale(scale: 0.95).combined(with: .opacity))
-               } else if let countdown = nextCountdownInfo(on: now) {
-                   CurrentBlockHeader(
-                       title: countdown.headerTitle,
-                       subtitle: countdown.headerSubtitle,
-                       color: countdown.headerColor,
-                       progress: countdown.progress,
-                       remainingText: countdown.remainingText,
-                       nextTitle: countdown.nextTitle,
-                       nextStartText: countdown.nextStartText,
-                       nextColor: countdown.nextColor,
-                       nextLevel: nil,
-                       nextSpecialLabel: countdown.nextSpecialLabel,
-                       style: store.cardColorStyle,
-                       isCountdownMode: true
-                   )
+      ScrollViewReader { proxy in
+          ScrollView {
+              VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
+                  VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                      Text(day.title)
+                          .font(DesignTokens.Typography.headline2)
+                          .foregroundStyle(.primary)
+                      
+                      Text("Your Schedule")
+                          .font(DesignTokens.Typography.subheadline)
+                          .foregroundStyle(.secondary)
+                  }
                   .padding(.horizontal, DesignTokens.Spacing.lg)
-                  .transition(.scale(scale: 0.95).combined(with: .opacity))
+
+                  let selectedIsToday = isSelectedDayToday()
+                  let timeline = selectedIsToday ? scheduleTimeline(for: now) : nil
+                  let dayDated = datedBlocks(for: now)
+                  let indexedBlocks = Array(dayDated.enumerated())
+
+                  ForEach(indexedBlocks, id: \.element.id) { index, datedBlock in
+                      switch datedBlock.original.kind {
+                        case .level(let level):
+                            let assignment = store.assignment(for: level)
+                            let isPast = selectedIsToday && now >= datedBlock.endDate
+                            let inlineStatus: ClassCardView.InlineStatus? = {
+                                guard selectedIsToday else { return nil }
+                                if timeline?.currentIndex == index,
+                                   let remainingText = timeline?.currentRemainingText,
+                                   let progress = timeline?.currentProgress {
+                                    return .current(progress: progress, remainingText: remainingText)
+                                }
+                                if timeline?.nextIndex == index, let nextStartText = timeline?.nextStartText {
+                                    return .upNext(startText: nextStartText)
+                                }
+                                return nil
+                            }()
+
+                            // For Music Block, check for special block replacements
+                            let musicTitle = level == .music ? store.displayMusicTitle(on: day) : nil
+                            let musicTeacher = level == .music ? store.displayMusicTeacher(on: day) : nil
+                            let musicRoom = level == .music ? store.displayMusicRoom(on: day) : nil
+                            let musicColor = level == .music ? store.color(for: .musicClubs) : nil
+
+                            ClassCardView(
+                               title: musicTitle ?? assignment.displayTitle(for: level, on: day),
+                                teacher: musicTeacher ?? assignment.displayTeacher(on: day),
+                                room: musicRoom ?? assignment.displayRoom(on: day),
+                                timeRange: formattedRange(start: datedBlock.original.start, end: datedBlock.original.end),
+                                color: musicColor ?? assignment.displayColor(on: day),
+                                style: store.cardColorStyle,
+                                duration: formattedDuration(start: datedBlock.original.start, end: datedBlock.original.end),
+                                level: level,
+                                 specialLabel: nil,
+                                 isFree: assignment.displayIsFree(on: day),
+                                 inlineStatus: inlineStatus,
+                                 isPast: isPast
+                            )
+                            .padding(.horizontal, DesignTokens.Spacing.lg)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                        case .special(let special):
+                            let isPast = selectedIsToday && now >= datedBlock.endDate
+                            let inlineStatus: ClassCardView.InlineStatus? = {
+                                guard selectedIsToday else { return nil }
+                                if timeline?.currentIndex == index,
+                                   let remainingText = timeline?.currentRemainingText,
+                                   let progress = timeline?.currentProgress {
+                                    return .current(progress: progress, remainingText: remainingText)
+                                }
+                                if timeline?.nextIndex == index, let nextStartText = timeline?.nextStartText {
+                                    return .upNext(startText: nextStartText)
+                                }
+                                return nil
+                            }()
+
+                            ClassCardView(
+                               title: store.displayTitle(for: special, on: day),
+                                teacher: store.displayTeacher(for: special, on: day),
+                                room: store.displayRoom(for: special, on: day),
+                                timeRange: formattedRange(start: datedBlock.original.start, end: datedBlock.original.end),
+                                color: store.color(for: special),
+                                style: store.cardColorStyle,
+                                duration: formattedDuration(start: datedBlock.original.start, end: datedBlock.original.end),
+                                level: nil,
+                                specialLabel: specialBlockLabel(for: special),
+                                isFree: false,
+                                inlineStatus: inlineStatus,
+                                isPast: isPast
+                            )
+                            .padding(.horizontal, DesignTokens.Spacing.lg)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                      }
+                  }
+
+                  Spacer(minLength: DesignTokens.Spacing.lg)
               }
-
-                ForEach(blocks, id: \.id) { (block: BellBlock) in
-                    switch block.kind {
-                    case .level(let level):
-                        let assignment = store.assignment(for: level)
-                        ClassCardView(
-                           title: assignment.displayTitle(for: level, on: day),
-                            teacher: assignment.displayTeacher(on: day),
-                            room: assignment.displayRoom(on: day),
-                            timeRange: formattedRange(start: block.start, end: block.end),
-                            color: assignment.displayColor(on: day),
-                            style: store.cardColorStyle,
-                            duration: formattedDuration(start: block.start, end: block.end),
-                            level: level,
-                             specialLabel: nil,
-                            isFree: assignment.displayIsFree(on: day)
-                        )
-                        .padding(.horizontal, DesignTokens.Spacing.lg)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-
-                    case .special(let special):
-                        ClassCardView(
-                           title: store.displayTitle(for: special),
-                            teacher: nil,
-                            room: nil,
-                            timeRange: formattedRange(start: block.start, end: block.end),
-                            color: store.color(for: special),
-                            style: store.cardColorStyle,
-                            duration: formattedDuration(start: block.start, end: block.end),
-                            level: nil,
-                            specialLabel: specialBlockLabel(for: special),
-                            isFree: false
-                        )
-                        .padding(.horizontal, DesignTokens.Spacing.lg)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                }
-                .animation(DesignTokens.Animation.smooth, value: blocks.count)
-
-              Spacer(minLength: DesignTokens.Spacing.lg)
+              .padding(.vertical, DesignTokens.Spacing.lg)
           }
-          .padding(.vertical, DesignTokens.Spacing.lg)
+          .modifier(SafeAreaTopPadding(4))
+          .onReceive(timer) { now = $0 }
+          .onAppear { scheduleAutoScrollIfNeeded(using: proxy) }
+          .onChange(of: day) { _ in
+              didAutoScrollToCurrentClass = false
+              scheduleAutoScrollIfNeeded(using: proxy)
+          }
+          .onChange(of: blocks.count) { _ in
+              scheduleAutoScrollIfNeeded(using: proxy)
+          }
       }
-      .modifier(SafeAreaTopPadding(4))
-      .onReceive(timer) { now = $0 }
+  }
+
+  private func scheduleAutoScrollIfNeeded(using proxy: ScrollViewProxy) {
+      guard !didAutoScrollToCurrentClass, isSelectedDayToday() else { return }
+      guard let targetID = currentBlockScrollTargetID(for: now) else { return }
+
+      didAutoScrollToCurrentClass = true
+      DispatchQueue.main.async {
+          withAnimation(DesignTokens.Animation.smooth) {
+              proxy.scrollTo(targetID, anchor: .top)
+          }
+      }
+  }
+
+  private func currentBlockScrollTargetID(for reference: Date) -> UUID? {
+      let dayDated = datedBlocks(for: reference)
+      let timeline = scheduleTimeline(for: reference)
+      guard let currentIndex = timeline.currentIndex, dayDated.indices.contains(currentIndex) else { return nil }
+      return dayDated[currentIndex].id
   }
 
   private func datedBlocks(for reference: Date) -> [DatedBlock] {
@@ -145,17 +181,96 @@ struct DayScheduleView: View {
           endComps.second = 0
 
           guard let s = cal.date(from: startComps), let e = cal.date(from: endComps) else { return nil }
-          return DatedBlock(original: block, startDate: s, endDate: e)
+          return DatedBlock(id: block.id, original: block, startDate: s, endDate: e)
       }.sorted(by: { $0.startDate < $1.startDate })
+  }
+
+  private func isSelectedDayToday() -> Bool {
+      let calendar = Calendar.current
+      switch calendar.component(.weekday, from: Date()) {
+      case 2: return day == .monday
+      case 3: return day == .tuesday
+      case 4: return day == .wednesday
+      case 5: return day == .thursday
+      case 6: return day == .friday
+      default: return false
+      }
+  }
+
+  private struct ScheduleTimeline {
+      let currentIndex: Int?
+      let nextIndex: Int?
+      let currentProgress: Double?
+      let currentRemainingText: String?
+      let nextStartText: String?
+  }
+
+  private func scheduleTimeline(for reference: Date) -> ScheduleTimeline {
+      let list = datedBlocks(for: reference)
+      guard !list.isEmpty else {
+          return ScheduleTimeline(currentIndex: nil, nextIndex: nil, currentProgress: nil, currentRemainingText: nil, nextStartText: nil)
+      }
+
+      var currentIndex: Int?
+      var nextIndex: Int?
+
+      for (idx, item) in list.enumerated() {
+          if reference >= item.startDate && reference < item.endDate {
+              currentIndex = idx
+              nextIndex = idx + 1 < list.count ? idx + 1 : nil
+              break
+          }
+
+          if reference < item.startDate {
+              nextIndex = idx
+              break
+          }
+      }
+
+      let currentProgress: Double?
+      let currentRemainingText: String?
+      if let currentIndex {
+          let current = list[currentIndex]
+          let total = max(1, current.endDate.timeIntervalSince(current.startDate))
+          let elapsed = max(0, reference.timeIntervalSince(current.startDate))
+          currentProgress = max(0, min(1, elapsed / total))
+          let remaining = max(0, current.endDate.timeIntervalSince(reference))
+          currentRemainingText = "Ends in " + formatDuration(remaining)
+      } else {
+          currentProgress = nil
+          currentRemainingText = nil
+      }
+
+      let nextStartText: String?
+      if let nextIndex {
+          let remaining = max(0, list[nextIndex].startDate.timeIntervalSince(reference))
+          let minutes = Int(remaining) / 60
+          nextStartText = "Starts in \(minutes) min"
+      } else {
+          nextStartText = nil
+      }
+
+      return ScheduleTimeline(
+          currentIndex: currentIndex,
+          nextIndex: nextIndex,
+          currentProgress: currentProgress,
+          currentRemainingText: currentRemainingText,
+          nextStartText: nextStartText
+      )
   }
 
     private func blockTitleColorSubtitle(for block: BellBlock) -> (title: String, color: Color, subtitle: String, level: Level?, specialLabel: String?) {
         switch block.kind {
         case .level(let level):
             let a = store.assignment(for: level)
-            return (a.displayTitle(for: level, on: day), a.displayColor(on: day), a.displaySubtitle(on: day), level, nil)
+            // For Music Block, check for special block replacements and color
+            let title = level == .music ? (store.displayMusicTitle(on: day) ?? a.displayTitle(for: level, on: day)) : a.displayTitle(for: level, on: day)
+            let color = level == .music ? store.color(for: .musicClubs) : a.displayColor(on: day)
+            // Don't show subtitle for Music Block (it's a special block and doesn't need description)
+            let subtitle = level == .music ? "" : a.displaySubtitle(on: day)
+            return (title, color, subtitle, level, nil)
         case .special(let sp):
-             return (store.displayTitle(for: sp), store.color(for: sp), "", nil, specialBlockLabel(for: sp))
+             return (store.displayTitle(for: sp, on: day), store.color(for: sp), "", nil, specialBlockLabel(for: sp))
         }
     }
     
@@ -453,6 +568,11 @@ struct CurrentBlockHeader: View {
 }
 
 struct ClassCardView: View {
+  enum InlineStatus {
+      case current(progress: Double, remainingText: String)
+      case upNext(startText: String)
+  }
+
   let title: String
   let teacher: String?
   let room: String?
@@ -463,12 +583,19 @@ struct ClassCardView: View {
   let level: Level?
   let specialLabel: String?
   let isFree: Bool
+  let inlineStatus: InlineStatus?
+  let isPast: Bool
 
   private var hasTeacher: Bool { teacher != nil && !teacher!.isEmpty }
   private var hasRoom: Bool { room != nil && !room!.isEmpty }
   private var hasDetails: Bool { !isFree && (hasTeacher || hasRoom || (duration != nil && !duration!.isEmpty)) }
   private var hasLevel: Bool { level != nil }
   private var hasSpecialLabel: Bool { specialLabel != nil && !specialLabel!.isEmpty }
+  private var mutedOpacity: Double { isPast ? 0.56 : 1.0 }
+  private var isCurrent: Bool {
+      if case .current = inlineStatus { return true }
+      return false
+  }
 
   private var softGradient: LinearGradient {
       let c = color
@@ -486,14 +613,47 @@ struct ClassCardView: View {
   }
 
    var body: some View {
-       VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+       VStack(alignment: .leading, spacing: isCurrent ? DesignTokens.Spacing.lg : DesignTokens.Spacing.md) {
+           if let inlineStatus {
+               HStack(spacing: DesignTokens.Spacing.sm) {
+                   switch inlineStatus {
+                   case .current:
+                       Image(systemName: "clock.fill")
+                           .font(.title3)
+                           .foregroundStyle(isPast ? .secondary : color)
+
+                       Text("Now")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   case .upNext:
+                       Label("Up Next", systemImage: "forward.fill")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   }
+
+                   Spacer()
+
+                   switch inlineStatus {
+                   case .current(_, let remainingText):
+                       Label(remainingText, systemImage: "hourglass.bottomhalf.fill")
+                           .font(DesignTokens.Typography.body)
+                           .fontWeight(.semibold)
+                           .foregroundStyle(isPast ? .secondary : color)
+                   case .upNext(let startText):
+                       Label(startText, systemImage: "clock.fill")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   }
+               }
+           }
+
            HStack(alignment: .center, spacing: DesignTokens.Spacing.md) {
                VStack(alignment: .leading, spacing: 3) {
                    Text(title)
                        .font(DesignTokens.Typography.title)
                        .fontWeight(.semibold)
-                       .foregroundStyle(.primary)
-                   
+                       .foregroundStyle(isPast ? .secondary : .primary)
+
                    if let level = level {
                        Text(level.displayName)
                            .font(DesignTokens.Typography.caption)
@@ -504,45 +664,54 @@ struct ClassCardView: View {
                            .foregroundStyle(.secondary)
                    }
                }
-               
+
                Spacer()
-               
+
                Label(timeRange, systemImage: "clock.fill")
                    .font(DesignTokens.Typography.caption)
-                   .foregroundStyle(color)
+                   .foregroundStyle(isPast ? .secondary : color)
                    .fontWeight(.medium)
                    .labelStyle(.titleAndIcon)
            }
 
-          if hasDetails {
-              HStack(spacing: DesignTokens.Spacing.lg) {
-                  if hasTeacher {
-                      Label(teacher!, systemImage: "person.fill")
-                          .font(DesignTokens.Typography.caption)
-                          .foregroundStyle(.secondary)
-                  }
-                  if hasRoom {
-                      Label(room!, systemImage: "mappin.and.ellipse")
-                          .font(DesignTokens.Typography.caption)
-                          .foregroundStyle(.secondary)
-                  }
-                  Spacer()
-                  if let duration, !duration.isEmpty {
-                      Label(duration, systemImage: "hourglass.bottomhalf.filled")
-                          .font(DesignTokens.Typography.caption)
-                          .foregroundStyle(.secondary)
-                  }
-              }
-          }
-      }
-      .padding(DesignTokens.Spacing.lg)
-      .background(backgroundForStyle)
-      .overlay(strokeForStyle)
-      .overlay(glowForStyle)
-      .cornerRadius(DesignTokens.Radius.md)
-      .accessibilityElement(children: .ignore)
-      .accessibilityLabel("\(title), \(timeRange)\(teacher != nil ? ", with \(teacher!)" : "")\(room != nil ? ", in \(room!)" : "")")
-  }
+           if hasDetails {
+               HStack(spacing: DesignTokens.Spacing.lg) {
+                   if hasTeacher {
+                       Label(teacher!, systemImage: "person.fill")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   }
+                   if hasRoom {
+                       Label(room!, systemImage: "mappin.and.ellipse")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   }
+                   Spacer()
+                   if let duration, !duration.isEmpty {
+                       Label(duration, systemImage: "hourglass.bottomhalf.filled")
+                           .font(DesignTokens.Typography.caption)
+                           .foregroundStyle(.secondary)
+                   }
+               }
+           }
+
+           if case .current(let progress, _) = inlineStatus {
+               ProgressView(value: progress)
+                   .tint(isPast ? .secondary : color)
+                   .animation(.linear(duration: 0.2), value: progress)
+           }
+       }
+       .padding(DesignTokens.Spacing.lg)
+       .padding(.vertical, isCurrent ? DesignTokens.Spacing.sm : 0)
+       .background(backgroundForStyle)
+       .overlay(strokeForStyle)
+       .overlay(glowForStyle)
+       .cornerRadius(DesignTokens.Radius.md)
+       .scaleEffect(isCurrent ? 1.01 : 1.0)
+       .opacity(mutedOpacity)
+       .accessibilityElement(children: .ignore)
+       .accessibilityLabel("\(title), \(timeRange)\(teacher != nil ? ", with \(teacher!)" : "")\(room != nil ? ", in \(room!)" : "")")
+   }
 
   @ViewBuilder
   private var backgroundForStyle: some View {

@@ -2,12 +2,14 @@ import SwiftUI
 import Combine
 #if canImport(AppKit)
 import AppKit
+import Sparkle
 #endif
 import UserNotifications
 
 // Fully redesigned Settings view with tab-based organization
 struct SettingsView: View {
     @ObservedObject var store: UserScheduleStore
+    let checkForUpdatesAction: (() -> Void)?
     
     // Local UI state
     @State private var selectedTab: SettingsTab = .customize
@@ -42,6 +44,55 @@ struct SettingsView: View {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
         return b.isEmpty ? v : "\(v) (\(b))"
+    }
+
+    private func defaultReplacement(isFree: Bool = false) -> ClassAssignment.ReplacementClass {
+        ClassAssignment.ReplacementClass(title: "", teacher: "", room: "", isFree: isFree)
+    }
+
+    private func specialFreeBinding(for block: SpecialBlock, defaultValue: Bool = false) -> Binding<Bool> {
+        Binding(
+            get: { store.specialFree[block] ?? defaultValue },
+            set: { newValue in
+                store.specialFree[block] = newValue
+                // Ensure replacement is initialized when toggled to not-free
+                if !newValue && store.specialBlockReplacements[block] == nil {
+                    store.specialBlockReplacements[block] = defaultReplacement(isFree: false)
+                }
+                // Clear replacement when toggled back to free to avoid stale data
+                if newValue && store.specialBlockReplacements[block] != nil {
+                    store.specialBlockReplacements[block] = nil
+                }
+            }
+        )
+    }
+
+    private func specialReplacementBinding(for block: SpecialBlock, defaultIsFree: Bool = false) -> Binding<ClassAssignment.ReplacementClass> {
+        Binding(
+            get: { store.specialBlockReplacements[block] ?? defaultReplacement(isFree: defaultIsFree) },
+            set: { store.specialBlockReplacements[block] = $0 }
+        )
+    }
+    
+    private func getMusicBlockUnavailableDays() -> Set<Int> {
+        var unavailable: Set<Int> = []
+        for club in store.clubs {
+            if club.meetsMondayClub {
+                unavailable.insert(2) // Monday
+            }
+            if club.meetsWednesdayClub {
+                unavailable.insert(4) // Wednesday
+            }
+        }
+        return unavailable
+    }
+
+    private func getLunchUnavailableDays() -> Set<Int> {
+        var unavailable: Set<Int> = []
+        for club in store.clubs where club.meetsWednesdayClub {
+            unavailable.insert(4) // Wednesday
+        }
+        return unavailable
     }
     
     var body: some View {
@@ -180,6 +231,37 @@ struct SettingsView: View {
             .padding(DesignTokens.Spacing.lg)
             .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
             .designShadow(DesignTokens.Shadows.small)
+
+            #if canImport(AppKit)
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.title3)
+                        .foregroundStyle(DesignTokens.Colors.primary)
+                    Text("Updates")
+                        .font(DesignTokens.Typography.headline2)
+                }
+                .padding(.bottom, DesignTokens.Spacing.sm)
+
+                Text("Check Sparkle for the latest RooMate release.")
+                    .font(DesignTokens.Typography.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Button {
+                    checkForUpdatesAction?()
+                } label: {
+                    Label("Check for Updates…", systemImage: "sparkles")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(DesignTokens.Spacing.md)
+                        .background(DesignTokens.Colors.primary.opacity(0.1))
+                        .cornerRadius(DesignTokens.Radius.lg)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(DesignTokens.Spacing.lg)
+            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
+            .designShadow(DesignTokens.Shadows.small)
+            #endif
         }
     }
     
@@ -304,131 +386,319 @@ struct SettingsView: View {
     }
     
     private var scheduleTabContent: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "calendar.badge.clock")
-                        .font(.title3)
-                        .foregroundStyle(DesignTokens.Colors.primary)
-                    Text("Special Blocks")
-                        .font(DesignTokens.Typography.headline2)
+        let weekdayColumns = Array(repeating: GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), count: 3)
+        let consciousFree = specialFreeBinding(for: .consciousCommunities)
+        let consciousReplacement = specialReplacementBinding(for: .consciousCommunities)
+        let lunchFree = specialFreeBinding(for: .lunch)
+        let lunchReplacement = specialReplacementBinding(for: .lunch)
+        let musicFree = Binding<Bool>(
+            get: { store.assignments[.music]?.isFree ?? true },
+            set: { newValue in
+                var musicAssignment = store.assignments[.music] ?? ClassAssignment.default(for: .music)
+                musicAssignment.isFree = newValue
+                store.assignments[.music] = musicAssignment
+                store.specialFree[.musicClubs] = newValue
+                // Ensure replacement is initialized when toggled to not-free
+                if !newValue && store.specialBlockReplacements[.musicClubs] == nil {
+                    store.specialBlockReplacements[.musicClubs] = defaultReplacement(isFree: false)
                 }
-                
-                Text("Mark special schedule blocks as free time")
-                    .font(DesignTokens.Typography.subheadline)
-                    .foregroundStyle(.secondary)
+                // Clear replacement when toggled back to free to avoid stale data
+                if newValue && store.specialBlockReplacements[.musicClubs] != nil {
+                    store.specialBlockReplacements[.musicClubs] = nil
+                }
             }
-            .padding(DesignTokens.Spacing.lg)
+        )
+        let musicAssignment = store.assignment(for: .music)
+        let musicReplacement = specialReplacementBinding(for: .musicClubs)
+        let availableMusicDays = Weekday.allCases.filter { $0 != .wednesday && !getMusicBlockUnavailableDays().contains($0.calendarWeekdayIndex) }
+        let availableLunchDays = Weekday.allCases.filter { !getLunchUnavailableDays().contains($0.calendarWeekdayIndex) }
 
-            let musicAssignment = store.assignment(for: .music)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-                    HStack(spacing: DesignTokens.Spacing.sm) {
-                        Image(systemName: "music.note")
-                            .font(.title3)
-                            .foregroundStyle(DesignTokens.Colors.primary)
-                        Text("Music Block")
-                            .font(DesignTokens.Typography.headline2)
+        return VStack(spacing: DesignTokens.Spacing.lg) {
+            ScheduleCard(
+                title: "Schedule",
+                subtitle: "Set which blocks count as free time and what shows instead when they are not.",
+                icon: "calendar.badge.clock",
+                tint: DesignTokens.Colors.primary
+            ) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                    Text("Use these settings to decide what counts as open time and what should appear instead when a block is not free.")
+                        .font(DesignTokens.Typography.subheadline)
+                        .foregroundStyle(.primary)
+
+                    Text("The labels below use plain language so you can change them without guessing what \"is free\" means.")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            ScheduleCard(
+                title: "Special blocks",
+                subtitle: "Mark blocks as free time, and add replacement details only when a block is not free.",
+                icon: "square.grid.2x2",
+                tint: DesignTokens.Colors.primary
+            ) {
+                VStack(spacing: DesignTokens.Spacing.lg) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+                            Image(systemName: "heart.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(DesignTokens.Colors.primary)
+
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                                Text("Conscious Communities")
+                                    .font(DesignTokens.Typography.body)
+                                    .fontWeight(.semibold)
+
+                                Text("Count this block as free time when it should not be treated like a class.")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer(minLength: 0)
+
+                            ScheduleStateBadge(text: consciousFree.wrappedValue ? "Free time" : "Scheduled", isFree: consciousFree.wrappedValue)
+                        }
+
+                        Toggle("Count as free time", isOn: consciousFree)
+                            .tint(DesignTokens.Colors.primary)
+
+                        if !consciousFree.wrappedValue {
+                            ReplacementClassEditor(
+                                prompt: "What should Conscious Communities be called instead?",
+                                replacement: consciousReplacement
+                            )
+                        }
+
+                        Divider().opacity(0.12)
+
+                        ColorPicker("Block Color", selection: store.colorBinding(for: .consciousCommunities))
+                            .tint(store.color(for: .consciousCommunities))
                     }
 
-                    Text("Is Music Block free sometimes? If so, choose the days it isn’t free.")
-                        .font(DesignTokens.Typography.subheadline)
-                        .foregroundStyle(.secondary)
+                    Divider().opacity(0.12)
 
-                    Toggle("Music Block is free sometimes", isOn: Binding(
-                        get: { store.assignment(for: .music).isFree },
-                        set: { newValue in
-                            var music = store.assignment(for: .music)
-                            music.isFree = newValue
-                            if !newValue {
-                                music.musicDaysNotFree = []
-                            }
-                            store.assignments[.music] = music
-                            store.specialFree[.musicClubs] = music.displayIsFree(on: .monday)
-                        }
-                    ))
-                    .tint(DesignTokens.Colors.primary)
-                }
-
-                if musicAssignment.isFree {
                     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-                        Text("What days isn’t it free?")
-                            .font(DesignTokens.Typography.caption)
-                            .foregroundStyle(.secondary)
+                        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+                            Image(systemName: "fork.knife")
+                                .font(.title3)
+                                .foregroundStyle(DesignTokens.Colors.primary)
 
-                        LazyVGrid(columns: [GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)], spacing: DesignTokens.Spacing.sm) {
-                            ForEach(Weekday.allCases) { weekday in
-                                let isNotFree = musicAssignment.musicDaysNotFree.contains(weekday.calendarWeekdayIndex)
-                                WeekdayToggleButton(weekday: weekday, isSelected: isNotFree) {
-                                    withAnimation(DesignTokens.Animation.snappy) {
-                                        var music = store.assignment(for: .music)
-                                        if isNotFree {
-                                            music.musicDaysNotFree.remove(weekday.calendarWeekdayIndex)
-                                        } else {
-                                            music.musicDaysNotFree.insert(weekday.calendarWeekdayIndex)
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                                Text("Lunch")
+                                    .font(DesignTokens.Typography.body)
+                                    .fontWeight(.semibold)
+
+                                Text("If lunch is free, RooMate treats it as open time. If not, you can describe what happens on the days it isn’t free.")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer(minLength: 0)
+
+                            ScheduleStateBadge(text: lunchFree.wrappedValue ? "Free time" : "Scheduled", isFree: lunchFree.wrappedValue)
+                        }
+
+                        Toggle("Count as free time", isOn: lunchFree)
+                            .tint(DesignTokens.Colors.primary)
+
+                        if !lunchFree.wrappedValue {
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                                Text("Which days is lunch busy?")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundStyle(.secondary)
+
+                                LazyVGrid(columns: weekdayColumns, spacing: DesignTokens.Spacing.sm) {
+                                    ForEach(availableLunchDays) { weekday in
+                                        let isBusy = lunchReplacement.wrappedValue.daysNotFree.contains(weekday.calendarWeekdayIndex)
+                                        WeekdayToggleButton(weekday: weekday, isSelected: isBusy) {
+                                            withAnimation(DesignTokens.Animation.snappy) {
+                                                var replacement = lunchReplacement.wrappedValue
+                                                if isBusy {
+                                                    replacement.daysNotFree.remove(weekday.calendarWeekdayIndex)
+                                                } else {
+                                                    replacement.daysNotFree.insert(weekday.calendarWeekdayIndex)
+                                                }
+                                                lunchReplacement.wrappedValue = replacement
+                                            }
                                         }
-                                        store.assignments[.music] = music
-                                        store.specialFree[.musicClubs] = music.displayIsFree(on: .monday)
                                     }
                                 }
+
+                                Divider().opacity(0.12)
+
+                                ReplacementClassEditor(prompt: "What should happen instead?", replacement: lunchReplacement)
                             }
                         }
 
-                        Text("Selected days will count as class time in the schedule.")
-                            .font(DesignTokens.Typography.caption)
-                            .foregroundStyle(.secondary)
+                        Divider().opacity(0.12)
+
+                        ColorPicker("Block Color", selection: store.colorBinding(for: .lunch))
+                            .tint(store.color(for: .lunch))
+                    }
+
+                    Divider().opacity(0.12)
+
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+                            Image(systemName: "music.note")
+                                .font(.title3)
+                                .foregroundStyle(DesignTokens.Colors.primary)
+
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                                Text("Music Block")
+                                    .font(DesignTokens.Typography.body)
+                                    .fontWeight(.semibold)
+
+                                Text("Music is usually free on most days. Mark the days it is actually busy so RooMate can show that correctly.")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer(minLength: 0)
+
+                            ScheduleStateBadge(text: musicAssignment.isFree ? "Free time" : "Scheduled", isFree: musicAssignment.isFree)
+                        }
+
+                        Toggle("Count as free time", isOn: musicFree)
+                            .tint(DesignTokens.Colors.primary)
+
+                        if !musicFree.wrappedValue {
+                            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                                Text("Which days is music busy?")
+                                    .font(DesignTokens.Typography.caption)
+                                    .foregroundStyle(.secondary)
+
+                                LazyVGrid(columns: weekdayColumns, spacing: DesignTokens.Spacing.sm) {
+                                    ForEach(availableMusicDays) { weekday in
+                                            let isBusy = musicAssignment.musicDaysNotFree.contains(weekday.calendarWeekdayIndex)
+                                        WeekdayToggleButton(weekday: weekday, isSelected: isBusy) {
+                                            withAnimation(DesignTokens.Animation.snappy) {
+                                                var music = store.assignment(for: .music)
+                                                if isBusy {
+                                                    music.musicDaysNotFree.remove(weekday.calendarWeekdayIndex)
+                                                } else {
+                                                    music.musicDaysNotFree.insert(weekday.calendarWeekdayIndex)
+                                                }
+                                                store.assignments[.music] = music
+                                                store.specialFree[.musicClubs] = music.displayIsFree(on: .monday)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Divider().opacity(0.12)
+
+                                ReplacementClassEditor(prompt: "What should happen instead?", replacement: musicReplacement)
+                            }
+                        }
+
+                        Divider().opacity(0.12)
+
+                        ColorPicker("Block Color", selection: store.colorBinding(for: .musicClubs))
+                            .tint(store.color(for: .musicClubs))
                     }
                 }
             }
-            .padding(DesignTokens.Spacing.lg)
-            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
-            .designShadow(DesignTokens.Shadows.small)
-            
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                SpecialBlockToggleRow(
-                    title: "Conscious Communities is free",
-                    icon: "heart.circle.fill",
-                    isOn: Binding(
-                        get: { store.specialFree[.consciousCommunities] ?? false },
-                        set: { store.specialFree[.consciousCommunities] = $0 }
-                    )
-                )
-                
-                SpecialBlockToggleRow(
-                    title: "Lunch is free",
-                    icon: "fork.knife",
-                    isOn: Binding(
-                        get: { store.specialFree[.lunch] ?? false },
-                        set: { store.specialFree[.lunch] = $0 }
-                    )
-                )
-                
-                SpecialBlockToggleRow(
-                    title: "Music Block is free",
-                    icon: "music.note",
-                    isOn: Binding(
-                        get: { store.assignments[.music]?.isFree ?? true },
-                        set: {
-                            var musicAssignment = store.assignments[.music] ?? ClassAssignment.default(for: .music)
-                            musicAssignment.isFree = $0
-                            store.assignments[.music] = musicAssignment
-                            // Also mark the special "Music Block + Clubs" as free so special schedule entries
-                            // like Monday's `musicClubs` are treated as free time when this toggle is set.
-                            store.specialFree[.musicClubs] = $0
-                        }
-                    )
-                )
-            }
-            .padding(DesignTokens.Spacing.lg)
-            .background(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous).fill(compatibleBackgroundSecondary()))
-            .designShadow(DesignTokens.Shadows.small)
-            .padding(.horizontal, DesignTokens.Spacing.lg)
         }
     }
 }
 // ...existing code...
 
 // MARK: - Helper Components
+
+struct ScheduleCard<Content: View>: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    var tint: Color = DesignTokens.Colors.primary
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(tint)
+
+                Text(title)
+                    .font(DesignTokens.Typography.headline2)
+            }
+
+            Text(subtitle)
+                .font(DesignTokens.Typography.subheadline)
+                .foregroundStyle(.secondary)
+
+            content()
+        }
+        .padding(DesignTokens.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+        )
+        .designShadow(DesignTokens.Shadows.small)
+    }
+}
+
+struct ScheduleStateBadge: View {
+    let text: String
+    let isFree: Bool
+
+    var body: some View {
+        Text(text)
+            .font(DesignTokens.Typography.caption)
+            .fontWeight(.semibold)
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, 6)
+            .background(
+                Capsule(style: .continuous)
+                    .fill((isFree ? DesignTokens.Colors.success : DesignTokens.Colors.accent).opacity(0.14))
+            )
+            .foregroundStyle(isFree ? DesignTokens.Colors.success : DesignTokens.Colors.accent)
+    }
+}
+
+struct ReplacementClassEditor: View {
+    let prompt: String
+    @Binding var replacement: ClassAssignment.ReplacementClass
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            Text(prompt)
+                .font(DesignTokens.Typography.caption)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                TextField("Replacement class", text: $replacement.title)
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, DesignTokens.Spacing.xs)
+                    .background(compatibleBackgroundSecondary())
+                    .cornerRadius(DesignTokens.Radius.sm)
+                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+
+                HStack(spacing: DesignTokens.Spacing.md) {
+                    TextField("Teacher", text: $replacement.teacher)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(compatibleBackgroundSecondary())
+                        .cornerRadius(DesignTokens.Radius.sm)
+                        .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+
+                    TextField("Room", text: $replacement.room)
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: 140)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(compatibleBackgroundSecondary())
+                        .cornerRadius(DesignTokens.Radius.sm)
+                        .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                }
+            }
+        }
+    }
+}
 
 struct ThemeButton: View {
     let option: AppearancePreference
@@ -537,7 +807,7 @@ struct WeekdayToggleButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : weekday.systemImage)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 18))
                     .frame(height: 24)
 
@@ -563,26 +833,295 @@ struct WeekdayToggleButton: View {
     }
 }
 
+// MARK: - Special Block Replacement Component
+
+struct SpecialBlockReplacementRow: View {
+    let title: String
+    let icon: String
+    @Binding var isOn: Bool
+    @Binding var replacement: ClassAssignment.ReplacementClass
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.md) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(DesignTokens.Colors.primary)
+                
+                Text(title)
+                    .font(DesignTokens.Typography.body)
+                
+                Spacer()
+                
+                Toggle("", isOn: $isOn)
+                    .tint(DesignTokens.Colors.primary)
+            }
+            
+            if !isOn {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text("Which days is it free?")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                    let daySymbols = Calendar.current.weekdaySymbols
+                    let allIndices: [Int] = [2, 3, 4, 5, 6]
+                    let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+
+                    LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
+                        ForEach(allIndices, id: \.self) { idx in
+                            let label = daySymbols[idx - 1]
+                            let isFree = !replacement.daysNotFree.contains(idx)
+
+                            Button {
+                                withAnimation(DesignTokens.Animation.snappy) {
+                                    if isFree {
+                                        replacement.daysNotFree.insert(idx)
+                                    } else {
+                                        replacement.daysNotFree.remove(idx)
+                                    }
+                                }
+                            } label: {
+                                Text(label)
+                                    .font(DesignTokens.Typography.caption)
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, DesignTokens.Spacing.sm)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm, style: .continuous)
+                                            .fill(isFree ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.15)) : compatibleBackgroundSecondary())
+                                    )
+                                    .foregroundStyle(isFree ? DesignTokens.Colors.primary : .primary)
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                        }
+                    }
+
+                    Divider().opacity(0.1)
+
+                    Text("Selected days count as free time")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                    Toggle(isOn: Binding(
+                        get: { replacement.isFree },
+                        set: { replacement.isFree = $0 }
+                    )) {
+                        Label("This is a class/activity on other days", systemImage: "book.fill")
+                    }
+                    .tint(DesignTokens.Colors.primary)
+
+                    if replacement.isFree {
+                        Text("Free on other days too.")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                            TextField("Class name", text: $replacement.title)
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, DesignTokens.Spacing.sm)
+                                .padding(.vertical, DesignTokens.Spacing.xs)
+                                .background(compatibleBackgroundSecondary())
+                                .cornerRadius(DesignTokens.Radius.sm)
+                                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                        
+                            HStack(spacing: DesignTokens.Spacing.md) {
+                                TextField("Teacher", text: $replacement.teacher)
+                                    .foregroundStyle(.primary)
+                                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                                    .padding(.vertical, DesignTokens.Spacing.xs)
+                                    .background(compatibleBackgroundSecondary())
+                                    .cornerRadius(DesignTokens.Radius.sm)
+                                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                        
+                                TextField("Room", text: $replacement.room)
+                                    .foregroundStyle(.primary)
+                                    .frame(maxWidth: 140)
+                                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                                    .padding(.vertical, DesignTokens.Spacing.xs)
+                                    .background(compatibleBackgroundSecondary())
+                                    .cornerRadius(DesignTokens.Radius.sm)
+                                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                            }
+                        }
+                    }
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.22), value: isOn)
+            }
+        }
+        .padding(DesignTokens.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .fill(compatibleBackgroundSecondary())
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
+                .strokeBorder(Color.secondary.opacity(0.1), lineWidth: 1)
+        )
+    }
+}
+
 // MARK: - Special Block Toggle Component
 
 struct SpecialBlockToggleRow: View {
     let title: String
     let icon: String
     @Binding var isOn: Bool
+    var showMusicDays: Bool = false
+    var musicAssignment: ClassAssignment?
+    var availableMusicDays: [Weekday]?
+    var onMusicDayChanged: ((Weekday, Bool) -> Void)?
+    var replacement: Binding<ClassAssignment.ReplacementClass>?
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(DesignTokens.Colors.primary)
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: DesignTokens.Spacing.md) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(DesignTokens.Colors.primary)
+                
+                Text(title)
+                    .font(DesignTokens.Typography.body)
+                
+                Spacer()
+                
+                Toggle("", isOn: $isOn)
+                    .tint(DesignTokens.Colors.primary)
+            }
             
-            Text(title)
-                .font(DesignTokens.Typography.body)
+            if showMusicDays && isOn && musicAssignment?.isFree == true && !(availableMusicDays?.isEmpty ?? true) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text("What days do you have music?")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)], spacing: DesignTokens.Spacing.sm) {
+                        ForEach(availableMusicDays ?? []) { weekday in
+                            let isNotFree = musicAssignment?.musicDaysNotFree.contains(weekday.calendarWeekdayIndex) ?? false
+                            Button {
+                                onMusicDayChanged?(weekday, isNotFree)
+                            } label: {
+                                Text(weekday.title)
+                                    .font(DesignTokens.Typography.caption)
+                                    .fontWeight(.semibold)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, DesignTokens.Spacing.sm)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm, style: .continuous)
+                                            .fill(isNotFree ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.2)) : AnyShapeStyle(compatibleBackgroundSecondary()))
+                                    )
+                                    .foregroundStyle(isNotFree ? DesignTokens.Colors.primary : .primary)
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                        }
+                    }
+                }
+            }
             
-            Spacer()
-            
-            Toggle("", isOn: $isOn)
-                .tint(DesignTokens.Colors.primary)
+            if !isOn && replacement != nil {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text("Which days do you have something else?")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                    let daySymbols = Calendar.current.weekdaySymbols
+                    let allIndices: [Int] = [2, 3, 4, 5, 6]
+                    let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+
+                    LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
+                        ForEach(allIndices, id: \.self) { idx in
+                            let label = daySymbols[idx - 1]
+                            let hasReplacement = replacement?.wrappedValue.daysNotFree.contains(idx) ?? false
+
+                            Button {
+                                withAnimation(DesignTokens.Animation.snappy) {
+                                    if hasReplacement {
+                                        replacement?.wrappedValue.daysNotFree.remove(idx)
+                                    } else {
+                                        replacement?.wrappedValue.daysNotFree.insert(idx)
+                                    }
+                                }
+                            } label: {
+                                Text(label)
+                                    .font(DesignTokens.Typography.caption)
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, DesignTokens.Spacing.sm)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: DesignTokens.Radius.sm, style: .continuous)
+                                            .fill(hasReplacement ? AnyShapeStyle(DesignTokens.Colors.primary.opacity(0.15)) : compatibleBackgroundSecondary())
+                                    )
+                                    .foregroundStyle(hasReplacement ? DesignTokens.Colors.primary : .primary)
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                        }
+                    }
+
+                    Divider().opacity(0.1)
+
+                    Text("Free on selected days")
+                        .font(DesignTokens.Typography.caption)
+                        .foregroundStyle(.secondary)
+
+                    Toggle(isOn: Binding(
+                        get: { replacement?.wrappedValue.isFree ?? true },
+                        set: { replacement?.wrappedValue.isFree = $0 }
+                    )) {
+                        Label("This is a class/activity on other days", systemImage: "book.fill")
+                    }
+                    .tint(DesignTokens.Colors.primary)
+
+                    if replacement?.wrappedValue.isFree == true {
+                        Text("Free on other days too.")
+                            .font(DesignTokens.Typography.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                            TextField("Class name", text: Binding(
+                                get: { replacement?.wrappedValue.title ?? "" },
+                                set: { replacement?.wrappedValue.title = $0 }
+                            ))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, DesignTokens.Spacing.sm)
+                                .padding(.vertical, DesignTokens.Spacing.xs)
+                                .background(compatibleBackgroundSecondary())
+                                .cornerRadius(DesignTokens.Radius.sm)
+                                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                        
+                            HStack(spacing: DesignTokens.Spacing.md) {
+                                TextField("Teacher", text: Binding(
+                                    get: { replacement?.wrappedValue.teacher ?? "" },
+                                    set: { replacement?.wrappedValue.teacher = $0 }
+                                ))
+                                    .foregroundStyle(.primary)
+                                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                                    .padding(.vertical, DesignTokens.Spacing.xs)
+                                    .background(compatibleBackgroundSecondary())
+                                    .cornerRadius(DesignTokens.Radius.sm)
+                                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                        
+                                TextField("Room", text: Binding(
+                                    get: { replacement?.wrappedValue.room ?? "" },
+                                    set: { replacement?.wrappedValue.room = $0 }
+                                ))
+                                    .foregroundStyle(.primary)
+                                    .frame(maxWidth: 140)
+                                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                                    .padding(.vertical, DesignTokens.Spacing.xs)
+                                    .background(compatibleBackgroundSecondary())
+                                    .cornerRadius(DesignTokens.Radius.sm)
+                                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm).strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1))
+                            }
+                        }
+                    }
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.22), value: isOn)
+            }
         }
         .padding(DesignTokens.Spacing.md)
         .background(
@@ -850,13 +1389,13 @@ struct ClubEditorRow: View {
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 Toggle(isOn: $club.meetsMondayClub) {
-                    Text("Monday club period")
+                    Text("Monday club period (Music block + Clubs)")
                         .font(DesignTokens.Typography.body)
                 }
                 .tint(DesignTokens.Colors.primary)
 
                 Toggle(isOn: $club.meetsWednesdayClub) {
-                    Text("Wednesday club period")
+                    Text("Wednesday club period (Lunch & Clubs)")
                         .font(DesignTokens.Typography.body)
                 }
                 .tint(DesignTokens.Colors.primary)
@@ -943,5 +1482,5 @@ struct ClubEditorRow: View {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous)
                 .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 1)
         )
-     }
- }
+      }
+  }

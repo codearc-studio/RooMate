@@ -53,7 +53,7 @@ struct RooMateApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(checkForUpdatesAction: { updaterController.checkForUpdates(nil) })
         }
         .commands {
             CommandGroup(after: .appInfo) {
