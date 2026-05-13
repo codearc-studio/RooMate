@@ -1,426 +1,428 @@
 // !$*UTF8*$!
 {
-	archiveVersion = 1;
-	classes = {
-	};
-	objectVersion = 77;
-	objects = {
+    archiveVersion = 1;
+    classes = {
+    };
+    objectVersion = 77;
+    objects = {
 
 /* Begin PBXBuildFile section */
-		3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3F156B6A2FA7D490000ED49C /* Sparkle */; };
-		3F18D7342E99F16D00C1DA28 /* RooMate.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3F18D7332E99F16D00C1DA28 /* RooMate.icon */; };
-		3F4BDABD2FA90214001A1825 /* TelemetryClient in Frameworks */ = {isa = PBXBuildFile; productRef = 3F4BDABC2FA90214001A1825 /* TelemetryClient */; };
-		3F4BDABF2FA90214001A1825 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 3F4BDABE2FA90214001A1825 /* TelemetryDeck */; };
-		3FC78D7C2EA2C4190042FFED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FC78D7B2EA2C4190042FFED /* Assets.xcassets */; };
+        3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3F156B6A2FA7D490000ED49C /* Sparkle */; };
+        3F18D7342E99F16D00C1DA28 /* RooMate.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3F18D7332E99F16D00C1DA28 /* RooMate.icon */; };
+        3F4BDABD2FA90214001A1825 /* TelemetryClient in Frameworks */ = {isa = PBXBuildFile; productRef = 3F4BDABC2FA90214001A1825 /* TelemetryClient */; };
+        3F4BDABF2FA90214001A1825 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 3F4BDABE2FA90214001A1825 /* TelemetryDeck */; };
+        3FC78D7C2EA2C4190042FFED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FC78D7B2EA2C4190042FFED /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		3F18D71F2E99F05500C1DA28 /* RooMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RooMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F18D7332E99F16D00C1DA28 /* RooMate.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = RooMate.icon; sourceTree = "<group>"; };
-		3FC78D7B2EA2C4190042FFED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+        3F18D71F2E99F05500C1DA28 /* RooMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RooMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+        3F18D7332E99F16D00C1DA28 /* RooMate.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = RooMate.icon; sourceTree = "<group>"; };
+        3FC78D7B2EA2C4190042FFED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3F156B6D2FA7D5C7000ED49C /* Exceptions for "RooMate" folder in "RooMate" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 3F18D71E2E99F05500C1DA28 /* RooMate */;
-		};
+        3F156B6D2FA7D5C7000ED49C /* Exceptions for "RooMate" folder in "RooMate" target */ = {
+            isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+            membershipExceptions = (
+                Info.plist,
+            );
+            target = 3F18D71E2E99F05500C1DA28 /* RooMate */;
+        };
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3F18D7212E99F05500C1DA28 /* RooMate */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				3F156B6D2FA7D5C7000ED49C /* Exceptions for "RooMate" folder in "RooMate" target */,
-			);
-			path = RooMate;
-			sourceTree = "<group>";
-		};
+        3F18D7212E99F05500C1DA28 /* RooMate */ = {
+            isa = PBXFileSystemSynchronizedRootGroup;
+            exceptions = (
+                3F156B6D2FA7D5C7000ED49C /* Exceptions for "RooMate" folder in "RooMate" target */,
+            );
+            path = RooMate;
+            sourceTree = "<group>";
+        };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		3F18D71C2E99F05500C1DA28 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */,
-				3F4BDABD2FA90214001A1825 /* TelemetryClient in Frameworks */,
-				3F4BDABF2FA90214001A1825 /* TelemetryDeck in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+        3F18D71C2E99F05500C1DA28 /* Frameworks */ = {
+            isa = PBXFrameworksBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */,
+                3F4BDABD2FA90214001A1825 /* TelemetryClient in Frameworks */,
+                3F4BDABF2FA90214001A1825 /* TelemetryDeck in Frameworks */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		3F18D7162E99F05500C1DA28 = {
-			isa = PBXGroup;
-			children = (
-				3FC78D7B2EA2C4190042FFED /* Assets.xcassets */,
-				3F18D7332E99F16D00C1DA28 /* RooMate.icon */,
-				3F18D7212E99F05500C1DA28 /* RooMate */,
-				3F18D7202E99F05500C1DA28 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		3F18D7202E99F05500C1DA28 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				3F18D71F2E99F05500C1DA28 /* RooMate.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
+        3F18D7162E99F05500C1DA28 = {
+            isa = PBXGroup;
+            children = (
+                3FC78D7B2EA2C4190042FFED /* Assets.xcassets */,
+                3F18D7332E99F16D00C1DA28 /* RooMate.icon */,
+                3F18D7212E99F05500C1DA28 /* RooMate */,
+                3F18D7202E99F05500C1DA28 /* Products */,
+            );
+            sourceTree = "<group>";
+        };
+        3F18D7202E99F05500C1DA28 /* Products */ = {
+            isa = PBXGroup;
+            children = (
+                3F18D71F2E99F05500C1DA28 /* RooMate.app */,
+            );
+            name = Products;
+            sourceTree = "<group>";
+        };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3F18D71E2E99F05500C1DA28 /* RooMate */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 3F18D72A2E99F05600C1DA28 /* Build configuration list for PBXNativeTarget "RooMate" */;
-			buildPhases = (
-				3F18D71B2E99F05500C1DA28 /* Sources */,
-				3F18D71C2E99F05500C1DA28 /* Frameworks */,
-				3F18D71D2E99F05500C1DA28 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				3F18D7212E99F05500C1DA28 /* RooMate */,
-			);
-			name = RooMate;
-			packageProductDependencies = (
-				3F156B6A2FA7D490000ED49C /* Sparkle */,
-				3F4BDABC2FA90214001A1825 /* TelemetryClient */,
-				3F4BDABE2FA90214001A1825 /* TelemetryDeck */,
-			);
-			productName = RooMate;
-			productReference = 3F18D71F2E99F05500C1DA28 /* RooMate.app */;
-			productType = "com.apple.product-type.application";
-		};
+        3F18D71E2E99F05500C1DA28 /* RooMate */ = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = 3F18D72A2E99F05600C1DA28 /* Build configuration list for PBXNativeTarget "RooMate" */;
+            buildPhases = (
+                3F18D71B2E99F05500C1DA28 /* Sources */,
+                3F18D71C2E99F05500C1DA28 /* Frameworks */,
+                3F18D71D2E99F05500C1DA28 /* Resources */,
+            );
+            buildRules = (
+            );
+            dependencies = (
+            );
+            fileSystemSynchronizedGroups = (
+                3F18D7212E99F05500C1DA28 /* RooMate */,
+            );
+            name = RooMate;
+            packageProductDependencies = (
+                3F156B6A2FA7D490000ED49C /* Sparkle */,
+                3F4BDABC2FA90214001A1825 /* TelemetryClient */,
+                3F4BDABE2FA90214001A1825 /* TelemetryDeck */,
+            );
+            productName = RooMate;
+            productReference = 3F18D71F2E99F05500C1DA28 /* RooMate.app */;
+            productType = "com.apple.product-type.application";
+        };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		3F18D7172E99F05500C1DA28 /* Project object */ = {
-			isa = PBXProject;
-			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2620;
-				TargetAttributes = {
-					3F18D71E2E99F05500C1DA28 = {
-						CreatedOnToolsVersion = 26.0;
-					};
-				};
-			};
-			buildConfigurationList = 3F18D71A2E99F05500C1DA28 /* Build configuration list for PBXProject "RooMate" */;
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
-			);
-			mainGroup = 3F18D7162E99F05500C1DA28;
-			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */,
-				3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
-			);
-			preferredProjectObjectVersion = 77;
-			productRefGroup = 3F18D7202E99F05500C1DA28 /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
-			targets = (
-				3F18D71E2E99F05500C1DA28 /* RooMate */,
-			);
-		};
+        3F18D7172E99F05500C1DA28 /* Project object */ = {
+            isa = PBXProject;
+            attributes = {
+                BuildIndependentTargetsInParallel = 1;
+                LastSwiftUpdateCheck = 2600;
+                LastUpgradeCheck = 2620;
+                TargetAttributes = {
+                    3F18D71E2E99F05500C1DA28 = {
+                        CreatedOnToolsVersion = 26.0;
+                    };
+                };
+            };
+            buildConfigurationList = 3F18D71A2E99F05500C1DA28 /* Build configuration list for PBXProject "RooMate" */;
+            developmentRegion = en;
+            hasScannedForEncodings = 0;
+            knownRegions = (
+                en,
+                Base,
+            );
+            mainGroup = 3F18D7162E99F05500C1DA28;
+            minimizedProjectReferenceProxies = 1;
+            packageReferences = (
+                3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */,
+                3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+            );
+            preferredProjectObjectVersion = 77;
+            productRefGroup = 3F18D7202E99F05500C1DA28 /* Products */;
+            projectDirPath = "";
+            projectRoot = "";
+            targets = (
+                3F18D71E2E99F05500C1DA28 /* RooMate */,
+            );
+        };
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		3F18D71D2E99F05500C1DA28 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				3FC78D7C2EA2C4190042FFED /* Assets.xcassets in Resources */,
-				3F18D7342E99F16D00C1DA28 /* RooMate.icon in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+        3F18D71D2E99F05500C1DA28 /* Resources */ = {
+            isa = PBXResourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                3FC78D7C2EA2C4190042FFED /* Assets.xcassets in Resources */,
+                3F18D7342E99F16D00C1DA28 /* RooMate.icon in Resources */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		3F18D71B2E99F05500C1DA28 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+        3F18D71B2E99F05500C1DA28 /* Sources */ = {
+            isa = PBXSourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		3F18D7282E99F05600C1DA28 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 4F4MT9662G;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		3F18D7292E99F05600C1DA28 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 4F4MT9662G;
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
-			};
-			name = Release;
-		};
-		3F18D72B2E99F05600C1DA28 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RooMate/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RooMate;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
-				MARKETING_VERSION = 5.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				REGISTER_APP_GROUPS = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		3F18D72C2E99F05600C1DA28 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = RooMate/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RooMate;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 13.5;
-				MARKETING_VERSION = 5.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				REGISTER_APP_GROUPS = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
+        3F18D7282E99F05600C1DA28 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                ALWAYS_SEARCH_USER_PATHS = NO;
+                ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+                CLANG_ANALYZER_NONNULL = YES;
+                CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+                CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+                CLANG_ENABLE_MODULES = YES;
+                CLANG_ENABLE_OBJC_ARC = YES;
+                CLANG_ENABLE_OBJC_WEAK = YES;
+                CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+                CLANG_WARN_BOOL_CONVERSION = YES;
+                CLANG_WARN_COMMA = YES;
+                CLANG_WARN_CONSTANT_CONVERSION = YES;
+                CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+                CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+                CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+                CLANG_WARN_EMPTY_BODY = YES;
+                CLANG_WARN_ENUM_CONVERSION = YES;
+                CLANG_WARN_INFINITE_RECURSION = YES;
+                CLANG_WARN_INT_CONVERSION = YES;
+                CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+                CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+                CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+                CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+                CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+                CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+                CLANG_WARN_STRICT_PROTOTYPES = YES;
+                CLANG_WARN_SUSPICIOUS_MOVE = YES;
+                CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+                CLANG_WARN_UNREACHABLE_CODE = YES;
+                CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+                COPY_PHASE_STRIP = NO;
+                DEAD_CODE_STRIPPING = YES;
+                DEBUG_INFORMATION_FORMAT = dwarf;
+                DEVELOPMENT_TEAM = 4F4MT9662G;
+                ENABLE_STRICT_OBJC_MSGSEND = YES;
+                ENABLE_TESTABILITY = YES;
+                ENABLE_USER_SCRIPT_SANDBOXING = YES;
+                GCC_C_LANGUAGE_STANDARD = gnu17;
+                GCC_DYNAMIC_NO_PIC = NO;
+                GCC_NO_COMMON_BLOCKS = YES;
+                GCC_OPTIMIZATION_LEVEL = 0;
+                GCC_PREPROCESSOR_DEFINITIONS = (
+                    "DEBUG=1",
+                    "$(inherited)",
+                );
+                GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+                GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+                GCC_WARN_UNDECLARED_SELECTOR = YES;
+                GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+                GCC_WARN_UNUSED_FUNCTION = YES;
+                GCC_WARN_UNUSED_VARIABLE = YES;
+                LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+                MACOSX_DEPLOYMENT_TARGET = 26.0;
+                MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+                MTL_FAST_MATH = YES;
+                ONLY_ACTIVE_ARCH = YES;
+                SDKROOT = macosx;
+                STRING_CATALOG_GENERATE_SYMBOLS = YES;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+                SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+            };
+            name = Debug;
+        };
+        3F18D7292E99F05600C1DA28 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                ALWAYS_SEARCH_USER_PATHS = NO;
+                ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+                CLANG_ANALYZER_NONNULL = YES;
+                CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+                CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+                CLANG_ENABLE_MODULES = YES;
+                CLANG_ENABLE_OBJC_ARC = YES;
+                CLANG_ENABLE_OBJC_WEAK = YES;
+                CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+                CLANG_WARN_BOOL_CONVERSION = YES;
+                CLANG_WARN_COMMA = YES;
+                CLANG_WARN_CONSTANT_CONVERSION = YES;
+                CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+                CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+                CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+                CLANG_WARN_EMPTY_BODY = YES;
+                CLANG_WARN_ENUM_CONVERSION = YES;
+                CLANG_WARN_INFINITE_RECURSION = YES;
+                CLANG_WARN_INT_CONVERSION = YES;
+                CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+                CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+                CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+                CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+                CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+                CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+                CLANG_WARN_STRICT_PROTOTYPES = YES;
+                CLANG_WARN_SUSPICIOUS_MOVE = YES;
+                CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+                CLANG_WARN_UNREACHABLE_CODE = YES;
+                CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+                COPY_PHASE_STRIP = NO;
+                DEAD_CODE_STRIPPING = YES;
+                DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+                DEVELOPMENT_TEAM = 4F4MT9662G;
+                ENABLE_NS_ASSERTIONS = NO;
+                ENABLE_STRICT_OBJC_MSGSEND = YES;
+                ENABLE_USER_SCRIPT_SANDBOXING = YES;
+                GCC_C_LANGUAGE_STANDARD = gnu17;
+                GCC_NO_COMMON_BLOCKS = YES;
+                GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+                GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+                GCC_WARN_UNDECLARED_SELECTOR = YES;
+                GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+                GCC_WARN_UNUSED_FUNCTION = YES;
+                GCC_WARN_UNUSED_VARIABLE = YES;
+                LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+                MACOSX_DEPLOYMENT_TARGET = 26.0;
+                MTL_ENABLE_DEBUG_INFO = NO;
+                MTL_FAST_MATH = YES;
+                SDKROOT = macosx;
+                STRING_CATALOG_GENERATE_SYMBOLS = YES;
+                SWIFT_COMPILATION_MODE = wholemodule;
+            };
+            name = Release;
+        };
+        3F18D72B2E99F05600C1DA28 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
+                ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+                CODE_SIGN_IDENTITY = "Apple Development";
+                CODE_SIGN_ENTITLEMENTS = RooMate/RooMate.entitlements;
+                CODE_SIGN_STYLE = Automatic;
+                COMBINE_HIDPI_IMAGES = YES;
+                CURRENT_PROJECT_VERSION = 3;
+                DEAD_CODE_STRIPPING = YES;
+                DEVELOPMENT_TEAM = 5KFXU6Q8VM;
+                ENABLE_APP_SANDBOX = YES;
+                ENABLE_HARDENED_RUNTIME = YES;
+                ENABLE_PREVIEWS = YES;
+                GENERATE_INFOPLIST_FILE = YES;
+                INFOPLIST_FILE = RooMate/Info.plist;
+                INFOPLIST_KEY_CFBundleDisplayName = RooMate;
+                INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+                INFOPLIST_KEY_NSHumanReadableCopyright = "";
+                LD_RUNPATH_SEARCH_PATHS = (
+                    "$(inherited)",
+                    "@executable_path/../Frameworks",
+                );
+                MACOSX_DEPLOYMENT_TARGET = 13.5;
+                MARKETING_VERSION = 5.1;
+                PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                PROVISIONING_PROFILE_SPECIFIER = "";
+                REGISTER_APP_GROUPS = YES;
+                STRING_CATALOG_GENERATE_SYMBOLS = YES;
+                SWIFT_APPROACHABLE_CONCURRENCY = YES;
+                SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+                SWIFT_EMIT_LOC_STRINGS = YES;
+                SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+                SWIFT_VERSION = 5.0;
+            };
+            name = Debug;
+        };
+        3F18D72C2E99F05600C1DA28 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
+                ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+                CODE_SIGN_IDENTITY = "Apple Development";
+                CODE_SIGN_ENTITLEMENTS = RooMate/RooMate.entitlements;
+                CODE_SIGN_STYLE = Automatic;
+                COMBINE_HIDPI_IMAGES = YES;
+                CURRENT_PROJECT_VERSION = 3;
+                DEAD_CODE_STRIPPING = YES;
+                DEVELOPMENT_TEAM = 5KFXU6Q8VM;
+                ENABLE_APP_SANDBOX = YES;
+                ENABLE_HARDENED_RUNTIME = YES;
+                ENABLE_PREVIEWS = YES;
+                GENERATE_INFOPLIST_FILE = YES;
+                INFOPLIST_FILE = RooMate/Info.plist;
+                INFOPLIST_KEY_CFBundleDisplayName = RooMate;
+                INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+                INFOPLIST_KEY_NSHumanReadableCopyright = "";
+                LD_RUNPATH_SEARCH_PATHS = (
+                    "$(inherited)",
+                    "@executable_path/../Frameworks",
+                );
+                MACOSX_DEPLOYMENT_TARGET = 13.5;
+                MARKETING_VERSION = 5.1;
+                PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                PROVISIONING_PROFILE_SPECIFIER = "";
+                REGISTER_APP_GROUPS = YES;
+                STRING_CATALOG_GENERATE_SYMBOLS = YES;
+                SWIFT_APPROACHABLE_CONCURRENCY = YES;
+                SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+                SWIFT_EMIT_LOC_STRINGS = YES;
+                SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+                SWIFT_VERSION = 5.0;
+            };
+            name = Release;
+        };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3F18D71A2E99F05500C1DA28 /* Build configuration list for PBXProject "RooMate" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				3F18D7282E99F05600C1DA28 /* Debug */,
-				3F18D7292E99F05600C1DA28 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		3F18D72A2E99F05600C1DA28 /* Build configuration list for PBXNativeTarget "RooMate" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				3F18D72B2E99F05600C1DA28 /* Debug */,
-				3F18D72C2E99F05600C1DA28 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+        3F18D71A2E99F05500C1DA28 /* Build configuration list for PBXProject "RooMate" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                3F18D7282E99F05600C1DA28 /* Debug */,
+                3F18D7292E99F05600C1DA28 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Release;
+        };
+        3F18D72A2E99F05600C1DA28 /* Build configuration list for PBXNativeTarget "RooMate" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                3F18D72B2E99F05600C1DA28 /* Debug */,
+                3F18D72C2E99F05600C1DA28 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Release;
+        };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.9.1;
-			};
-		};
-		3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.12.0;
-			};
-		};
+        3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+            isa = XCRemoteSwiftPackageReference;
+            repositoryURL = "https://github.com/sparkle-project/Sparkle";
+            requirement = {
+                kind = upToNextMajorVersion;
+                minimumVersion = 2.9.1;
+            };
+        };
+        3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+            isa = XCRemoteSwiftPackageReference;
+            repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+            requirement = {
+                kind = upToNextMajorVersion;
+                minimumVersion = 2.12.0;
+            };
+        };
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3F156B6A2FA7D490000ED49C /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-		3F4BDABC2FA90214001A1825 /* TelemetryClient */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
-			productName = TelemetryClient;
-		};
-		3F4BDABE2FA90214001A1825 /* TelemetryDeck */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
-			productName = TelemetryDeck;
-		};
+        3F156B6A2FA7D490000ED49C /* Sparkle */ = {
+            isa = XCSwiftPackageProductDependency;
+            package = 3F156B692FA7D490000ED49C /* XCRemoteSwiftPackageReference "Sparkle" */;
+            productName = Sparkle;
+        };
+        3F4BDABC2FA90214001A1825 /* TelemetryClient */ = {
+            isa = XCSwiftPackageProductDependency;
+            package = 3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+            productName = TelemetryClient;
+        };
+        3F4BDABE2FA90214001A1825 /* TelemetryDeck */ = {
+            isa = XCSwiftPackageProductDependency;
+            package = 3F4BDABB2FA90214001A1825 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+            productName = TelemetryDeck;
+        };
 /* End XCSwiftPackageProductDependency section */
-	};
-	rootObject = 3F18D7172E99F05500C1DA28 /* Project object */;
+    };
+    rootObject = 3F18D7172E99F05500C1DA28 /* Project object */;
 }

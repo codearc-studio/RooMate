@@ -6,5 +6,7 @@
 	<string>https://raw.githubusercontent.com/codearc-studio/RooMate/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>TlyXWxHETq2i607xdjzie7HQJDUnm8UZZf3SS7VZLzY=</string>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
 </dict>
 </plist>
