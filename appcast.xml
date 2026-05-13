@@ -1,28 +1,37 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
-  <channel>
-    <title>RooMate</title>
-
-    <item>
-      <title>RooMate 4.0</title>
-
-      <pubDate>Tue, 12 May 2026 14:05:22 -0400</pubDate>
-
-      <!-- IMPORTANT: build number (used for update detection) -->
-      <sparkle:version>1</sparkle:version>
-
-      <!-- User-facing version -->
-      <sparkle:shortVersionString>4.0</sparkle:shortVersionString>
-
-      <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
-
-      <enclosure
-        url="https://github.com/codearc-studio/RooMate/releases/download/v4.0/RooMate-4.0.zip"
-        length="5347288"
-        type="application/octet-stream"
-        sparkle:edSignature="UaA8UwM42reSf3U00uJa2P4MMAilINf4eCOQjXuAqXP0TB9ULqpW9T/w5EG4Gv6YdMRlLO4y/i2d1OJQ5yK6BA=="
-      />
-    </item>
-
-  </channel>
+    <channel>
+        <title>RooMate</title>
+        <item>
+            <title>5.1</title>
+            <pubDate>Wed, 13 May 2026 07:31:46 -0400</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate-5.1-b3.zip" length="5228293" type="application/octet-stream" sparkle:edSignature="71VHh9K3Lr9GQzNd3806JECXQc/EjzoZL4isfMgqA+ijoUXL6/8s+0q4yJA4EZhPrM5Uv5WxsLHiKeBIx3TMBw=="/>
+            <sparkle:deltas>
+                <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate3-2.delta" sparkle:deltaFrom="2" length="669470" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="975840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="U/cQ1RLSyQofaRbeLpMMiMRbHLAiJj1HOCfukyBa0YIjy+J5jZ8ZZmCtNA1JekyxDbmporJH+xhb7Bs8iJz+BQ=="/>
+                <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate3-1.delta" sparkle:deltaFrom="1" length="378910" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="975840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="XQnKuzcilICTNZL2mayF+InxRni2zmRL0PSHiqQqwOXrRNmh6fobslLSWABP5EiM86YBmy28zKfSrHlgrM4aCg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
+            <title>5</title>
+            <pubDate>Tue, 12 May 2026 19:31:58 -0400</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate-5.0.zip" length="3250797" type="application/octet-stream" sparkle:edSignature="A2nOjGLQHrUDPYY3ijYoWH3UslqPWJkjM+eho5j3ST6GipjLhKA7XLvsAcxJTXPEp2LEKRVPDAB8kOfAPng1Dw=="/>
+            <sparkle:deltas>
+                <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate2-1.delta" sparkle:deltaFrom="1" length="360626" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="975840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="VCelgs/Sz8ZQHgiFEUDsWUtRu89oxfRF8UnV++T60lrVdQboplLD561Pr2Ix5XJlWhGx0u6x5pp8x+/04X3XAg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
+            <title>4.0</title>
+            <pubDate>Tue, 12 May 2026 14:05:22 -0400</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://raw.githubusercontent.com/codearc-studio/RooMate/main/RooMate-4.0.zip" length="5347288" type="application/octet-stream" sparkle:edSignature="UaA8UwM42reSf3U00uJa2P4MMAilINf4eCOQjXuAqXP0TB9ULqpW9T/w5EG4Gv6YdMRlLO4y/i2d1OJQ5yK6BA=="/>
+        </item>
+    </channel>
 </rss>
