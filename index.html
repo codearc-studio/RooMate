@@ -111,11 +111,18 @@
   }
 
   .theme-toggle {
-    background: none; border: 1px solid var(--border-strong);
-    border-radius: 8px; padding: 6px 10px;
-    cursor: pointer; color: var(--text-secondary);
-    font-size: 14px; transition: all 0.2s;
-    display: flex; align-items: center; gap: 6px;
+    background: none;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 
   .theme-toggle:hover {
@@ -272,6 +279,121 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* HERO PREVIEW */
+  .hero-preview-wrap {
+    margin-top: 3.5rem;
+    width: 100%;
+    max-width: 1050px;
+    animation: fadeUp 0.6s ease 0.35s both;
+    perspective: 1200px;
+  }
+
+  .hero-preview-img {
+    width: 100%;
+    border-radius: 26px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 90px rgba(0,0,0,0.18);
+    transform: rotateX(6deg) rotateY(-3deg);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .hero-preview-img:hover {
+    transform: rotateX(0deg) rotateY(0deg) translateY(-4px);
+    box-shadow: 0 40px 110px rgba(0,0,0,0.22);
+  }
+
+  .tech-stack {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 2rem;
+    animation: fadeUp 0.6s ease 0.32s both;
+  }
+
+  .tech-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow);
+  }
+
+  .install-steps {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .install-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+  }
+
+  .install-step:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .install-step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--pill-bg);
+    color: var(--afs-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .install-step h3 {
+    font-size: 15px;
+    margin-bottom: 0.4rem;
+    color: var(--text-primary);
+  }
+
+  .install-step p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .faq-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .faq-card h3 {
+    font-size: 15px;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+  }
+
+  .faq-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
   /* SECTIONS */
   section {
     padding: 110px 2rem;
@@ -406,7 +528,40 @@
     border-radius: 14px;
     box-shadow: var(--shadow-lg);
     margin-bottom: 10px;
-    transition: transform 0.2s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    opacity: 1;
+  }
+  .mockup-screenshot img {
+    will-change: opacity, transform;
+  }
+  @media (max-width: 768px) {
+    .screenshot-tabs {
+      overflow-x: auto;
+      white-space: nowrap;
+      scroll-snap-type: x mandatory;
+    }
+
+    .screenshot-tabs .tab {
+      scroll-snap-align: center;
+    }
+
+    .hero-preview-img {
+      transform: none !important;
+    }
+
+    .roadmap-card:hover {
+      transform: translateY(-4px);
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .status-live {
+    animation: pulseLive 2.5s infinite;
+  }
+
+  @keyframes pulseLive {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   .screenshot-tabs {
@@ -878,6 +1033,82 @@
     .mockup-body { grid-template-columns: 140px 1fr; }
     .mockup-cards { grid-template-columns: 1fr 1fr; }
     .about-stats { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* Hide download on mobile */
+    a[href="#download"], #sticky-download {
+      display: none !important;
+    }
+
+    /* Show mobile-only message */
+    .mobile-download-note {
+      display: block;
+      margin-top: 1rem;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+  }
+
+  /* REVEAL ANIMATION SYSTEM */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* MICRO INTERACTIONS (HOVER POLISH) */
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-nav:hover {
+    transform: scale(1.03);
+  }
+
+  .screenshot-tabs .tab {
+    position: relative;
+  }
+
+  .screenshot-tabs .tab::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--afs-blue);
+    transition: all 0.2s ease;
+    transform: translateX(-50%);
+  }
+
+  .screenshot-tabs .tab.active::after {
+    width: 60%;
+  }
+
+  /* STICKY DOWNLOAD BUTTON */
+  .sticky-download {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--afs-blue);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s ease;
+    z-index: 999;
+  }
+
+  .sticky-download.show {
+    opacity: 1;
+    transform: translateY(0);
   }
 </style>
 </head>
@@ -917,7 +1148,6 @@
         </svg>
       </span>
 
-      <span id="theme-label">Light</span>
     </button>
     <a href="#download" class="btn-nav">Download</a>
   </div>
@@ -946,26 +1176,47 @@
     <a href="#features" class="btn-secondary">
       Explore features →
     </a>
+    <a href="https://tally.so/r/7RalBZ" target="_blank" class="btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 14c1.2-.9 2-2.4 2-4a5 5 0 0 0-10 0c0 1.6.8 3.1 2 4"/>
+        <path d="M9 18h6"/>
+        <path d="M10 22h4"/>
+      </svg>
+      Suggest features
+    </a>
+  </div>
+
+  <div class="hero-preview-wrap">
+    <img src="images/dashboardlight.png" alt="RooMate Dashboard Preview" class="hero-preview-img" id="hero-preview-img">
+  </div>
+
+  <div class="tech-stack">
+    <div class="tech-pill">SwiftUI</div>
+    <div class="tech-pill">macOS Native</div>
+    <div class="tech-pill">Built for Students</div>
+    <div class="tech-pill">Fast & Lightweight</div>
   </div>
 
   <p class="hero-platform-note">
     <span>macOS — Free to use · Windows coming soon</span>
   </p>
+  <div class="mobile-download-note" style="display:none;">
+    Download is only available on macOS. Open this site on a Mac to download RooMate.
+  </div>
 </section>
 
-<!-- FEATURES -->
 <section id="features">
   <div class="section-inner">
     <div class="features-header">
       <div>
-        <span class="section-label">Features</span>
-        <h2 class="section-title">Everything you need,<br>nothing you don't.</h2>
+        <span class="section-label reveal">Features</span>
+        <h2 class="section-title reveal">Everything you need,<br>nothing you don't.</h2>
       </div>
-      <p class="section-desc">RooMate connects directly to school data sources like Google Sheets for athletics and calendar feeds for events, presenting everything in a clean, fast interface.</p>
+      <p class="section-desc reveal">RooMate brings together schedules, sports, events, and clubs into one clean, fast experience designed for AFS students.</p>
     </div>
 
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
@@ -977,7 +1228,7 @@
           <span class="tag">Personalized</span>
         </div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
@@ -988,31 +1239,31 @@
           <span class="tag">Unified</span>
         </div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         </div>
         <h3>Sports Hub</h3>
-        <p>Live integration with AFS athletics via Google Sheets. Upcoming games, team schedules, home/away indicators, and coach notes — all updated automatically.</p>
+        <p>Keep up with upcoming games, team schedules, home and away matchups, and important athletics updates in one place.</p>
         <div class="feature-tags">
           <span class="tag">Live Data</span>
           <span class="tag">Home/Away</span>
           <span class="tag">Notes</span>
         </div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.5 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.41 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.4a16 16 0 0 0 5.69 5.69l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </div>
         <h3>School Events</h3>
-        <p>Synced directly from AFS iCal feeds across all divisions — All School, Upper, Middle, and Lower School. Events parsed and sorted automatically, always up to date.</p>
+        <p>See school events across all divisions including All School, Upper, Middle, and Lower School in a simple organized view.</p>
         <div class="feature-tags">
           <span class="tag">iCal Sync</span>
           <span class="tag">All Divisions</span>
           <span class="tag">Auto-sorted</span>
         </div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
@@ -1024,7 +1275,7 @@
           <span class="tag">Expanding</span>
         </div>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5289c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4m16 0h2M5.34 5.34L3.93 3.93m14.14 14.14l1.41 1.41M12 2v2m0 16v2"/></svg>
         </div>
@@ -1038,50 +1289,85 @@
       </div>
     </div>
   </div>
+  </div>
 </section>
 
-
-
-<!-- DASHBOARD SCREENSHOTS -->
-<section id="dashboard">
+<!-- VALUE SECTION -->
+<section id="value">
   <div class="section-inner">
-    <span class="section-label">Dashboard Preview</span>
-    <h2 class="section-title">A day in the life.</h2>
-    <p class="section-desc">Here's what your RooMate dashboard looks like across key screens.</p>
+    <span class="section-label reveal">Why RooMate</span>
+    <h2 class="section-title reveal">Everything you actually need for your school day.</h2>
+    <p class="section-desc reveal">RooMate removes the clutter and brings your daily school essentials into one simple place.</p>
 
-    <div class="mockup-screenshot">
-      <img id="dashboard-screenshot" src="images/dashboardlight.png" alt="Dashboard screen">
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <h3>No switching apps</h3>
+        <p>Everything lives in one dashboard so you don’t have to jump between tabs or tools.</p>
+      </div>
 
-      <div class="screenshot-tabs">
-        <button class="tab active" onclick="setScreenshot('dashboard.png', this)">Dashboard</button>
-        <button class="tab" onclick="setScreenshot('schedule.png', this)">Schedule</button>
-        <button class="tab" onclick="setScreenshot('sports.png', this)">Sports</button>
-        <button class="tab" onclick="setScreenshot('events.png', this)">Events</button>
-        <button class="tab" onclick="setScreenshot('settings.png', this)">Settings</button>
+      <div class="feature-card reveal">
+        <h3>Built around your schedule</h3>
+        <p>Your school day is the center of everything, not an afterthought.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <h3>Fast and distraction-free</h3>
+        <p>Clean interface designed to get you what you need instantly.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- DATA SOURCES -->
+<!-- DASHBOARD SCREENSHOTS -->
+<section id="dashboard">
+  <div class="section-inner">
+    <span class="section-label reveal">Dashboard Preview</span>
+    <h2 class="section-title reveal">A day in the life.</h2>
+    <p class="section-desc reveal">Here's what your RooMate dashboard looks like across key screens.</p>
+
+    <div class="mockup-screenshot">
+      <img id="dashboard-screenshot" src="images/dashboardlight.png" alt="Dashboard screen" loading="lazy">
+      <div class="screenshot-tabs">
+        <button class="tab active" onclick="setScreenshot('dashboard', this)">Dashboard</button>
+        <button class="tab" onclick="setScreenshot('schedule', this)">Schedule</button>
+        <button class="tab" onclick="setScreenshot('sports', this)">Sports</button>
+        <button class="tab" onclick="setScreenshot('events', this)">Events</button>
+        <button class="tab" onclick="setScreenshot('settings', this)">Settings</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORM -->
 <section id="data">
   <div class="section-inner">
-    <span class="section-label">Data Sources</span>
-    <h2 class="section-title">Powered by AFS data,<br>automatically.</h2>
-    <p class="section-desc">RooMate reads directly from the sources AFS already maintains. No manual entry, no lag.</p>
+    <span class="section-label reveal">Platform</span>
+    <h2 class="section-title reveal">Built around student life.</h2>
+    <p class="section-desc reveal">RooMate is designed to make everyday school life simpler with a fast, focused dashboard experience for AFS students.</p>
+
     <div class="sources-grid">
-      <div class="source-card">
-        <div class="source-icon">📊</div>
+      <div class="source-card reveal">
+        <div class="source-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h7l-1 8 10-14h-7l1-6z"></path>
+          </svg>
+        </div>
         <div>
-          <h3>Google Sheets</h3>
-          <p>Athletics schedules and coaching updates are read live from school-maintained Google Sheets. Home/away indicators and notes come through automatically.</p>
+          <h3>Fast access</h3>
+          <p>Everything you need during the school day, without extra tabs or distractions.</p>
         </div>
       </div>
-      <div class="source-card">
-        <div class="source-icon">📅</div>
+
+      <div class="source-card reveal">
+        <div class="source-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10l-10-5L2 10l10 5 10-5z"></path>
+            <path d="M6 12v5c0 1 4 3 6 3s6-2 6-3v-5"></path>
+          </svg>
+        </div>
         <div>
-          <h3>AFS iCal Feeds</h3>
-          <p>School events are pulled from official AFS calendar feeds across all school divisions — All School, Upper, Middle, and Lower — parsed and sorted without any setup.</p>
+          <h3>Built for student routines</h3>
+          <p>Designed around how students actually move through their school day.</p>
         </div>
       </div>
     </div>
@@ -1091,39 +1377,89 @@
 <!-- ROADMAP -->
 <section id="roadmap">
   <div class="section-inner">
-    <span class="section-label">Roadmap</span>
-    <h2 class="section-title">What's coming next.</h2>
-    <p class="section-desc">RooMate is actively in development. Here's what's live, what's close, and what's on the horizon.</p>
+    <span class="section-label reveal">Roadmap</span>
+    <h2 class="section-title reveal">What's coming next.</h2>
+    <p class="section-desc reveal">The RooMate roadmap is focused on expanding the dashboard into a more complete student experience over time.</p>
+    <div class="roadmap-timeline" style="margin-top:3rem; border-left:2px solid var(--border); padding-left:20px; display:flex; flex-direction:column; gap:20px;">
+
+      <div>
+        <div class="roadmap-status status-live">● Now</div>
+        <h3>Core Dashboard</h3>
+        <p>Schedule, dashboard, and core navigation are available and actively improving.</p>
+      </div>
+
+      <div>
+        <div class="roadmap-status status-soon">◎ Next</div>
+        <h3>Sports & Events Expansion</h3>
+        <p>More detailed sports tracking and improved event organization tools.</p>
+      </div>
+
+      <div>
+        <div class="roadmap-status status-planned">○ Future</div>
+        <h3>Platform Expansion</h3>
+        <p>Planned support for additional platforms and expanded student tools.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- RELEASE NOTES -->
+<section id="releases">
+  <div class="section-inner">
+    <span class="section-label reveal">Latest Release</span>
+    <h2 class="section-title reveal">RooMate v5.1</h2>
+    <p class="section-desc reveal">Recent improvements and additions currently shipping in the latest builds.</p>
+
     <div class="roadmap-grid">
-      <div class="roadmap-card">
-        <div class="roadmap-status status-live">● Live</div>
-        <h3>Schedule & Dashboard</h3>
-        <p>Class schedule tracking, daily dashboard view, and customizable appearance settings are available now.</p>
+      <div class="roadmap-card reveal">
+        <div class="roadmap-status status-live">● New</div>
+        <h3>Dashboard Refresh</h3>
+        <p>Cleaner layouts, improved navigation, and a more focused daily dashboard experience.</p>
       </div>
-      <div class="roadmap-card">
-        <div class="roadmap-status status-live">● Live</div>
+
+      <div class="roadmap-card reveal">
+        <div class="roadmap-status status-live">● Improved</div>
         <h3>Sports Hub</h3>
-        <p>Live Google Sheets integration with game schedules, home/away indicators, and notes from athletics.</p>
+        <p>Better organization for athletics schedules, matchups, and upcoming games.</p>
       </div>
-      <div class="roadmap-card">
-        <div class="roadmap-status status-live">● Live</div>
-        <h3>Events & Clubs</h3>
-        <p>AFS iCal calendar sync across all divisions, plus club tracking with meeting times and notes.</p>
+
+      <div class="roadmap-card reveal">
+        <div class="roadmap-status status-live">● Updated</div>
+        <h3>Dark Mode</h3>
+        <p>Refined light and dark appearance support throughout the RooMate interface.</p>
       </div>
-      <div class="roadmap-card">
-        <div class="roadmap-status status-soon">◎ Coming Soon</div>
-        <h3>Expanded Sports Hub</h3>
-        <p>Team pages, deeper season tracking, and stats support planned as the next major Sports Hub upgrade.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-inner">
+    <span class="section-label reveal">FAQ</span>
+    <h2 class="section-title reveal">Common questions.</h2>
+    <p class="section-desc reveal">A few quick answers about RooMate and the project.</p>
+
+    <div class="faq-grid">
+      <div class="faq-card reveal">
+        <h3>Is RooMate official?</h3>
+        <p>No. RooMate is an independent student project created for AFS students.</p>
       </div>
-      <div class="roadmap-card">
-        <div class="roadmap-status status-soon">◎ Coming Soon</div>
-        <h3>RooPac Tracker</h3>
-        <p>A dedicated tracker for RooPac — expanding the platform into more areas of AFS student life.</p>
+
+      <div class="faq-card reveal">
+        <h3>Is RooMate free?</h3>
+        <p>Yes. RooMate is currently free to download and use.</p>
       </div>
-      <div class="roadmap-card">
-        <div class="roadmap-status status-planned">○ Planned</div>
-        <h3>Windows Version</h3>
-        <p>RooMate is currently macOS-first. A Windows version is planned to bring the dashboard to all AFS students.</p>
+
+      <div class="faq-card reveal">
+        <h3>Will there be a Windows version?</h3>
+        <p>Yes. Windows support is planned as RooMate continues to grow.</p>
+      </div>
+
+      <div class="faq-card reveal">
+        <h3>Is RooMate open source?</h3>
+        <p>No. RooMate is not open source.</p>
       </div>
     </div>
   </div>
@@ -1134,10 +1470,10 @@
   <div class="section-inner">
     <div class="about-grid">
       <div class="about-text">
-        <span class="section-label">About</span>
-        <h2 class="section-title">Built for AFS,<br>by a student.</h2>
-        <p class="section-desc">RooMate started as a personal project to solve a real problem: too many places to check, not enough time between classes. It's a private project, not open source — built with SwiftUI and real AFS data sources.</p>
-        <p class="section-desc" style="margin-top: 1rem;">The goal is simple: one fast, clean place for everything that matters in your school day.</p>
+        <span class="section-label reveal">About</span>
+        <h2 class="section-title reveal">Built for AFS,<br>by a student.</h2>
+        <p class="section-desc reveal">RooMate started as a personal project to solve a real problem: too many places to check, not enough time between classes. It's not open source, built with SwiftUI for AFS students.</p>
+        <p class="section-desc reveal" style="margin-top: 1rem;">The goal is simple: one fast, clean place for everything that matters in your school day.</p>
       </div>
       <div class="about-visual">
         <div class="about-ring"><div class="about-ring-dot"></div></div>
@@ -1151,15 +1487,15 @@
 <section id="download" style="padding: 80px 2rem; text-align: center;">
   <div style="max-width: 600px; margin: 0 auto;">
     <img src="images/Darkroo.png" alt="" style="width: 64px; height: 64px; object-fit: contain; margin-bottom: 1.5rem; filter: drop-shadow(0 8px 24px rgba(82,137,200,0.3));">
-    <h2 class="section-title">Ready to get organized?</h2>
-    <p class="section-desc" style="margin: 1rem auto 2rem;">Download RooMate for macOS and start your school day with clarity.</p>
+    <h2 class="section-title reveal">Ready to get organized?</h2>
+    <p class="section-desc reveal" style="margin: 1rem auto 2rem;">Download RooMate for macOS and start your school day with clarity.</p>
     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
       <a href="https://drive.google.com/uc?export=download&id=1SQiqDQwSdsrJGB6ifMsShnG1kqWOjboh" class="btn-primary" style="font-size: 16px; padding: 14px 28px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download for macOS
       </a>
     </div>
-    <p style="margin-top: 1.25rem; font-size: 13px; color: var(--text-muted);">Free · macOS · Private project</p>
+    <p style="margin-top: 1.25rem; font-size: 13px; color: var(--text-muted);">Free · macOS</p>
   </div>
 </section>
 
@@ -1172,7 +1508,7 @@
           <img src="images/Darkroo.png" alt="" class="footer-logo">
           <span class="footer-wordmark">RooMate</span>
         </div>
-        <p class="footer-desc">Student dashboard for Abington Friends School. Unifying schedules, sports, events, and clubs in one fast, clean macOS app.</p>
+        <p class="footer-desc">Student dashboard for Abington Friends School. Bringing schedules, sports, events, and student life together in one clean macOS app.</p>
       </div>
       <div class="footer-col">
         <h4>Features</h4>
@@ -1194,7 +1530,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 RooMate. A private student project — not affiliated with or endorsed by Abington Friends School.</p>
+      <p>© 2026 RooMate · Built by <a href="https://codearc.studio" target="_blank" style="color: rgba(255,255,255,0.65); text-decoration: none;">CodeArc.studio</a> · Independent student project.</p>
       <div class="footer-afs-badge">
         <span class="afs-dot"></span>
         Made for AFS Students
@@ -1213,20 +1549,21 @@
 
     const sun = document.getElementById('theme-sun');
     const moon = document.getElementById('theme-moon');
-    const label = document.getElementById('theme-label');
     const logo = document.getElementById('logo-text');
 
     // UI should reflect CURRENT theme (after toggle)
     if (newTheme === 'light') {
       sun.style.display = 'inline-block';
       moon.style.display = 'none';
-      label.textContent = 'Dark';
       logo.src = 'images/Light.png';
+      const heroPreview = document.getElementById('hero-preview-img');
+      if (heroPreview) heroPreview.src = 'images/dashboardlight.png';
     } else {
       sun.style.display = 'none';
       moon.style.display = 'inline-block';
-      label.textContent = 'Light';
       logo.src = 'images/Dark.png';
+      const heroPreview = document.getElementById('hero-preview-img');
+      if (heroPreview) heroPreview.src = 'images/dashboard.png';
     }
 
     // Update all Roo images based on theme
@@ -1234,9 +1571,15 @@
       ? 'images/Darkroo.png'
       : 'images/Lightroo.png';
 
-    document.querySelectorAll('.nav-logo, .hero-logo-large, .about-roo, .footer-logo').forEach(img => {
+    document.querySelectorAll('.nav-logo, .hero-logo-large, .about-roo').forEach(img => {
       img.src = rooSrc;
     });
+
+    // Footer logo should always stay Darkroo
+    const footerLogo = document.querySelector('.footer-logo');
+    if (footerLogo) {
+      footerLogo.src = 'images/Darkroo.png';
+    }
 
     // download section icon (first image in download section)
     const downloadImg = document.querySelector('#download img');
@@ -1249,11 +1592,11 @@
 
     if (activeBtn) {
       const map = {
-        Dashboard: 'dashboard.png',
-        Schedule: 'schedule.png',
-        Sports: 'sports.png',
-        Events: 'events.png',
-        Settings: 'settings.png'
+        Dashboard: 'dashboard',
+        Schedule: 'schedule',
+        Sports: 'sports',
+        Events: 'events',
+        Settings: 'settings'
       };
 
       const key = activeBtn.textContent.trim();
@@ -1263,14 +1606,18 @@
     }
   }
 
-  // Animate cards on scroll
+  // Animate cards and reveal elements on scroll
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
         e.target.style.opacity = '1';
         e.target.style.transform = 'translateY(0)';
+        e.target.classList.add('visible');
       }
     });
+    // Observe all .reveal elements
+    const reveals = document.querySelectorAll('.reveal');
+    reveals.forEach(el => observer.observe(el));
   }, { threshold: 0.1 });
 
   document.querySelectorAll('.feature-card, .roadmap-card, .source-card').forEach((el, i) => {
@@ -1281,21 +1628,84 @@
   });
 </script>
 <script>
-function setScreenshot(file, btn) {
-  const html = document.documentElement;
-  const isLight = html.getAttribute('data-theme') === 'light';
+let lastScreenshotIndex = 0;
 
+const screenshotOrder = ['dashboard', 'schedule', 'sports', 'events', 'settings'];
+
+function setScreenshot(view, btn) {
   const img = document.getElementById('dashboard-screenshot');
 
-  const src = isLight
-    ? file.replace('.png', 'light.png')
-    : file;
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
-  img.src = 'images/' + src;
+  const map = {
+    dashboard: { light: 'dashboardlight.png', dark: 'dashboard.png' },
+    schedule: { light: 'schedulelight.png', dark: 'schedule.png' },
+    sports: { light: 'sportslight.png', dark: 'sports.png' },
+    events: { light: 'eventslight.png', dark: 'events.png' },
+    settings: { light: 'settingslight.png', dark: 'settings.png' }
+  };
+
+  const newIndex = screenshotOrder.indexOf(view);
+  const direction = newIndex >= lastScreenshotIndex ? 1 : -1;
+  lastScreenshotIndex = newIndex;
+
+  const target = map[view];
+  if (!target) return;
+
+  const newSrc = isLight ? target.light : target.dark;
+
+  img.style.opacity = '0';
+  img.style.transform = direction === 1 ? 'translateX(20px)' : 'translateX(-20px)';
+
+  setTimeout(() => {
+    img.src = 'images/' + newSrc;
+    img.style.opacity = '1';
+    img.style.transform = 'translateX(0px)';
+  }, 160);
 
   document.querySelectorAll('.screenshot-tabs .tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
 }
+
+Object.values({
+  dashboard: { light: 'dashboardlight.png', dark: 'dashboard.png' },
+  schedule: { light: 'schedulelight.png', dark: 'schedule.png' },
+  sports: { light: 'sportslight.png', dark: 'sports.png' },
+  events: { light: 'eventslight.png', dark: 'eventslight.png' },
+  settings: { light: 'settingslight.png', dark: 'settings.png' }
+}).forEach(v => {
+  new Image().src = 'images/' + v.light;
+  new Image().src = 'images/' + v.dark;
+});
 </script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const stickyBtn = document.getElementById('sticky-download');
+
+  window.addEventListener('scroll', () => {
+    if (!stickyBtn) return;
+    if (window.scrollY > 400) {
+      stickyBtn.classList.add('show');
+    } else {
+      stickyBtn.classList.remove('show');
+    }
+  });
+});
+</script>
+<script>
+// Kangaroo Easter Egg
+let rooClicks = 0;
+const roo = document.querySelector('.hero-logo-large');
+if (roo) {
+  roo.addEventListener('click', () => {
+    rooClicks++;
+    if (rooClicks === 5) {
+      alert('You found RooMate secret mode 🦘');
+      rooClicks = 0;
+    }
+  });
+}
+</script>
+<a href="#download" id="sticky-download" class="sticky-download">Download</a>
 </body>
 </html>
