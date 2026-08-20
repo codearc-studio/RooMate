@@ -6,27 +6,30 @@
 
         <title>RooMate</title>
 
-        <item>
-            <title>6.0</title>
-            <pubDate>Thu, 20 Aug 2026 14:05:00 -0400</pubDate>
 
-            <sparkle:version>4</sparkle:version>
-            <sparkle:shortVersionString>6.0</sparkle:shortVersionString>
+        <item>
+            <title>6.0.1</title>
+
+            <pubDate>Thu, 20 Aug 2026 14:39:00 -0400</pubDate>
+
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>6.0.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
 
             <description>
                 <![CDATA[
-                RooMate 6 is the biggest update yet, featuring a redesigned experience,
-                Semester Planner, Dining, Sports Hub, Clubs, PacTrack, announcements,
-                improved notifications, menu bar tools, and more.
+                RooMate 6.0.1 introduces the new V6 experience,
+                including Semester Planner, improved customization,
+                announcements, sports, clubs, PacTrack, notifications,
+                and many stability improvements.
                 ]]>
             </description>
 
             <enclosure
-                url="https://github.com/codearc-studio/RooMate/releases/download/v6.0/RooMate-6.0.zip"
-                length="11570586"
+                url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip"
+                length="11570579"
                 type="application/octet-stream"
-                sparkle:edSignature="1ec1NG2fMFYKIMlHZtOODpuVLd3jGfOB08iY6szc9H8ePHwPOVVxcA54fGggCGsJIKjYg42JODYBwUQaq3sEDA=="
+                sparkle:edSignature="IdzE8sc/jLHXU6JdOm64TtffKzceR/HCc5QrJs9+N2wyEnJnyergJl2M4GF4A+rJ4dEfb8ue5MWkxwObgCJlAQ=="
             />
 
         </item>
@@ -34,6 +37,7 @@
 
         <item>
             <title>5.1</title>
+
             <pubDate>Wed, 13 May 2026 07:31:46 -0400</pubDate>
 
             <sparkle:version>3</sparkle:version>
@@ -51,11 +55,12 @@
 
 
         <item>
-            <title>5</title>
+            <title>5.0</title>
+
             <pubDate>Tue, 12 May 2026 19:31:58 -0400</pubDate>
 
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>5</sparkle:shortVersionString>
+            <sparkle:version>2</version>
+            <sparkle:shortVersionString>5.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
 
             <enclosure
@@ -70,6 +75,7 @@
 
         <item>
             <title>4.0</title>
+
             <pubDate>Tue, 12 May 2026 14:05:22 -0400</pubDate>
 
             <sparkle:version>1</sparkle:version>
@@ -84,6 +90,7 @@
             />
 
         </item>
+
 
     </channel>
 
