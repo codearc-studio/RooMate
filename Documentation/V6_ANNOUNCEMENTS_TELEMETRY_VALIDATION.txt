@@ -1,0 +1,31 @@
+RooMate V6 — Announcements + TelemetryDeck + Semester Planner Validation
+Date: August 20, 2026
+
+Implemented
+- Production Announcements Google Sheet wired: 1ZuKZs5-Zu7ksUl6Rz_e5NSL3AX4Ct4d0unte6SAgswc
+- Expected tab: Announcements
+- Announcement contract: ID, Title, Message, Priority, Icon, Start Date, End Date, Link, Dismissible, Minimum Version, Status
+- Published/Draft gating, date windows, minimum-version gating, optional URL, dismissibility, info/success/important/warning, and custom SF Symbols supported.
+- TelemetryDeck App ID: 76FEC112-109A-46BC-8119-522949036DD5
+- TelemetryDeck signal prefix: RooMate.
+- Organization namespace documented as com.codearcstudio; it is configured in the TelemetryDeck dashboard.
+- Privacy-conscious signals added for launches, navigation, schedule modes, Semester Planner, onboarding, Dining favorites, Sports usage, menu bar/floating timer, announcements, and scraper failures.
+- Semester Planner restored to V6 as Schedule > Plan. Study Planner remains V7.
+
+Static validation
+- PASS: swift-format --strict across all 35 Swift files.
+- PASS: swiftc -parse across all 35 Swift files.
+- PASS: Info.plist, entitlements, and project.pbxproj lint.
+- PASS: 13 JSON files parsed.
+- PASS: XML/appcast parsed.
+- PASS: no merge-conflict markers.
+- PASS: no TODO/FIXME/HACK/fatalError markers in production Swift.
+- PASS: critical App ID, Google Sheet ID, and Day/Week/Plan source assertions.
+- PASS: synthetic announcement parser validation using the production A:K workbook contract.
+
+Still requires a Mac/live smoke test
+- Open the packaged app and confirm a Published row from the shared Google Sheet appears on Today.
+- Change a Draft row to Published and confirm RooMate picks it up after refresh.
+- Confirm a custom SF Symbol, success/warning presentation, optional link, date window, and dismissibility.
+- Confirm RooMate.App.Launched and several other RooMate.* signals appear in the TelemetryDeck dashboard.
+- Test Day / Week / Plan in the actual macOS UI.

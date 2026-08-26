@@ -1,0 +1,41 @@
+RooMate 6.0 build 4 — Final Audit Validation
+Validated: August 20, 2026
+
+Source / formatting
+- PASS: swift-format lint across RooMate macOS + experimental iOS source.
+- PASS: swiftc syntax parse across all 35 current Swift source files.
+- PASS: production UserScheduleStore ownership scan (one shared singleton; only two isolated preview constructions remain).
+- PASS: no TODO/FIXME/HACK, fatalError, try!, as!, obsolete UserDefaults.synchronize(), or stale legacy Sports source references.
+
+Parser / service checks
+- PASS: Sports CSV synthetic cases: UTF-8 BOM/header contract, quoted commas, malformed-date rejection, missing-team rejection, cancellation/conditional status inference, invalid-body rejection.
+- PASS: ICS synthetic cases: escaped commas, America/New_York TZID timestamps, UTC timestamps, folded lines, and all-day events.
+- PASS: Club Directory synthetic cases: named columns, positional A:I fallback, booleans, quoted commas, unpublished/duplicate filtering, URL normalization, HTML/error-body rejection.
+- PASS: Announcements synthetic cases: production A:K columns, Published/Draft filtering, info/success/important/warning parsing, custom icons, URL normalization, version comparison, and missing/error-feed behavior.
+- PASS: Special Schedule synthetic cases: published/draft INDEX rows, school-closed days, normal blocks, overlapping Extra items, and Marker items.
+- PASS: Dining MenuModels + MenuService Foundation/networking type-check in the audit environment.
+
+Schedule / resources / project
+- PASS: Bell schedule integrity. Monday 10 blocks, Tuesday 10, Wednesday 9, Thursday 10, Friday 9; positive durations and no unintended primary-timeline overlaps.
+- PASS: Info.plist, entitlements, and project.pbxproj parse/lint.
+- PASS: 13 JSON resources/configs and 13 XML/SVG/appcast resources parsed; referenced asset files exist.
+- PASS: no .DS_Store, xcuserdata, or .xcuserstate in the cleaned source tree.
+- PASS: RooMate macOS release identity is 6.0.2 build 5, minimum macOS 14.0, with no project-level forced Apple Development identity.
+- PASS: Sparkle Xcode package requirement is 2.9.5+ within 2.x.
+- PASS: checked-in appcast contains final RooMate 6.0.2 build 5 metadata and validates against the exact signed archive.
+
+Release addendum — August 26, 2026
+- PASS: Xcode Release archive and final focused test suite on macOS.
+- PASS: Developer ID signing, Apple notarization, stapled ticket validation, and Gatekeeper assessment.
+- PASS: final 6.0.2 ZIP metadata and Sparkle EdDSA signature validation.
+
+
+August 20, 2026 integration addendum
+- PASS: production Announcements sheet contract updated to ID / Title / Message / Priority / Icon / Start Date / End Date / Link / Dismissible / Minimum Version / Status.
+- PASS: synthetic Announcements parser test against the exact production workbook contract; Published rows load, Draft rows stay hidden, quoted commas parse, success/custom-icon rows parse, URLs normalize, and dismissibility is honored.
+- PASS: production announcement spreadsheet ID is wired to 1ZuKZs5-Zu7ksUl6Rz_e5NSL3AX4Ct4d0unte6SAgswc, tab Announcements.
+- PASS: TelemetryDeck App ID updated to 76FEC112-109A-46BC-8119-522949036DD5 with RooMate. signal prefix.
+- PASS: privacy-conscious analytics cover app launch, navigation, schedule mode, Semester Planner actions, onboarding funnel, aggregate dining favorite counts, game detail views, menu bar/floating timer usage, announcements, and scraper failures. Removed team-following analytics with the team feature.
+- PASS: custom analytics avoids class names, schedules, club names, team names, dining query/favorite names, PacTrack selections, announcement copy, and other student-entered content.
+- PASS: Semester Planner restored to the V6 Schedule picker as Day / Week / Plan. Study Planner remains deferred to V7.
+- NOT LIVE-VERIFIED HERE: Google Sheet network access from the packaged macOS app and arrival of events in the TelemetryDeck dashboard still require a Mac smoke test.

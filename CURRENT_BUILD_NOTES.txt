@@ -1,0 +1,80 @@
+RooMate 6.0 — Pre-Release Combined Build
+Audit refreshed August 20, 2026
+
+Release identity
+- macOS target: com.codearc.RooMate
+- Marketing version: 6.0
+- Build: 4
+- Minimum macOS: 14.0
+- Main window minimum: 1040 x 680
+
+Included V6 product areas
+- Today / Dashboard
+- Day + Week Schedule
+- Remote Special Schedules
+- Dining
+- Sports + Follow / My Team
+- Clubs + My Clubs schedule integration
+- Events
+- PacTrack
+- Links
+- Profile
+- Settings
+- Global search
+- Schedule notifications and temporary pause controls
+- Menu-bar companion
+- Always-on-top floating timer
+- Open at Login / background-on-close support
+- Sparkle integration
+- TelemetryDeck diagnostics/engagement signals
+
+V6 boundary
+- Semester Planner UI is retained in source for later work but hidden from V6.
+- Study Planner is V7 work.
+- Sports rosters/coaches are intentionally not shipped until a reliable source/workflow is verified.
+
+Audit cleanup applied
+- Unified production schedule state under UserScheduleStore.shared.
+- Removed obsolete mock/legacy Sports architecture and unreachable views.
+- Hardened Sports, Events, Dining, Clubs, special schedules, and announcements against malformed/stale remote data.
+- Coordinated notification request budgets.
+- Fixed menu-bar/floating-timer handling for extra/after-school club meetings.
+- Fixed floating timer sizing/drag behavior.
+- Expanded global search to configured classes and My Clubs.
+- Removed avoidable force unwraps in reusable schedule/dashboard/dining paths.
+- Batched reset persistence/notification work.
+- Removed stale docs, duplicate icon resources, user-specific Xcode state, .DS_Store files, and the obsolete duplicate iOS entry point.
+- Removed redundant direct TelemetryClient product linkage; RooMate imports TelemetryDeck.
+- Release builds are no longer forced to use the Apple Development identity.
+- Project and macOS target deployment settings now agree on macOS 14.0.
+- iOS target uses its own AppIcon asset catalog.
+- Sparkle minimum package version raised to 2.9.5; the stale 2.9.2 Package.resolved was removed so Xcode can resolve the updated dependency.
+- Telemetry failure signals no longer attach arbitrary raw error descriptions.
+- Swift source was normalized with swift-format.
+
+Static validation in this audit environment
+- All current Swift files pass swiftc -parse.
+- swift-format lint is clean after formatting.
+- Bell-schedule integrity checks pass for Monday-Friday.
+- Synthetic Sports CSV, ICS, Club Directory, Announcements, and Special Schedule parser tests pass.
+- Dining service Foundation/networking type-check passes in the audit environment.
+- plist / entitlements / Xcode project / appcast XML parse successfully.
+- Asset-catalog references and SVG XML validate.
+
+Still required on a real Mac before public release
+- Let Xcode resolve the updated Swift packages once, then commit the regenerated Package.resolved for the release candidate.
+- Clean Xcode Release build/type-check with zero compiler errors/warnings worth fixing.
+- Full 1040x680 and large-window visual sweep.
+- Live Dining, Sports, Clubs, Special Schedules, Events, and Announcements smoke tests.
+- Notification permission/delivery/pause tests.
+- Menu bar, floating timer, Dock reopen, close-vs-quit, and Open at Login tests.
+- Final Developer ID signing + notarization verification.
+- Build the final release archive and generate the real Sparkle V6 appcast enclosure/signature.
+
+Do not fabricate the V6 Sparkle signature/byte length before the final archive exists.
+
+2026-08-20 integration update
+- Announcements now load from Google Sheet 1ZuKZs5-Zu7ksUl6Rz_e5NSL3AX4Ct4d0unte6SAgswc, tab `Announcements`, using the workbook columns ID / Title / Message / Priority / Icon / Start Date / End Date / Link / Dismissible / Minimum Version / Status.
+- TelemetryDeck App ID: 76FEC112-109A-46BC-8119-522949036DD5. Organization namespace `com.codearcstudio` is configured in the TelemetryDeck dashboard (not as a Swift SDK Config field).
+- Added privacy-conscious product analytics for app launch, navigation, schedule mode/Semester Planner use, onboarding funnel, dining favorite counts, sports interaction counts, menu bar/floating timer usage, announcement feed/actions, and scraper failures. No student-entered names, class details, club names/notes, team names, dining query text, or PacTrack selections are included in RooMate custom analytics.
+- Semester Planner is visible and ships in V6. Study Planner remains deferred to V7.

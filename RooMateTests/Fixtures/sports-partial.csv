@@ -1,0 +1,4 @@
+Date,Day,Team,Opponent,Location,Time,Dismiss,Return,Notes
+not-a-date,Wednesday,Invalid Team,Opponent,H,4:00 PM,,,
+8/26/2026,Wednesday,,Opponent,H,4:00 PM,,,
+8/27/2026,Thursday,Valid Team,Opponent,A,4:15 PM,,,Rescheduled

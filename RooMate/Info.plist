@@ -2,11 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/codearc-studio/RooMate/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>TlyXWxHETq2i607xdjzie7HQJDUnm8UZZf3SS7VZLzY=</string>
-	<key>SUEnableInstallerLauncherService</key>
-	<true/>
+	<string>1805OnubmAaswEHtNC7sF1lL9398kEEL1A66pQu2Iy4=</string>
 </dict>
 </plist>
