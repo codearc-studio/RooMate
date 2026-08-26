@@ -719,7 +719,7 @@ struct ContentView: View {
             .padding(.bottom, 8)
         }
 
-        if selectedTab != .dashboard && !isEditingSidebar {
+        if selectedTab != .dashboard && selectedTab != .schedule && !isEditingSidebar {
           sidebarNowCard
             .frame(maxWidth: .infinity)
             .padding(.horizontal, macSidebarHorizontalInset)
@@ -983,7 +983,7 @@ struct ContentView: View {
             sidebarEditRow(tab)
           }
 
-          Text("Hidden items stay here while editing so you can bring them back anytime.")
+          Text("Hidden sections stay here while you edit, so you can show them again anytime.")
             .font(.system(size: 9.5))
             .foregroundStyle(DesignTokens.Colors.subtleText)
             .fixedSize(horizontal: false, vertical: true)
@@ -2544,7 +2544,7 @@ private struct RooMateOnboardingView: View {
       HStack(spacing: 8) {
         Image(systemName: "externaldrive.badge.checkmark")
           .foregroundStyle(DesignTokens.Colors.success)
-        Text("Your setup is saved as you go, so you can close RooMate and continue later.")
+        Text("RooMate saves your progress, so you can close this and finish later.")
           .font(.system(size: 10.5, weight: .medium))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -2597,7 +2597,7 @@ private struct RooMateOnboardingView: View {
       onboardingCard(
         title: "Start with you",
         subtitle:
-          "Your graduation year keeps your grade and PacTrack requirement in sync automatically.",
+          "Your graduation year lets RooMate update your grade and yearly RooPAC goal automatically.",
         icon: "person.crop.circle.fill",
         tint: DesignTokens.Colors.pacTrack
       ) {
@@ -2786,7 +2786,7 @@ private struct RooMateOnboardingView: View {
       ) {
         HStack(spacing: 14) {
           Label(
-            "\(configuredClassCount) of \(Level.allCases.count) configured",
+            "\(configuredClassCount) of \(Level.allCases.count) set up",
             systemImage: configuredClassCount == Level.allCases.count
               ? "checkmark.circle.fill" : "circle.dotted"
           )
@@ -2795,7 +2795,7 @@ private struct RooMateOnboardingView: View {
             configuredClassCount == Level.allCases.count
               ? DesignTokens.Colors.success : DesignTokens.Colors.secondaryText)
           Spacer()
-          Text("Class details, icons, colors, and meeting days are all configured here.")
+          Text("Set each class’s name, icon, color, and meeting days here.")
             .font(.system(size: 9.5, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.subtleText)
         }
@@ -3378,7 +3378,7 @@ private struct RooMateOnboardingView: View {
       onboardingCard(
         title: "Club Directory",
         subtitle:
-          "Find the clubs you attend and add them straight to My Clubs. You can still add something manually if it is not listed.",
+          "Find the clubs you attend and add them straight to My Clubs. You can also add one yourself if it is not listed.",
         icon: "rectangle.grid.2x2.fill",
         tint: DesignTokens.Colors.events
       ) {
@@ -3486,7 +3486,7 @@ private struct RooMateOnboardingView: View {
               store.clubs.append(Club())
             }
           } label: {
-            Label("Add Manually", systemImage: "plus")
+            Label("Add It Yourself", systemImage: "plus")
               .font(.system(size: 10.5, weight: .semibold))
               .padding(.horizontal, 10)
               .frame(height: 31)
@@ -3500,7 +3500,7 @@ private struct RooMateOnboardingView: View {
         HStack(spacing: 10) {
           Image(systemName: "arrow.up")
             .foregroundStyle(DesignTokens.Colors.events)
-          Text("Choose your clubs from the Directory above, or add one manually if it is missing.")
+          Text("Choose clubs from the directory, or add one yourself if it’s missing.")
             .font(.system(size: 10.5, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -3863,7 +3863,7 @@ private struct RooMateOnboardingView: View {
         HStack(spacing: 10) {
           Image(systemName: "wrench.and.screwdriver.fill")
             .foregroundStyle(DesignTokens.Colors.athletics)
-          Text("Team pages are being refreshed and will return later. The teams playing each game still appear below.")
+          Text("Team pages are unavailable for now. You can still see who is playing in each game.")
             .font(.system(size: 10.5, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
             .fixedSize(horizontal: false, vertical: true)
@@ -3875,7 +3875,7 @@ private struct RooMateOnboardingView: View {
         HStack(spacing: 10) {
           ProgressView()
             .controlSize(.small)
-          Text("Loading the athletics schedule…")
+          Text("Loading games…")
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -4165,13 +4165,13 @@ private struct RooMateOnboardingView: View {
       case .enabled:
         return "Open RooMate automatically when you sign in."
       case .requiresApproval:
-        return "Registered; macOS is waiting for approval in Login Items."
+        return "Allow RooMate in System Settings before it can open when you log in."
       case .notRegistered:
         return "Off by default. Turn it on if you want RooMate ready at sign-in."
       case .notFound:
-        return "This build cannot register RooMate as a login item yet."
+        return "This copy of RooMate can’t open automatically when you log in."
       @unknown default:
-        return "Login item status is unavailable."
+        return "RooMate couldn’t check this setting right now."
       }
     }
 
@@ -4191,7 +4191,10 @@ private struct RooMateOnboardingView: View {
           try service.unregister()
         }
       } catch {
-        launchAtLoginError = error.localizedDescription
+        #if DEBUG
+          print("[LaunchAtLogin] \(error.localizedDescription)")
+        #endif
+        launchAtLoginError = "RooMate couldn’t change this setting. You can skip it and try again later in Settings."
       }
       refreshOnboardingLaunchAtLoginStatus()
     }
@@ -4395,11 +4398,11 @@ private struct RooMateOnboardingView: View {
         return store.notificationsEnabled
           ? "Notifications are on" : "Notifications are paused in RooMate"
       case .denied:
-        return "Permission is blocked"
+        return "Notifications are off in System Settings"
       case .notDetermined:
-        return "Permission hasn't been requested"
+        return "Notifications haven’t been turned on"
       @unknown default:
-        return "Notification status unavailable"
+        return "RooMate couldn’t check notification settings"
       }
     #else
       return store.notificationsEnabled ? "Notifications are on" : "Notifications are off"
@@ -4564,7 +4567,7 @@ private struct RooMateOnboardingView: View {
           VStack(alignment: .leading, spacing: 1) {
             Text("Your current block")
               .font(.system(size: 9, weight: .semibold))
-            Text("Progress + Up Next")
+            Text("Progress and what’s next")
               .font(.system(size: 7.8, weight: .medium))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
@@ -4824,7 +4827,7 @@ private struct RooMateOnboardingView: View {
           VStack(alignment: .leading, spacing: 2) {
             Text("Start on Today")
               .font(.system(size: 14, weight: .semibold))
-            Text("RooMate keeps the school day centered on three questions.")
+            Text("RooMate helps you quickly answer three questions about your day.")
               .font(.system(size: 10, weight: .medium))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
@@ -4851,7 +4854,7 @@ private struct RooMateOnboardingView: View {
       .rooSurface(cornerRadius: 15, elevated: false, border: true)
 
       VStack(alignment: .leading, spacing: 9) {
-        Text("YOUR ROO MATE TOOLKIT")
+        Text("YOUR ROOMATE TOOLS")
           .font(.system(size: 8.5, weight: .bold))
           .tracking(1.2)
           .foregroundStyle(DesignTokens.Colors.subtleText)

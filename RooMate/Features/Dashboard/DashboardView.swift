@@ -719,7 +719,7 @@ struct DashboardView: View {
       VStack(alignment: .leading, spacing: 2) {
         Text("Announcements couldn’t be updated")
           .font(.system(size: 11.5, weight: .semibold))
-        Text("RooMate will keep trying in the background.")
+        Text("RooMate will try again automatically.")
           .font(.system(size: 10, weight: .medium))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -1375,7 +1375,7 @@ struct DashboardView: View {
   private var quickActionsCard: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .firstTextBaseline) {
-        SectionLabel("CONTEXTUAL ACTIONS")
+        SectionLabel("QUICK ACTIONS")
 
         Spacer()
 
@@ -1466,7 +1466,7 @@ struct DashboardView: View {
       if classBlocks.isEmpty {
         EmptyPreviewState(
           symbol: "calendar",
-          text: todayWeekday == nil ? "No classes today" : "No classes configured"
+          text: todayWeekday == nil ? "No classes today" : "Classes aren’t set up yet"
         )
         .frame(minHeight: 180)
       } else {

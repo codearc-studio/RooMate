@@ -394,7 +394,7 @@
         }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text("Your current live schedule will not be changed.")
+        Text("This won’t change your current schedule.")
       }
     }
 
@@ -794,7 +794,7 @@
             .font(.system(size: 23, weight: .semibold, design: .rounded))
             .foregroundStyle(DesignTokens.Colors.schedule)
 
-          Text("academic levels")
+          Text("classes set")
             .font(.system(size: 9.5, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -891,7 +891,7 @@
               .font(.system(size: 16, weight: .semibold))
               .foregroundStyle(DesignTokens.Colors.primaryText)
 
-            Text("A quick preview using RooMate's normal weekly block rotation.")
+            Text("See how these classes would fit into a normal school week.")
               .font(.system(size: 10.5))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
@@ -1355,7 +1355,7 @@
 
     private var scheduleInfoCard: some View {
       VStack(alignment: .leading, spacing: 12) {
-        sectionLabel("SCHEDULE INFO")
+        sectionLabel("ABOUT THIS DAY")
 
         infoRow("Schedule", value: scheduleStatusInfoValue, color: scheduleStatusColor)
         infoRow("Start Time", value: firstEntry.map { timeString($0.startDate) } ?? "—")
@@ -1703,7 +1703,7 @@
             .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
         } else {
-          Label("No school schedule", systemImage: "moon.zzz")
+          Label("No schedule today", systemImage: "moon.zzz")
             .font(.system(size: 13, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -1718,7 +1718,7 @@
       let entry = isViewingToday ? nextEntry : firstEntry
 
       return VStack(alignment: .leading, spacing: 12) {
-        sectionLabel(isViewingToday ? "UP NEXT" : "FIRST UP")
+        sectionLabel(isViewingToday ? "UP NEXT" : "FIRST CLASS")
 
         if let entry {
           HStack(spacing: 11) {
@@ -1828,8 +1828,8 @@
 
             Text(
               reminderGamesForSelectedDate.count == 1
-                ? "1 athletics event"
-                : "\(reminderGamesForSelectedDate.count) athletics events"
+                ? "1 game"
+                : "\(reminderGamesForSelectedDate.count) games"
             )
             .font(.system(size: 9.5))
             .foregroundStyle(DesignTokens.Colors.secondaryText)

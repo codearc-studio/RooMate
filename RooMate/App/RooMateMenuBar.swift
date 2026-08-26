@@ -1039,7 +1039,7 @@
             .fill(accent)
             .frame(width: 5, height: 5)
 
-          Text("PASSIVE")
+          Text("CLICK-THROUGH ON")
             .font(.system(size: 7, weight: .bold))
             .tracking(0.6)
             .foregroundStyle(accent)
@@ -1068,7 +1068,7 @@
                 )
             }
             .buttonStyle(.plain)
-            .help("Enable Click-through")
+            .help("Let clicks pass through the timer")
 
             Button {
               isEnabled = false
@@ -1894,7 +1894,7 @@
           Text("Enjoy the weekend")
             .font(.system(size: 16, weight: .semibold))
         } else if daySchedule.isEmpty {
-          Text("NO SCHEDULE AVAILABLE")
+          Text("SCHEDULE NOT SET UP")
             .font(.system(size: 9, weight: .bold))
             .tracking(0.8)
             .foregroundStyle(.secondary)

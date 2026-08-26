@@ -9,10 +9,10 @@ struct RooMateWhatsNewView: View {
 
   private let highlights: [(String, String, String, Color)] = [
     ("sparkles", "A redesigned Today", "See what’s happening now, what comes next, announcements, and the day at a glance.", DesignTokens.Colors.primary),
-    ("calendar", "Day, Week, and Plan", "Move between the live schedule, a complete week, and the Semester Planner without losing context.", DesignTokens.Colors.schedule),
+    ("calendar", "Day, Week, and Plan", "Move between today’s schedule, a complete week, and the Semester Planner in one place.", DesignTokens.Colors.schedule),
     ("fork.knife", "Dining, Sports, Clubs, and Events", "School life beyond the bell schedule now has a home in RooMate.", DesignTokens.Colors.dining),
     ("chart.bar.xaxis", "PacTrack", "Keep an on-device view of RooPAC progress and future choices.", DesignTokens.Colors.pacTrack),
-    ("magnifyingglass", "Search with Command-K", "Jump straight to pages, classes, teams, games, events, dining, and settings.", DesignTokens.Colors.info),
+    ("magnifyingglass", "Search with Command-K", "Jump straight to pages, classes, games, events, dining, and settings.", DesignTokens.Colors.info),
     ("menubar.rectangle", "There when you need it", "Use the menu bar companion, floating timer, improved reminders, and new customization.", DesignTokens.Colors.events),
   ]
 
@@ -81,9 +81,9 @@ struct RooMateDiagnosticsView: View {
     VStack(alignment: .leading, spacing: 16) {
       HStack {
         VStack(alignment: .leading, spacing: 3) {
-          Text("Diagnostics Summary")
+          Text("Bug Report Info")
             .font(.system(size: 20, weight: .semibold))
-          Text("Review exactly what RooMate will copy before sharing it.")
+          Text("Check exactly what RooMate will copy before you share it.")
             .font(.system(size: 11))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -103,7 +103,7 @@ struct RooMateDiagnosticsView: View {
       .overlay { RoundedRectangle(cornerRadius: 12).stroke(DesignTokens.Colors.border) }
 
       HStack {
-        Label("No student-entered content is included.", systemImage: "lock.shield")
+        Label("Your classes, notes, searches, and other personal school information are not included.", systemImage: "lock.shield")
           .font(.system(size: 10.5))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
         Spacer()
@@ -114,7 +114,7 @@ struct RooMateDiagnosticsView: View {
           #endif
           copied = true
         } label: {
-          Label(copied ? "Copied" : "Copy Diagnostics", systemImage: copied ? "checkmark" : "doc.on.doc")
+          Label(copied ? "Copied" : "Copy Bug Report Info", systemImage: copied ? "checkmark" : "doc.on.doc")
         }
         .buttonStyle(.borderedProminent)
       }

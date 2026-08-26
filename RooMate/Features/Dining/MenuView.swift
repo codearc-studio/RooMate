@@ -357,11 +357,11 @@ struct MenuView: View {
           .font(.system(size: 20, weight: .medium))
           .foregroundStyle(DesignTokens.Colors.subtleText)
 
-        Text("No items for this period")
+        Text("No menu items for this meal")
           .font(.system(size: 11.5, weight: .semibold))
           .foregroundStyle(DesignTokens.Colors.primaryText)
 
-        Text("Try another meal period from the menu above.")
+        Text("Choose another meal above.")
           .font(.system(size: 9.5))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
           .multilineTextAlignment(.center)
@@ -948,7 +948,7 @@ struct MenuView: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.primaryText)
 
-          Text("Tap the heart next to a menu item to save it here.")
+          Text("Click the heart next to a menu item to save it here.")
             .font(.system(size: 10))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
             .multilineTextAlignment(.center)
@@ -1088,7 +1088,7 @@ struct MenuView: View {
 
   private var lookingAheadCard: some View {
     VStack(alignment: .leading, spacing: 12) {
-      DiningSectionLabel("LOOKING AHEAD")
+      DiningSectionLabel("UPCOMING MENUS")
 
       if let next = relativeDate(1) {
         Button {
@@ -1143,7 +1143,7 @@ struct MenuView: View {
 
   // MARK: - States and footer
 
-  private func errorCard(_ error: Error) -> some View {
+  private func errorCard(_: Error) -> some View {
     HStack(spacing: 10) {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(DesignTokens.Colors.warning)
@@ -1151,7 +1151,7 @@ struct MenuView: View {
       VStack(alignment: .leading, spacing: 2) {
         Text("Menu couldn't be updated")
           .font(.system(size: 11, weight: .semibold))
-        Text(error.localizedDescription)
+        Text(store.isShowingSavedData ? "Your saved menu is still available." : "Check your connection or try again in a moment.")
           .font(.system(size: 10))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
           .lineLimit(2)

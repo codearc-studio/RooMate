@@ -228,7 +228,7 @@ struct ClubsHubView: View {
       metricCard(
         title: "Directory",
         value: directoryStore.isConfigured ? "\(directoryStore.clubs.count)" : "—",
-        subtitle: directoryStore.isConfigured ? "clubs available" : "directory unavailable",
+        subtitle: directoryStore.isConfigured ? "clubs available" : "can’t load directory",
         icon: "rectangle.grid.2x2.fill",
         color: DesignTokens.Colors.dining
       )
@@ -392,7 +392,7 @@ struct ClubsHubView: View {
             .font(.system(size: 9, weight: .bold))
             .tracking(0.7)
             .foregroundStyle(accent)
-          Text("A few picks from the Club Directory")
+          Text("A few clubs you might want to explore")
             .font(.system(size: 10))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -444,14 +444,14 @@ struct ClubsHubView: View {
           }
           .frame(maxWidth: .infinity, minHeight: 260)
           .rooSurface(cornerRadius: DesignTokens.Radius.lg)
-        } else if let error = directoryStore.lastError, directoryStore.clubs.isEmpty {
+        } else if directoryStore.lastError != nil, directoryStore.clubs.isEmpty {
           VStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle")
               .font(.system(size: 24, weight: .medium))
               .foregroundStyle(DesignTokens.Colors.warning)
             Text("Couldn’t load the club directory")
               .font(.system(size: 13, weight: .semibold))
-            Text(error)
+            Text("Check your connection or try again in a moment.")
               .font(.system(size: 10.5))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
               .multilineTextAlignment(.center)
@@ -557,7 +557,7 @@ struct ClubsHubView: View {
         Image(systemName: "checkmark.circle.fill")
           .foregroundStyle(DesignTokens.Colors.success)
         Text(
-          "Club details refresh automatically. Your My Clubs list and meeting times stay personal to you."
+          "RooMate updates club details automatically. Your My Clubs list and meeting times stay personal to you."
         )
         .font(.system(size: 10))
         .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -762,7 +762,7 @@ struct ClubsHubView: View {
               .font(.system(size: 14, weight: .semibold))
 
             Text(
-              "Browse the directory to add a club to My Clubs, or add one manually if it isn’t listed yet. This only changes your personal RooMate setup."
+              "Browse the directory to add a club to My Clubs, or add one yourself if it isn’t listed yet. This only changes your RooMate setup."
             )
             .font(.system(size: 10.5))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -815,7 +815,7 @@ struct ClubsHubView: View {
         Text("Your meeting times")
           .font(.system(size: 12, weight: .semibold))
         Text(
-          "Add the times that apply to you: Monday or Wednesday club periods, a Level or school block, or an additional after-school meeting. Additional meetings can overlap something already on your schedule."
+          "Add the times that apply to you: Monday or Wednesday club periods, a Level or school block, or another after-school meeting. After-school meetings can overlap something already on your schedule."
         )
         .font(.system(size: 10))
         .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -933,7 +933,7 @@ struct ClubsHubView: View {
       + club.blockMeetings.count
       + club.otherMeetings.count
 
-    parts.append(count == 0 ? "No meeting times" : "\(count) meeting rule\(count == 1 ? "" : "s")")
+    parts.append(count == 0 ? "No meeting times" : "\(count) meeting time\(count == 1 ? "" : "s")")
     return parts.joined(separator: " • ")
   }
 

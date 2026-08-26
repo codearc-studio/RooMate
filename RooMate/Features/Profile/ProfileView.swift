@@ -301,7 +301,7 @@ struct ProfileView: View {
           .font(.system(size: 27, weight: .semibold))
           .foregroundStyle(DesignTokens.Colors.primaryText)
 
-        Text("The small details RooMate uses to feel like yours.")
+        Text("Choose how RooMate greets you and shows your profile.")
           .font(DesignTokens.Typography.subheadline)
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -396,7 +396,7 @@ struct ProfileView: View {
             .tracking(0.7)
             .foregroundStyle(DesignTokens.Colors.athletics)
 
-          Text("Saved on this Mac")
+          Text("Your profile stays on this Mac")
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -505,7 +505,7 @@ struct ProfileView: View {
   private var classYearPanel: some View {
     profilePanel(
       title: "Class Year",
-      subtitle: "Set this once and RooMate keeps your current grade in sync.",
+      subtitle: "Set this once, and RooMate updates your grade each school year.",
       icon: "graduationcap.fill",
       tint: DesignTokens.Colors.schedule
     ) {
@@ -603,7 +603,7 @@ struct ProfileView: View {
           HStack(spacing: 7) {
             Image(systemName: "paintpalette.fill")
               .foregroundStyle(accent)
-            Text("Using a custom profile color")
+            Text("Custom profile color selected")
               .font(.system(size: 10.5, weight: .medium))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
             Spacer()

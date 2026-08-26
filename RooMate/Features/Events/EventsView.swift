@@ -742,7 +742,7 @@ struct EventsView: View {
 
   private var upcomingOverviewCard: some View {
     VStack(alignment: .leading, spacing: 12) {
-      EventsSectionLabel("UPCOMING OVERVIEW", color: eventsColor)
+      EventsSectionLabel("COMING UP", color: eventsColor)
 
       overviewMetric(
         title: "Today",
@@ -853,7 +853,7 @@ struct EventsView: View {
 
         Spacer()
 
-        Text("7-Day")
+        Text("Next 7 Days")
           .font(.system(size: 9, weight: .semibold))
           .foregroundStyle(eventsColor)
       }
@@ -935,16 +935,16 @@ struct EventsView: View {
     .rooSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
-  private func errorCard(_ error: Error) -> some View {
+  private func errorCard(_: Error) -> some View {
     HStack(alignment: .top, spacing: 10) {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(DesignTokens.Colors.warning)
 
       VStack(alignment: .leading, spacing: 3) {
-        Text("Couldn't load events")
+        Text("Couldn’t load events")
           .font(.system(size: 12, weight: .semibold))
 
-        Text(error.localizedDescription)
+        Text("Check your connection or try again in a moment.")
           .font(.system(size: 10))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -976,7 +976,7 @@ struct EventsView: View {
       Text(
         savedOnly
           ? "Save an event, or choose another date range."
-          : "Try another date, calendar source, or search."
+          : "Try another date, calendar, or search."
       )
       .font(.system(size: 11))
       .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -1008,8 +1008,8 @@ struct EventsView: View {
 
       Text(
         selectedSources.contains(.allEvents)
-          ? "RooMate is showing the combined school calendar. Some combined events do not include their original source calendar."
-          : "Events are loaded from: \(store.selectionDetail)."
+          ? "RooMate is showing the combined school calendar. Some events may not say which school calendar they came from."
+          : "Showing events from: \(store.selectionDetail)."
       )
       .font(.system(size: 9))
       .foregroundStyle(DesignTokens.Colors.subtleText)

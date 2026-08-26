@@ -45,13 +45,13 @@ enum RooMateSupportDiagnostics {
     formatter.formatOptions = [.withInternetDateTime]
 
     var lines = [
-      "RooMate diagnostics",
+      "RooMate bug report info",
       "Version: \(RooMateVersion.current)",
       "Build: \(RooMateVersion.build)",
       "macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
-      "Architecture: \(architecture)",
-      "Timestamp: \(formatter.string(from: date))",
-      "Remote services:",
+      "Mac type: \(architecture)",
+      "Time: \(formatter.string(from: date))",
+      "School data:",
     ]
 
     for service in RemoteServiceID.allCases {
@@ -60,18 +60,18 @@ enum RooMateSupportDiagnostics {
         if status.loadedSuccessfully {
           value = "Loaded"
         } else if status.usingSavedData {
-          value = "Using saved data (\(status.errorCategory ?? "refresh failed"))"
+          value = "Using saved data"
         } else {
-          value = "Unavailable (\(status.errorCategory ?? "refresh failed"))"
+          value = "Couldn’t load"
         }
       } else {
-        value = "Not checked in this session"
+        value = "Not checked yet"
       }
       lines.append("- \(service.rawValue): \(value)")
     }
 
     lines.append("")
-    lines.append("This summary does not include names, schedules, rooms, teams, searches, plans, assignments, announcements, or user-entered content.")
+    lines.append("This does not include names, classes, teachers, rooms, clubs, teams, searches, plans, assignments, announcements, notes, or other personal school information.")
     return lines.joined(separator: "\n")
   }
 }

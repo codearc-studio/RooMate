@@ -180,13 +180,13 @@
       case .enabled:
         return "RooMate will open automatically when you sign in."
       case .requiresApproval:
-        return "RooMate is registered, but macOS needs you to approve it in Login Items."
+        return "Allow RooMate in System Settings before it can open when you log in."
       case .notRegistered:
         return "Off by default. Turn this on if you want RooMate ready as soon as you sign in."
       case .notFound:
-        return "RooMate could not be found as a login item from this build."
+        return "This copy of RooMate can’t open automatically when you log in."
       @unknown default:
-        return "Login item status is unavailable right now."
+        return "RooMate couldn’t check this setting right now."
       }
     }
 
@@ -207,7 +207,10 @@
           try service.unregister()
         }
       } catch {
-        launchAtLoginError = error.localizedDescription
+        #if DEBUG
+          print("[LaunchAtLogin] \(error.localizedDescription)")
+        #endif
+        launchAtLoginError = "RooMate couldn’t change this setting. Try again, or use Login Items in System Settings."
       }
 
       refreshLaunchAtLoginStatus()
@@ -822,10 +825,10 @@
                     .frame(width: 20)
 
                   VStack(alignment: .leading, spacing: 2) {
-                    Text("Approve in Login Items")
+                    Text("Allow in System Settings")
                       .font(.system(size: 12.5, weight: .semibold))
                       .foregroundStyle(DesignTokens.Colors.primaryText)
-                    Text("macOS is waiting for approval before RooMate can open at login.")
+                    Text("Allow RooMate in System Settings before it can open when you log in.")
                       .font(.system(size: 10.5))
                       .foregroundStyle(DesignTokens.Colors.secondaryText)
                   }
@@ -874,7 +877,7 @@
               .frame(width: 34, height: 34)
 
               VStack(alignment: .leading, spacing: 3) {
-                Text("Keeps running after you close the window")
+                Text("Keep RooMate running when its window is closed")
                   .font(.system(size: 12.5, weight: .semibold))
                   .foregroundStyle(DesignTokens.Colors.primaryText)
                 Text(
@@ -915,7 +918,7 @@
 
             compactToggle(
               title: "Class starting soon",
-              subtitle: "5 minutes before a configured class begins.",
+              subtitle: "5 minutes before a class begins.",
               isOn: $store.notifyClassStartingSoon,
               disabled: !notificationsAreActive
             )
@@ -924,7 +927,7 @@
 
             compactToggle(
               title: "Class ending soon",
-              subtitle: "5 minutes before a configured class ends.",
+              subtitle: "5 minutes before a class ends.",
               isOn: $store.notifyClassEndingSoon,
               disabled: !notificationsAreActive
             )
@@ -1938,7 +1941,7 @@
                   DesignTokens.Colors.primaryText
                 )
 
-              Text("CORE SETUP")
+              Text("MAIN SETUP")
                 .font(.system(size: 7.5, weight: .bold))
                 .tracking(0.65)
                 .foregroundStyle(
@@ -1954,7 +1957,7 @@
 
             Text(
               assignedClassCount == 7
-                ? "All seven Levels are configured. This schedule powers Today, notifications, the menu bar, and your floating timer."
+                ? "All seven Levels are set up. This schedule powers Today, notifications, the menu bar, and your floating timer."
                 : "Set each Level once. RooMate uses this everywhere: Today, Schedule, reminders, the menu bar, and the floating timer."
             )
             .font(.system(size: 11.5))
@@ -2072,7 +2075,7 @@
     private var specialSchedulesCard: some View {
       settingsCard(
         title: "School Special Schedules",
-        subtitle: "RooMate automatically syncs school-wide schedule changes.",
+        subtitle: "RooMate checks for school-wide schedule changes automatically.",
         icon: "calendar.badge.clock",
         tint: DesignTokens.Colors.schedule
       ) {
@@ -2088,7 +2091,7 @@
             .frame(width: 38, height: 38)
 
             VStack(alignment: .leading, spacing: 3) {
-              Text("Automatic updates")
+              Text("Updates happen automatically")
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(DesignTokens.Colors.primaryText)
 
@@ -2126,13 +2129,11 @@
             )
           }
 
-          if let error = store.remoteSpecialScheduleError {
+          if store.remoteSpecialScheduleError != nil {
             HStack(alignment: .top, spacing: 8) {
               Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(DesignTokens.Colors.warning)
-              Text(
-                "RooMate couldn't refresh right now. Your last saved school schedule is still being used. \(error)"
-              )
+              Text("RooMate couldn’t update special schedules. Your saved schedule is still available.")
               .font(.system(size: 10.5))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
               .fixedSize(horizontal: false, vertical: true)
@@ -2158,7 +2159,7 @@
           .foregroundStyle(DesignTokens.Colors.secondaryText)
 
           Text(
-            "Special schedules update automatically from RooMate’s school schedule source. They can’t be edited from Settings."
+            "RooMate updates special schedules automatically. They can’t be changed here."
           )
           .font(.system(size: 10.5))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -2169,12 +2170,12 @@
 
     private var officialScheduleStatusText: String {
       guard let date = store.officialSpecialSchedulesLastUpdated else {
-        return "Waiting for the first sync."
+        return "Not updated yet."
       }
 
       let formatter = RelativeDateTimeFormatter()
       formatter.unitsStyle = .full
-      return "Last synced \(formatter.localizedString(for: date, relativeTo: Date()))."
+      return "Last updated \(formatter.localizedString(for: date, relativeTo: Date()))."
     }
 
     private var scheduleModeSwitcher: some View {
@@ -2327,12 +2328,12 @@
 
         settingsCard(
           title: "Menu Data",
-          subtitle: "Dining automatically shows the menu data available to RooMate.",
+          subtitle: "Dining shows the latest school menu RooMate can find.",
           icon: "arrow.triangle.2.circlepath",
           tint: DesignTokens.Colors.info
         ) {
           infoRow(
-            icon: "checkmark.circle.fill", title: "No manual menu setup required",
+            icon: "checkmark.circle.fill", title: "No menu setup needed",
             subtitle: "Use Dining itself for dates, search, filters, and station browsing.",
             tint: DesignTokens.Colors.success)
         }
@@ -2352,7 +2353,7 @@
 
         settingsCard(
           title: "Team pages",
-          subtitle: "Team browsing and following are temporarily unavailable.",
+          subtitle: "Team pages and following will return in a future update.",
           icon: "wrench.and.screwdriver.fill",
           tint: DesignTokens.Colors.athletics
         ) {
@@ -2480,7 +2481,7 @@
             HStack(spacing: 7) {
               Image(systemName: "info.circle")
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
-              Text("Current selection: \(eventsStore.selectionDetail)")
+              Text("Showing: \(eventsStore.selectionDetail)")
                 .font(.system(size: 9.5, weight: .medium))
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
               Spacer()
@@ -2523,7 +2524,7 @@
                 Text("\(savedEventCount)")
                   .font(.system(size: 28, weight: .semibold, design: .rounded))
                   .foregroundStyle(DesignTokens.Colors.pacTrack)
-                Text("bookmarked")
+                Text("saved")
                   .font(DesignTokens.Typography.caption)
                   .foregroundStyle(DesignTokens.Colors.secondaryText)
               }
@@ -2565,7 +2566,7 @@
 
         settingsCard(
           title: "Grade Level",
-          subtitle: "Profile now keeps this in sync automatically.",
+          subtitle: "RooMate updates this from the graduation year in your Profile.",
           icon: "graduationcap",
           tint: DesignTokens.Colors.pacTrack
         ) {
@@ -2632,7 +2633,7 @@
         ) {
           HStack(spacing: 18) {
             miniMetric(
-              value: "\(minimumPlannedRooPACs)", label: "Minimum planned",
+              value: "\(minimumPlannedRooPACs)", label: "Planned so far",
               tint: DesignTokens.Colors.pacTrack)
             miniMetric(
               value: "\(store.rooPACCurrentGrade.requirement)", label: "Required this year",
@@ -2688,7 +2689,7 @@
             .frame(width: 46, height: 46)
 
             VStack(alignment: .leading, spacing: 3) {
-              Text("Check for a new version")
+              Text("See if a newer version is available")
                 .font(.system(size: 14, weight: .semibold))
               Text(
                 checkForUpdatesAction == nil
@@ -2786,7 +2787,7 @@
             infoRow(
               icon: "chart.xyaxis.line", title: "Analytics",
               subtitle:
-                "RooMate sends limited app-usage and failure-category signals through TelemetryDeck. Your name, class schedule, club notes, and PacTrack plan are not added to RooMate's analytics signals.",
+                "RooMate measures general app use and broad loading problems with TelemetryDeck. It never sends your name, classes, club notes, RooPAC plan, searches, or other personal school information.",
               tint: DesignTokens.Colors.info)
           }
         }
@@ -2835,15 +2836,15 @@
 
           HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-              Text("Privacy-safe diagnostics")
+              Text("Info for a bug report")
                 .font(.system(size: 12.5, weight: .semibold))
-              Text("Preview version, macOS, architecture, time, and generic service status before copying.")
+              Text("See exactly what will be copied: RooMate version, macOS version, Mac type, time, and whether school data loaded.")
                 .font(.system(size: 10.5))
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
-            Button("View Diagnostics") { showDiagnostics = true }
+            Button("View Bug Report Info") { showDiagnostics = true }
               .buttonStyle(.bordered)
           }
         }
@@ -2886,7 +2887,7 @@
 
         VStack(spacing: 9) {
           railStat(
-            title: "Classes configured", value: "\(assignedClassCount)/7",
+            title: "Classes set up", value: "\(assignedClassCount)/7",
             tint: DesignTokens.Colors.schedule)
           railStat(title: "Clubs", value: "\(store.clubs.count)", tint: DesignTokens.Colors.dining)
           railStat(
@@ -3046,7 +3047,7 @@
             .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
           Spacer()
-          Text("\(assignedClassCount)/7 configured")
+          Text("\(assignedClassCount)/7 set up")
             .font(.system(size: 11.5, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.schedule)
             .padding(.horizontal, 9)
@@ -3082,7 +3083,7 @@
             && assignment.title != level.displayName
           let summary =
             assignment.isFree
-            ? "Free block" : (hasCustomClass ? assignment.title : "Not configured")
+            ? "Free block" : (hasCustomClass ? assignment.title : "Not set up")
 
           Button {
             withAnimation(DesignTokens.Animation.snappy) {
@@ -3194,9 +3195,9 @@
             .frame(width: 34, height: 34)
 
             VStack(alignment: .leading, spacing: 2) {
-              Text("Flexible Block Behavior")
+              Text("Set up changing blocks")
                 .font(.system(size: 14, weight: .semibold))
-              Text("Only the blocks that can actually vary need extra setup.")
+              Text("Only set up blocks that change on different days.")
                 .font(DesignTokens.Typography.caption)
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
             }
@@ -5087,7 +5088,7 @@
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           VStack(alignment: .leading, spacing: 2) {
-            Text("Exact schedule blocks")
+            Text("Schedule blocks")
               .font(.system(size: 12, weight: .semibold))
             Text(
               "Place this club on any Level or school block. RooMate will show the club instead of that block on the selected day."
@@ -5125,7 +5126,7 @@
             Image(systemName: "rectangle.stack.badge.plus")
               .foregroundStyle(DesignTokens.Colors.secondaryText)
             VStack(alignment: .leading, spacing: 1) {
-              Text("No exact blocks assigned")
+              Text("No schedule blocks added")
                 .font(.system(size: 10.5, weight: .medium))
               Text("Example: Tuesday • Level 4, or Thursday • Office Hours")
                 .font(.system(size: 9.5))
@@ -5223,7 +5224,7 @@
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           VStack(alignment: .leading, spacing: 2) {
-            Text("Additional / after-school meetings")
+            Text("Other and after-school meetings")
               .font(.system(size: 12, weight: .semibold))
             Text(
               "These appear alongside the regular schedule, can happen after school, and may overlap another block."
@@ -5260,7 +5261,7 @@
           HStack(spacing: 8) {
             Image(systemName: "calendar.badge.plus")
               .foregroundStyle(DesignTokens.Colors.secondaryText)
-            Text("No additional meetings")
+            Text("No other meetings added")
               .font(.system(size: 10.5, weight: .medium))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }

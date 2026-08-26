@@ -447,7 +447,7 @@ struct RemoteDataStatusLabel: View {
         .foregroundStyle(
           usingSavedData ? DesignTokens.Colors.warning : DesignTokens.Colors.subtleText
         )
-        .help(usingSavedData ? "RooMate will refresh this when the connection returns." : "Remote data is up to date.")
+        .help(usingSavedData ? "RooMate will try again when you’re connected." : "The latest school data is loaded.")
     }
   }
 

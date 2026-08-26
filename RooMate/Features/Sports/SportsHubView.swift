@@ -265,7 +265,7 @@ struct SportsHubView: View {
       if store.isLoading && store.liveGames.isEmpty {
         HStack(spacing: 9) {
           ProgressView().controlSize(.small)
-          Text("Loading athletics schedule…")
+          Text("Loading games…")
             .font(.system(size: 11))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -274,7 +274,7 @@ struct SportsHubView: View {
         compactEmptyState(
           icon: "calendar.badge.checkmark",
           title: "No upcoming games",
-          subtitle: "New games will appear here when they are added to the athletics schedule."
+          subtitle: "New games will appear here when they are added to the school sports schedule."
         )
         .frame(minHeight: 170)
       } else {
@@ -355,10 +355,10 @@ struct SportsHubView: View {
         .background(athleticsColor.opacity(0.11), in: RoundedRectangle(cornerRadius: 9))
 
       VStack(alignment: .leading, spacing: 3) {
-        Text("Team pages are taking a timeout")
+        Text("Team pages are unavailable for now")
           .font(.system(size: 11.5, weight: .semibold))
           .foregroundStyle(DesignTokens.Colors.primaryText)
-        Text("They’ll return in a future update. Games remain available here.")
+        Text("They’ll return in a future update. You can still view games and set reminders.")
           .font(.system(size: 9.5, weight: .medium))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
           .fixedSize(horizontal: false, vertical: true)
@@ -442,12 +442,12 @@ struct SportsHubView: View {
               Text(sportsMonthYear(selectedDate))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundStyle(DesignTokens.Colors.primaryText)
-              Text("Select a day to see its athletics schedule")
+              Text("Select a day to see its games")
                 .font(.system(size: 10.5))
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
             }
             Spacer()
-            Text("\(filteredGames.count) event\(filteredGames.count == 1 ? "" : "s")")
+            Text("\(filteredGames.count) game\(filteredGames.count == 1 ? "" : "s")")
               .font(.system(size: 10, weight: .semibold))
               .foregroundStyle(athleticsColor)
               .padding(.horizontal, 9)
@@ -548,7 +548,7 @@ struct SportsHubView: View {
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.primaryText)
           Text(
-            "\(selectedSportsCalendarDayGames.count) event\(selectedSportsCalendarDayGames.count == 1 ? "" : "s")"
+            "\(selectedSportsCalendarDayGames.count) game\(selectedSportsCalendarDayGames.count == 1 ? "" : "s")"
           )
           .font(.system(size: 10))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -563,7 +563,7 @@ struct SportsHubView: View {
         VStack(spacing: 8) {
           Image(systemName: "calendar").font(.system(size: 20)).foregroundStyle(
             DesignTokens.Colors.subtleText)
-          Text("No athletics events").font(.system(size: 11.5, weight: .semibold))
+          Text("No games that day").font(.system(size: 11.5, weight: .semibold))
           Text("Choose another day in the calendar.").font(.system(size: 9.5)).foregroundStyle(
             DesignTokens.Colors.secondaryText)
         }
@@ -654,7 +654,7 @@ struct SportsHubView: View {
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
 
               TextField(
-                "Search teams, games, or opponents",
+                "Search games or opponents",
                 text: $searchText
               )
               .textFieldStyle(.plain)
@@ -737,7 +737,7 @@ struct SportsHubView: View {
   private var headerSubtitle: String {
     switch selectedSection {
     case .overview:
-      return "Games and athletics updates in one place"
+      return "Games and schedule changes in one place"
     case .games:
       return longDate(selectedDate)
     }
@@ -790,7 +790,7 @@ struct SportsHubView: View {
       Spacer()
 
       if selectedSection == .overview {
-        Text("Synced with the athletics schedule")
+        Text("Updated from the school sports schedule")
           .font(.system(size: 9.5, weight: .medium))
           .foregroundStyle(DesignTokens.Colors.subtleText)
       }
@@ -1259,7 +1259,7 @@ struct SportsHubView: View {
         compactEmptyState(
           icon: "calendar.badge.checkmark",
           title: "No upcoming games",
-          subtitle: "There isn’t another game on the athletics schedule yet."
+          subtitle: "There isn’t another game on the school sports schedule yet."
         )
       }
     }
@@ -1270,7 +1270,7 @@ struct SportsHubView: View {
   private var updatesCard: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
-        SportsSectionLabel("UPDATES", color: DesignTokens.Colors.warning)
+        SportsSectionLabel("SCHEDULE CHANGES", color: DesignTokens.Colors.warning)
         Spacer()
         Text("\(updates.count)")
           .font(.system(size: 10, weight: .semibold))
@@ -1330,7 +1330,7 @@ struct SportsHubView: View {
 
   private var athleticCalendarCard: some View {
     VStack(alignment: .leading, spacing: 12) {
-      SportsSectionLabel("ATHLETIC CALENDAR", color: DesignTokens.Colors.events)
+      SportsSectionLabel("SPORTS CALENDAR", color: DesignTokens.Colors.events)
 
       Button {
         selectedDate = Date()
@@ -1352,7 +1352,7 @@ struct SportsHubView: View {
               .font(.system(size: 12, weight: .semibold))
               .foregroundStyle(DesignTokens.Colors.primaryText)
 
-            Text("\(nextSevenDayGames.count) event\(nextSevenDayGames.count == 1 ? "" : "s")")
+            Text("\(nextSevenDayGames.count) game\(nextSevenDayGames.count == 1 ? "" : "s")")
               .font(.system(size: 10))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
@@ -1384,7 +1384,7 @@ struct SportsHubView: View {
       ProgressView()
         .controlSize(.small)
 
-      Text("Loading the athletics schedule…")
+      Text("Loading games…")
         .font(.system(size: 12, weight: .medium))
         .foregroundStyle(DesignTokens.Colors.secondaryText)
 
@@ -1394,16 +1394,16 @@ struct SportsHubView: View {
     .rooSurface(cornerRadius: DesignTokens.Radius.lg)
   }
 
-  private func errorCard(_ error: Error) -> some View {
+  private func errorCard(_: Error) -> some View {
     HStack(alignment: .top, spacing: 10) {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(DesignTokens.Colors.warning)
 
       VStack(alignment: .leading, spacing: 3) {
-        Text("Couldn't load athletics")
+        Text("Couldn’t load games")
           .font(.system(size: 12, weight: .semibold))
 
-        Text(error.localizedDescription)
+        Text("Check your connection or try again in a moment.")
           .font(.system(size: 10))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -1464,7 +1464,7 @@ struct SportsHubView: View {
         .font(.system(size: 9))
         .foregroundStyle(DesignTokens.Colors.subtleText)
 
-      Text("Sports schedules can change. RooMate shows the latest athletics information available.")
+      Text("Game times can change. RooMate shows the latest school sports schedule available.")
         .font(.system(size: 9))
         .foregroundStyle(DesignTokens.Colors.subtleText)
 
@@ -2003,7 +2003,7 @@ private struct SportsDaySection: View {
 
         Spacer()
 
-        Text("\(group.games.count) event\(group.games.count == 1 ? "" : "s")")
+        Text("\(group.games.count) game\(group.games.count == 1 ? "" : "s")")
           .font(.system(size: 9, weight: .semibold))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }

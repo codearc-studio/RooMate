@@ -384,7 +384,7 @@ struct RooPACTrackerView: View {
       return PacTrackStatus(
         title: "Your plan could meet it",
         detail:
-          "Some selected activities have variable RooPAC values. Set exact amounts as you know them.",
+          "Some activities can earn different amounts. Add the final amount once you know it.",
         icon: "circle.lefthalf.filled",
         color: DesignTokens.Colors.warning
       )
@@ -393,7 +393,7 @@ struct RooPACTrackerView: View {
     return PacTrackStatus(
       title: "\(remainingFromMinimum) more RooPAC\(remainingFromMinimum == 1 ? "" : "s") needed",
       detail:
-        "Add another approved activity or adjust a variable-value activity when you know its amount.",
+        "Add another approved activity, or update an activity once you know its final amount.",
       icon: "flag.fill",
       color: DesignTokens.Colors.warning
     )
@@ -738,10 +738,10 @@ struct RooPACTrackerView: View {
     }
 
     if minimumPlanned == maximumPlanned {
-      return "exact planned total"
+      return "planned total"
     }
 
-    return "possible total • set exact values when known"
+    return "possible total • add final amounts when known"
   }
 
   // MARK: Plan card
@@ -858,7 +858,7 @@ struct RooPACTrackerView: View {
           Text("2026–27 RooPAC Activity Guide")
             .font(.system(size: 15, weight: .semibold))
 
-          Text("Official values from the RooPAC table")
+          Text("RooPAC values from the school guide")
             .font(.system(size: 10))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }
@@ -964,7 +964,7 @@ struct RooPACTrackerView: View {
         .tint(accent)
 
       HStack {
-        Text("Minimum planned")
+        Text("Planned so far")
           .font(.system(size: 10))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
         Spacer()
@@ -1007,7 +1007,7 @@ struct RooPACTrackerView: View {
 
         Text(
           maximumPlanned >= currentRequirement
-            ? "Your variable-value activities could close this gap. Set exact values when you know them."
+            ? "Activities with different possible amounts may cover this gap. Add the final amounts once you know them."
             : "Choose another approved activity below to close the remaining gap."
         )
         .font(.system(size: 10))
@@ -1344,7 +1344,7 @@ private struct RooPACPlanRow: View {
         }
         .menuStyle(.borderlessButton)
         .buttonStyle(.plain)
-        .help("Set an exact RooPAC amount when you know it")
+        .help("Set the RooPAC amount once you know it")
       } else {
         Text(activity.rangeDescription)
           .font(.system(size: 10, weight: .semibold))
@@ -1432,7 +1432,7 @@ private struct RooPACActivityPickerSheet: View {
       Divider().opacity(0.35)
 
       HStack {
-        Text("Variable-value activities can be left as a range until you know the exact amount.")
+        Text("If an activity can earn different amounts, leave it as a range until you know your final amount.")
           .font(.system(size: 9))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
 
@@ -1778,7 +1778,7 @@ private struct RooPACRequirementsSheet: View {
           Text("RooPAC Requirements • 2026–27")
             .font(.system(size: 18, weight: .semibold))
 
-          Text("Annual requirements and approved activity values")
+          Text("Yearly requirements and activity values")
             .font(.system(size: 11))
             .foregroundStyle(DesignTokens.Colors.secondaryText)
         }

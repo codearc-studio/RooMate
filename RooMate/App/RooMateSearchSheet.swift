@@ -151,7 +151,7 @@ struct RooMateSearchSheet: View {
           Image(systemName: "magnifyingglass")
             .font(.system(size: 28))
             .foregroundStyle(DesignTokens.Colors.subtleText)
-          Text("Search your RooMate")
+          Text("Search RooMate")
             .font(.system(size: 15, weight: .semibold))
           Text("Find pages, classes, clubs, events, games, and dining items.")
             .font(.caption)
