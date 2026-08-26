@@ -26,6 +26,7 @@ struct ContentView: View {
   @State private var updateTrigger = UUID()
   @State private var showSearch = false
   @State private var showWhatsNew = false
+  @State private var showAnnouncements = false
   @AppStorage("RooMateLastAcknowledgedWhatsNewVersion")
   private var lastAcknowledgedWhatsNewVersion = ""
   @State private var hoveredSidebarTab: Tab?
@@ -102,14 +103,6 @@ struct ContentView: View {
   // Blocks for the selected day
   private var blocksForSelectedDay: [BellBlock] {
     store.bellBlocks(for: nextDate(for: selectedDay))
-  }
-
-  private func preferredColorScheme(for appearance: AppearancePreference) -> ColorScheme? {
-    switch appearance {
-    case .system: nil
-    case .light: .light
-    case .dark: .dark
-    }
   }
 
   // Derived sidebar/tab ordering based on user preferences
@@ -1348,7 +1341,8 @@ struct ContentView: View {
                 scheduleFocusMode = true
                 selectedTab = .schedule
               },
-              onSearch: { showSearch = true }
+              onSearch: { showSearch = true },
+              onShowAnnouncements: { showAnnouncements = true }
             )
 
           case .schedule:
@@ -1424,6 +1418,7 @@ struct ContentView: View {
       "UserSpecialBlockFree",
       "UserSpecialBlockReplacements",
       "UserClubs",
+      "UserThemePreference",
       "UserAppearancePreference",
       "UserCardColorStyle",
       "SpecialScheduleOverrides",
@@ -1451,7 +1446,7 @@ struct ContentView: View {
       || !store.sidebarOrder.isEmpty
       || !store.sidebarFavorites.isEmpty
       || !store.sidebarHidden.isEmpty
-      || store.appearance != .system
+      || store.theme != .system
       || store.cardColorStyle != .colors
       || store.notifyClassStartingSoon != true
       || store.notifyClassEndingSoon != false
@@ -1498,12 +1493,13 @@ struct ContentView: View {
     acknowledgeWhatsNew()
   }
 
-  private let currentWhatsNewVersion = "6.0"
+  private let currentWhatsNewVersion = "6.0.4"
 
   private func maybeShowWhatsNew() {
     guard v6OnboardingCompleted,
       RooMateVersion.compare(RooMateVersion.current, currentWhatsNewVersion) != .orderedAscending,
-      RooMateVersion.compare(lastAcknowledgedWhatsNewVersion, currentWhatsNewVersion) == .orderedAscending
+      RooMateVersion.compare(lastAcknowledgedWhatsNewVersion, currentWhatsNewVersion)
+        == .orderedAscending
     else { return }
     showWhatsNew = true
   }
@@ -1582,7 +1578,8 @@ struct ContentView: View {
                       onOpenEvents: { selectedTab = .events },
                       onOpenPacTrack: { selectedTab = .rooPAC },
                       onOpenScheduleFocus: { selectedTab = .schedule },
-                      onSearch: { showSearch = true }
+                      onSearch: { showSearch = true },
+                      onShowAnnouncements: { showAnnouncements = true }
                     )
 
                   case .schedule:
@@ -1658,10 +1655,17 @@ struct ContentView: View {
         #endif
       }
     }
-    .preferredColorScheme(preferredColorScheme(for: store.appearance))
+    .preferredColorScheme(store.theme.colorScheme)
     .onAppear {
       resolveV6OnboardingRouting()
       maybeShowWhatsNew()
+      if v6OnboardingCompleted,
+        UserDefaults.standard.bool(forKey: "RooMateOpenAnnouncementsOnLaunch")
+      {
+        UserDefaults.standard.removeObject(forKey: "RooMateOpenAnnouncementsOnLaunch")
+        selectedTab = .dashboard
+        showAnnouncements = true
+      }
       store.refreshProfileDerivedData()
       Task {
         await store.refreshAnnouncements()
@@ -1687,6 +1691,12 @@ struct ContentView: View {
     .onReceive(NotificationCenter.default.publisher(for: .rooMateShowWhatsNew)) { _ in
       guard v6OnboardingCompleted else { return }
       showWhatsNew = true
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .rooMateShowAnnouncements)) { _ in
+      guard v6OnboardingCompleted else { return }
+      UserDefaults.standard.removeObject(forKey: "RooMateOpenAnnouncementsOnLaunch")
+      selectedTab = .dashboard
+      showAnnouncements = true
     }
     .onChange(of: selectedTab) { _, newTab in
       TelemetryTracker.trackTabSelected(telemetryTabName(for: newTab))
@@ -1735,6 +1745,7 @@ struct ContentView: View {
     ) { _ in
       Task {
         await store.refreshOfficialSpecialSchedules(force: true)
+        await store.refreshOfficialSchoolDates(force: true)
       }
     }
     .onReceive(
@@ -1784,6 +1795,9 @@ struct ContentView: View {
           showSearch = false
         }
       )
+    }
+    .sheet(isPresented: $showAnnouncements) {
+      RooMateAnnouncementsSheet(store: store)
     }
     .sheet(isPresented: $showWhatsNew, onDismiss: acknowledgeWhatsNew) {
       RooMateWhatsNewView(onDismiss: acknowledgeWhatsNew)
@@ -2410,7 +2424,11 @@ private struct RooMateOnboardingView: View {
             .font(.system(size: 10.5, weight: .bold))
         }
         .font(.system(size: 11.5, weight: .semibold))
-        .foregroundStyle(.white)
+        .foregroundStyle(
+          canContinueCurrentStep
+            ? currentStep.tint.accessibleForegroundColor
+            : DesignTokens.Colors.primaryText.opacity(0.55)
+        )
         .padding(.horizontal, 16)
         .frame(height: 36)
         .contentShape(Rectangle())
@@ -2716,7 +2734,7 @@ private struct RooMateOnboardingView: View {
                 if selected {
                   Image(systemName: "checkmark")
                     .font(.system(size: 10, weight: .black))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(accent.color.accessibleForegroundColor)
                 }
               }
               .padding(4)
@@ -2942,7 +2960,7 @@ private struct RooMateOnboardingView: View {
                   if selected {
                     Image(systemName: "checkmark")
                       .font(.system(size: 8, weight: .black))
-                      .foregroundStyle(.white)
+                      .foregroundStyle(option.accessibleForegroundColor)
                   }
                 }
               }
@@ -3935,10 +3953,13 @@ private struct RooMateOnboardingView: View {
             .font(.system(size: 10.5, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.primaryText)
             .lineLimit(1)
-          Text(game.opponent.isEmpty ? game.rawDateString : "vs \(game.opponent) • \(game.rawDateString)")
-            .font(.system(size: 8.5, weight: .medium))
-            .foregroundStyle(DesignTokens.Colors.secondaryText)
-            .lineLimit(1)
+          Text(
+            game.opponent.isEmpty
+              ? game.rawDateString : "vs \(game.opponent) • \(game.rawDateString)"
+          )
+          .font(.system(size: 8.5, weight: .medium))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .lineLimit(1)
         }
 
         Spacer(minLength: 4)
@@ -4066,46 +4087,11 @@ private struct RooMateOnboardingView: View {
     VStack(alignment: .leading, spacing: 18) {
       onboardingCard(
         title: "Appearance",
-        subtitle: "Choose the theme RooMate should use everywhere.",
+        subtitle: "Choose the look you want to start with. You can change it any time in Settings.",
         icon: "circle.lefthalf.filled",
         tint: DesignTokens.Colors.settings
       ) {
-        HStack(spacing: 8) {
-          ForEach(AppearancePreference.allCases) { appearance in
-            let selected = store.appearance == appearance
-            Button {
-              withAnimation(DesignTokens.Animation.content) {
-                store.appearance = appearance
-              }
-            } label: {
-              HStack(spacing: 7) {
-                Image(systemName: appearance.systemImage)
-                Text(appearance.title)
-              }
-              .font(.system(size: 10.5, weight: .semibold))
-              .foregroundStyle(
-                selected ? DesignTokens.Colors.settings : DesignTokens.Colors.secondaryText
-              )
-              .frame(maxWidth: .infinity)
-              .frame(height: 35)
-              .background(
-                selected
-                  ? DesignTokens.Colors.settings.opacity(0.11)
-                  : DesignTokens.Colors.hover.opacity(0.22),
-                in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-              )
-              .overlay {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                  .strokeBorder(
-                    selected
-                      ? DesignTokens.Colors.settings.opacity(0.34)
-                      : DesignTokens.Colors.border,
-                    lineWidth: 1)
-              }
-            }
-            .buttonStyle(.plain)
-          }
-        }
+        RooMateThemePicker(selection: $store.theme, style: .onboarding)
       }
 
       #if canImport(ServiceManagement)
@@ -4194,7 +4180,8 @@ private struct RooMateOnboardingView: View {
         #if DEBUG
           print("[LaunchAtLogin] \(error.localizedDescription)")
         #endif
-        launchAtLoginError = "RooMate couldn’t change this setting. You can skip it and try again later in Settings."
+        launchAtLoginError =
+          "RooMate couldn’t change this setting. You can skip it and try again later in Settings."
       }
       refreshOnboardingLaunchAtLoginStatus()
     }
@@ -4207,7 +4194,7 @@ private struct RooMateOnboardingView: View {
       onboardingCard(
         title: "Choose exactly what RooMate can remind you about",
         subtitle:
-          "Permission is requested only if you choose Enable. Every reminder type stays individually controllable here and later in Settings.",
+          "Permission is requested only if you choose Enable. Routine reminders stay configurable; RooMate announcements always notify when notifications are enabled.",
         icon: "bell.badge.fill",
         tint: DesignTokens.Colors.warning
       ) {
@@ -4266,6 +4253,48 @@ private struct RooMateOnboardingView: View {
       }
 
       onboardingCard(
+        title: "RooMate announcements",
+        subtitle:
+          "Announcements are part of RooMate’s core communication system, so there is no separate off switch.",
+        icon: "megaphone.fill",
+        tint: DesignTokens.Colors.today
+      ) {
+        HStack(spacing: 11) {
+          ZStack {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+              .fill(DesignTokens.Colors.today.opacity(0.12))
+            Image(systemName: notificationsAreActive ? "bell.fill" : "bell.slash.fill")
+              .font(.system(size: 14, weight: .semibold))
+              .foregroundStyle(
+                notificationsAreActive
+                  ? DesignTokens.Colors.today
+                  : DesignTokens.Colors.secondaryText
+              )
+          }
+          .frame(width: 38, height: 38)
+
+          VStack(alignment: .leading, spacing: 2) {
+            Text("Always on with RooMate notifications")
+              .font(.system(size: 11.5, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+            Text(
+              notificationsAreActive
+                ? "New published announcements can appear on Today and notify you automatically."
+                : "Enable RooMate notifications above if you want announcement alerts."
+            )
+            .font(.system(size: 9.5, weight: .medium))
+            .foregroundStyle(DesignTokens.Colors.secondaryText)
+          }
+
+          Spacer()
+
+          Image(systemName: "lock.fill")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.subtleText)
+        }
+      }
+
+      onboardingCard(
         title: "School day reminders",
         subtitle: "Class and club reminders are sent shortly before the thing you need to get to.",
         icon: "clock.badge.checkmark",
@@ -4312,7 +4341,8 @@ private struct RooMateOnboardingView: View {
 
       onboardingCard(
         title: "Dining & Events",
-        subtitle: "Optional reminders for the things you save in RooMate. Sports reminders are selected per game.",
+        subtitle:
+          "Optional reminders for the things you save in RooMate. Sports reminders are selected per game.",
         icon: "sparkles",
         tint: DesignTokens.Colors.warning
       ) {
@@ -4369,7 +4399,7 @@ private struct RooMateOnboardingView: View {
         Image(systemName: "hand.raised.fill")
           .foregroundStyle(DesignTokens.Colors.secondaryText)
         Text(
-          "RooMate schedules these locally from the data already used by the app. You can pause everything for an hour or the rest of the day from Settings."
+          "RooMate schedules these locally from the data already used by the app. Settings can pause routine reminders; published RooMate announcements still come through while notifications are enabled."
         )
         .font(.system(size: 9.5, weight: .medium))
         .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -4933,7 +4963,7 @@ private struct RooMateOnboardingView: View {
     HStack(spacing: 9) {
       Text(number)
         .font(.system(size: 9, weight: .bold, design: .rounded))
-        .foregroundStyle(.white)
+        .foregroundStyle(tint.accessibleForegroundColor)
         .frame(width: 22, height: 22)
         .background(tint, in: Circle())
       VStack(alignment: .leading, spacing: 1) {

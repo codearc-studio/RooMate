@@ -95,6 +95,23 @@ import Foundation
       signal("Announcements.LinkOpened", parameters: ["level": level])
     }
 
+    static func trackAnnouncementCenterOpened() {
+      signal("Announcements.CenterOpened")
+    }
+
+    static func trackAnnouncementNotificationScheduled(
+      level: String,
+      scheduledForFuture: Bool
+    ) {
+      signal(
+        "Announcements.NotificationScheduled",
+        parameters: [
+          "level": level,
+          "timing": scheduledForFuture ? "future" : "immediate",
+        ]
+      )
+    }
+
     static func trackScraperFailure(
       signal signalName: String, target: String, errorType: String
     ) {
@@ -124,6 +141,8 @@ import Foundation
     static func trackAnnouncementFeedLoaded(totalCount: Int, activeCount: Int) {}
     static func trackAnnouncementDismissed(level: String) {}
     static func trackAnnouncementLinkOpened(level: String) {}
+    static func trackAnnouncementCenterOpened() {}
+    static func trackAnnouncementNotificationScheduled(level: String, scheduledForFuture: Bool) {}
     static func trackScraperFailure(signal: String, target: String, errorType: String) {}
   }
 #endif

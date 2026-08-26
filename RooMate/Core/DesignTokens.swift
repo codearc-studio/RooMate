@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 #if canImport(AppKit)
@@ -21,79 +22,208 @@ struct DesignTokens {
   }
 
   struct Colors {
+    enum ThemeColorRole {
+      case primary, accent, accentHover, accentPressed
+      case today, schedule, pacTrack, dining, athletics, events, links, settings
+      case success, warning, destructive, info
+      case background, sidebar, surface, surfaceElevated, hover
+      case canvasTop, canvasBottom, sidebarTop
+      case primaryText, secondaryText, subtleText
+    }
+
+    struct ThemePalette {
+      let primary: UInt32
+      let accent: UInt32
+      let accentHover: UInt32
+      let accentPressed: UInt32
+      let today: UInt32
+      let schedule: UInt32
+      let pacTrack: UInt32
+      let dining: UInt32
+      let athletics: UInt32
+      let events: UInt32
+      let links: UInt32
+      let settings: UInt32
+      let success: UInt32
+      let warning: UInt32
+      let destructive: UInt32
+      let info: UInt32
+      let background: UInt32
+      let sidebar: UInt32
+      let surface: UInt32
+      let surfaceElevated: UInt32
+      let hover: UInt32
+      let canvasTop: UInt32
+      let canvasBottom: UInt32
+      let sidebarTop: UInt32
+      let primaryText: UInt32
+      let secondaryText: UInt32
+      let subtleText: UInt32
+
+      subscript(role: ThemeColorRole) -> UInt32 {
+        switch role {
+        case .primary: primary
+        case .accent: accent
+        case .accentHover: accentHover
+        case .accentPressed: accentPressed
+        case .today: today
+        case .schedule: schedule
+        case .pacTrack: pacTrack
+        case .dining: dining
+        case .athletics: athletics
+        case .events: events
+        case .links: links
+        case .settings: settings
+        case .success: success
+        case .warning: warning
+        case .destructive: destructive
+        case .info: info
+        case .background: background
+        case .sidebar: sidebar
+        case .surface: surface
+        case .surfaceElevated: surfaceElevated
+        case .hover: hover
+        case .canvasTop: canvasTop
+        case .canvasBottom: canvasBottom
+        case .sidebarTop: sidebarTop
+        case .primaryText: primaryText
+        case .secondaryText: secondaryText
+        case .subtleText: subtleText
+        }
+      }
+    }
+
+    static func palette(for theme: RooMateTheme, systemDark: Bool = false) -> ThemePalette {
+      switch theme == .system ? (systemDark ? RooMateTheme.rooDark : .rooLight) : theme {
+      case .system, .rooLight:
+        ThemePalette(
+          primary: 0xA8582D, accent: 0xB34B3B, accentHover: 0xAE592F,
+          accentPressed: 0x8F432F, today: 0x9F562B, schedule: 0x426E93,
+          pacTrack: 0x6A519A, dining: 0xA15528, athletics: 0x347258,
+          events: 0x376F91, links: 0x586577, settings: 0x5C616B,
+          success: 0x347254, warning: 0x8E5C0E, destructive: 0xA94343,
+          info: 0x3E6D95, background: 0xF4F1EC, sidebar: 0xECE8E2,
+          surface: 0xFBFAF8, surfaceElevated: 0xFFFFFF, hover: 0xEAE5DE,
+          canvasTop: 0xFAF8F4, canvasBottom: 0xF1EEE8, sidebarTop: 0xF2EEE8,
+          primaryText: 0x202126, secondaryText: 0x55585E, subtleText: 0x666970
+        )
+      case .sunrise:
+        ThemePalette(
+          primary: 0xA64F2C, accent: 0xB4483B, accentHover: 0xC35F37,
+          accentPressed: 0x873A24, today: 0xA9502D, schedule: 0x3D6F94,
+          pacTrack: 0x6A519A, dining: 0xA75A27, athletics: 0x34765A,
+          events: 0x376F91, links: 0x586577, settings: 0x5C616B,
+          success: 0x347254, warning: 0x8D5B0D, destructive: 0xA74242,
+          info: 0x3E6D95, background: 0xF8F0E7, sidebar: 0xF0E2D6,
+          surface: 0xFFF9F2, surfaceElevated: 0xFFFFFF, hover: 0xEEDDD0,
+          canvasTop: 0xFFFAF3, canvasBottom: 0xF4E9DE, sidebarTop: 0xF5E8DC,
+          primaryText: 0x2A201B, secondaryText: 0x68574F, subtleText: 0x725E55
+        )
+      case .courtyard:
+        ThemePalette(
+          primary: 0x8F4F2F, accent: 0x3F7458, accentHover: 0x568A6D,
+          accentPressed: 0x2F5D46, today: 0x95502B, schedule: 0x416B8C,
+          pacTrack: 0x65508B, dining: 0x945627, athletics: 0x347058,
+          events: 0x386A87, links: 0x52616A, settings: 0x566159,
+          success: 0x326C53, warning: 0x80600E, destructive: 0x9A4444,
+          info: 0x386989, background: 0xF1F5EF, sidebar: 0xE5EDE3,
+          surface: 0xF9FCF7, surfaceElevated: 0xFFFFFF, hover: 0xDDE8DA,
+          canvasTop: 0xF8FBF6, canvasBottom: 0xECF2E9, sidebarTop: 0xEAF1E7,
+          primaryText: 0x1D2821, secondaryText: 0x4F5E55, subtleText: 0x5C6B62
+        )
+      case .rooDark:
+        ThemePalette(
+          primary: 0xF29A5A, accent: 0xEE795E, accentHover: 0xF5AA72,
+          accentPressed: 0xD96F51, today: 0xF2A65A, schedule: 0x78A6D0,
+          pacTrack: 0x9A78C8, dining: 0xECA45F, athletics: 0x67B68A,
+          events: 0x6FAACB, links: 0x8794A8, settings: 0x9A9FA9,
+          success: 0x67B68A, warning: 0xE8B45F, destructive: 0xD97777,
+          info: 0x78A6D0, background: 0x090A0C, sidebar: 0x101216,
+          surface: 0x15171A, surfaceElevated: 0x1B1D22, hover: 0x22252A,
+          canvasTop: 0x0B0C0F, canvasBottom: 0x08090B, sidebarTop: 0x121419,
+          primaryText: 0xF5F5F6, secondaryText: 0xA7ABB2, subtleText: 0x818791
+        )
+      case .midnight:
+        ThemePalette(
+          primary: 0xF0A16A, accent: 0xF27E68, accentHover: 0xF5AE7D,
+          accentPressed: 0xD86D59, today: 0xF2A65A, schedule: 0x80B3E3,
+          pacTrack: 0xA58BD5, dining: 0xEFB06D, athletics: 0x74C397,
+          events: 0x79B8DE, links: 0x98A8C1, settings: 0xACB4C2,
+          success: 0x76C49A, warning: 0xEAC06D, destructive: 0xE78585,
+          info: 0x83B4E0, background: 0x070C14, sidebar: 0x0D1420,
+          surface: 0x131C29, surfaceElevated: 0x192537, hover: 0x223148,
+          canvasTop: 0x0A101B, canvasBottom: 0x060A11, sidebarTop: 0x101827,
+          primaryText: 0xF4F7FB, secondaryText: 0xACB8C9, subtleText: 0x8390A3
+        )
+      case .oled:
+        ThemePalette(
+          primary: 0xF7A367, accent: 0xFF806B, accentHover: 0xFFB17F,
+          accentPressed: 0xE3705C, today: 0xF5A45C, schedule: 0x82B5E2,
+          pacTrack: 0xAA8CD8, dining: 0xF1AE68, athletics: 0x75C599,
+          events: 0x7CB9DB, links: 0x9CA9BC, settings: 0xB0B4BC,
+          success: 0x75C599, warning: 0xEDBE68, destructive: 0xE88989,
+          info: 0x84B5E0, background: 0x000000, sidebar: 0x030303,
+          surface: 0x080808, surfaceElevated: 0x101010, hover: 0x191919,
+          canvasTop: 0x000000, canvasBottom: 0x000000, sidebarTop: 0x030303,
+          primaryText: 0xF7F7F7, secondaryText: 0xB6B6B6, subtleText: 0x898989
+        )
+      }
+    }
+
     // MARK: Brand / primary interaction
-    //
-    // Dark mode keeps RooMate's warm cream/orange glow. Light mode uses
-    // deeper versions of the same hues so colored controls stay crisp on
-    // pale surfaces instead of becoming pastel or low-contrast.
-    static let primary = adaptive(light: 0xC96F3A, dark: 0xF29A5A)
-    static let accent = adaptive(light: 0xC95F49, dark: 0xEE795E)
-    static let accentHover = adaptive(light: 0xD98550, dark: 0xF5AA72)
-    static let accentPressed = adaptive(light: 0xA94F3A, dark: 0xD96F51)
+    static var primary: Color { themed(.primary) }
+    static var accent: Color { themed(.accent) }
+    static var accentHover: Color { themed(.accentHover) }
+    static var accentPressed: Color { themed(.accentPressed) }
 
     // MARK: Feature identity
-    // Feature colors intentionally shift darker in light mode. This lets
-    // RooMate stay colorful without relying on muddy translucent fills.
-    static let today = adaptive(light: 0xB86A2E, dark: 0xF2A65A)
-    static let schedule = adaptive(light: 0x4B739C, dark: 0x78A6D0)
-    static let pacTrack = adaptive(light: 0x7359A8, dark: 0x9A78C8)
-    static let dining = adaptive(light: 0xB96B2B, dark: 0xECA45F)
-    static let athletics = adaptive(light: 0x3E7E60, dark: 0x67B68A)
-    static let events = adaptive(light: 0x3F789D, dark: 0x6FAACB)
-    static let links = adaptive(light: 0x5F6C7F, dark: 0x8794A8)
-    static let settings = adaptive(light: 0x666C77, dark: 0x9A9FA9)
+    static var today: Color { themed(.today) }
+    static var schedule: Color { themed(.schedule) }
+    static var pacTrack: Color { themed(.pacTrack) }
+    static var dining: Color { themed(.dining) }
+    static var athletics: Color { themed(.athletics) }
+    static var events: Color { themed(.events) }
+    static var links: Color { themed(.links) }
+    static var settings: Color { themed(.settings) }
 
     // MARK: Semantic
-    static let success = adaptive(light: 0x39795A, dark: 0x67B68A)
-    static let warning = adaptive(light: 0xA56D19, dark: 0xE8B45F)
-    static let destructive = adaptive(light: 0xB45353, dark: 0xD97777)
-    static let info = adaptive(light: 0x47739F, dark: 0x78A6D0)
+    static var success: Color { themed(.success) }
+    static var warning: Color { themed(.warning) }
+    static var destructive: Color { themed(.destructive) }
+    static var info: Color { themed(.info) }
 
     // MARK: Main surfaces
-    // Light mode is intentionally warm rather than stark white. The
-    // hierarchy is canvas -> sidebar -> card -> elevated card.
-    static let background = adaptive(light: 0xF4F1EC, dark: 0x090A0C)
-    static let sidebar = adaptive(light: 0xECE8E2, dark: 0x101216)
-    static let surface = adaptive(light: 0xFBFAF8, dark: 0x15171A)
-    static let surfaceElevated = adaptive(light: 0xFFFFFF, dark: 0x1B1D22)
-    static let hover = adaptive(light: 0xEAE5DE, dark: 0x22252A)
+    static var background: Color { themed(.background) }
+    static var sidebar: Color { themed(.sidebar) }
+    static var surface: Color { themed(.surface) }
+    static var surfaceElevated: Color { themed(.surfaceElevated) }
+    static var hover: Color { themed(.hover) }
+    static var lightCanvasTop: Color { themed(.canvasTop) }
+    static var lightCanvasBottom: Color { themed(.canvasBottom) }
+    static var lightSidebarTop: Color { themed(.sidebarTop) }
 
-    // Canvas-only light colors used by BackgroundView. They are deliberately
-    // exposed here so every screen shares the same warm paper foundation.
-    static let lightCanvasTop = Color(hex: 0xFAF8F4)
-    static let lightCanvasBottom = Color(hex: 0xF1EEE8)
-    static let lightSidebarTop = Color(hex: 0xF2EEE8)
+    static var selection: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.060, darkAlpha: 0.095)
+    }
+    static var selectionBorder: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.105, darkAlpha: 0.10)
+    }
+    static var sidebarHover: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.050, darkAlpha: 0.055)
+    }
+    static var sidebarHoverBorder: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.085, darkAlpha: 0.065)
+    }
 
-    static let selection = adaptiveWithAlpha(
-      light: 0x2C2A27, lightAlpha: 0.060,
-      dark: 0xFFFFFF, darkAlpha: 0.095
-    )
-    static let selectionBorder = adaptiveWithAlpha(
-      light: 0x2C2A27, lightAlpha: 0.105,
-      dark: 0xFFFFFF, darkAlpha: 0.10
-    )
-
-    static let sidebarHover = adaptiveWithAlpha(
-      light: 0x342F2A, lightAlpha: 0.050,
-      dark: 0xFFFFFF, darkAlpha: 0.055
-    )
-    static let sidebarHoverBorder = adaptiveWithAlpha(
-      light: 0x342F2A, lightAlpha: 0.085,
-      dark: 0xFFFFFF, darkAlpha: 0.065
-    )
-
-    static let primaryText = adaptive(light: 0x202126, dark: 0xF5F5F6)
-    static let secondaryText = adaptive(light: 0x64676D, dark: 0xA7ABB2)
-    static let subtleText = adaptive(light: 0x8A8D94, dark: 0x747A84)
-
-    static let border = adaptiveWithAlpha(
-      light: 0x302D29, lightAlpha: 0.095,
-      dark: 0xFFFFFF, darkAlpha: 0.075
-    )
-    static let borderStrong = adaptiveWithAlpha(
-      light: 0x302D29, lightAlpha: 0.155,
-      dark: 0xFFFFFF, darkAlpha: 0.12
-    )
+    static var primaryText: Color { themed(.primaryText) }
+    static var secondaryText: Color { themed(.secondaryText) }
+    static var subtleText: Color { themed(.subtleText) }
+    static var border: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.095, darkAlpha: 0.075)
+    }
+    static var borderStrong: Color {
+      themedWithAlpha(.primaryText, lightAlpha: 0.155, darkAlpha: 0.12)
+    }
 
     // Brand/icon colors, used sparingly in onboarding/About/identity moments.
     static let iconCreamTop = Color(hex: 0xFFF5E2)
@@ -112,29 +242,48 @@ struct DesignTokens {
       endPoint: .bottomTrailing
     )
 
-    private static func adaptive(light: UInt32, dark: UInt32) -> Color {
+    private static let themeDefaultsKey = "UserThemePreference"
+
+    private static func persistedTheme() -> RooMateTheme {
+      let defaults = UserDefaults(suiteName: "dev.roomate.prefs") ?? .standard
+      guard let data = defaults.data(forKey: themeDefaultsKey),
+        let theme = try? JSONDecoder().decode(RooMateTheme.self, from: data)
+      else {
+        return .system
+      }
+      return theme
+    }
+
+    private static func themed(_ role: ThemeColorRole) -> Color {
       #if canImport(AppKit)
         let dynamic = NSColor(
           name: nil,
           dynamicProvider: { appearance in
             let match = appearance.bestMatch(from: [.darkAqua, .aqua])
-            return nsColor(match == .darkAqua ? dark : light, alpha: 1)
+            let theme = persistedTheme()
+            return nsColor(
+              palette(for: theme, systemDark: match == .darkAqua)[role],
+              alpha: 1
+            )
           })
         return Color(nsColor: dynamic)
       #elseif canImport(UIKit)
         return Color(
           uiColor: UIColor { traits in
-            uiColor(traits.userInterfaceStyle == .dark ? dark : light, alpha: 1)
+            let theme = persistedTheme()
+            return uiColor(
+              palette(for: theme, systemDark: traits.userInterfaceStyle == .dark)[role],
+              alpha: 1
+            )
           })
       #else
-        return Color(hex: light)
+        return Color(hex: palette(for: persistedTheme())[role])
       #endif
     }
 
-    private static func adaptiveWithAlpha(
-      light: UInt32,
+    private static func themedWithAlpha(
+      _ role: ThemeColorRole,
       lightAlpha: CGFloat,
-      dark: UInt32,
       darkAlpha: CGFloat
     ) -> Color {
       #if canImport(AppKit)
@@ -142,22 +291,29 @@ struct DesignTokens {
           name: nil,
           dynamicProvider: { appearance in
             let match = appearance.bestMatch(from: [.darkAqua, .aqua])
-            if match == .darkAqua {
-              return nsColor(dark, alpha: darkAlpha)
-            }
-            return nsColor(light, alpha: lightAlpha)
+            let systemDark = match == .darkAqua
+            let theme = persistedTheme()
+            let isDark = theme == .system ? systemDark : theme.isDark
+            return nsColor(
+              palette(for: theme, systemDark: systemDark)[role],
+              alpha: isDark ? darkAlpha : lightAlpha
+            )
           })
         return Color(nsColor: dynamic)
       #elseif canImport(UIKit)
         return Color(
           uiColor: UIColor { traits in
-            if traits.userInterfaceStyle == .dark {
-              return uiColor(dark, alpha: darkAlpha)
-            }
-            return uiColor(light, alpha: lightAlpha)
+            let systemDark = traits.userInterfaceStyle == .dark
+            let theme = persistedTheme()
+            let isDark = theme == .system ? systemDark : theme.isDark
+            return uiColor(
+              palette(for: theme, systemDark: systemDark)[role],
+              alpha: isDark ? darkAlpha : lightAlpha
+            )
           })
       #else
-        return Color(hex: light).opacity(lightAlpha)
+        let theme = persistedTheme()
+        return Color(hex: palette(for: theme)[role]).opacity(theme.isDark ? darkAlpha : lightAlpha)
       #endif
     }
 
@@ -266,6 +422,58 @@ extension Color {
       blue: Double(hex & 0xFF) / 255.0,
       opacity: alpha
     )
+  }
+
+  /// Returns whichever of black or white has the stronger WCAG contrast
+  /// against this color. Use it for glyphs or text placed on arbitrary class,
+  /// profile, or themed feature colors.
+  var accessibleForegroundColor: Color {
+    let red: Double
+    let green: Double
+    let blue: Double
+
+    #if canImport(AppKit)
+      guard let color = NSColor(self).usingColorSpace(.sRGB) else {
+        return DesignTokens.Colors.primaryText
+      }
+      red = Double(color.redComponent)
+      green = Double(color.greenComponent)
+      blue = Double(color.blueComponent)
+    #elseif canImport(UIKit)
+      var resolvedRed: CGFloat = 0
+      var resolvedGreen: CGFloat = 0
+      var resolvedBlue: CGFloat = 0
+      var alpha: CGFloat = 0
+      guard
+        UIColor(self).getRed(
+          &resolvedRed,
+          green: &resolvedGreen,
+          blue: &resolvedBlue,
+          alpha: &alpha
+        )
+      else {
+        return DesignTokens.Colors.primaryText
+      }
+      red = Double(resolvedRed)
+      green = Double(resolvedGreen)
+      blue = Double(resolvedBlue)
+    #else
+      return .white
+    #endif
+
+    func linearized(_ component: Double) -> Double {
+      component <= 0.04045
+        ? component / 12.92
+        : pow((component + 0.055) / 1.055, 2.4)
+    }
+
+    let luminance =
+      0.2126 * linearized(red)
+      + 0.7152 * linearized(green)
+      + 0.0722 * linearized(blue)
+    let whiteContrast = 1.05 / (luminance + 0.05)
+    let blackContrast = (luminance + 0.05) / 0.05
+    return blackContrast >= whiteContrast ? .black : .white
   }
 }
 

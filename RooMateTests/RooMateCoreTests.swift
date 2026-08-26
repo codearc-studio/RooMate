@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import RooMate
 
 final class RooMateCoreTests: XCTestCase {
@@ -54,7 +55,8 @@ final class RooMateCoreTests: XCTestCase {
     let valid = String(decoding: try fixture("events-valid.ics"), as: UTF8.self)
     let duplicatedEvent = valid.replacingOccurrences(
       of: "END:VCALENDAR",
-      with: "BEGIN:VEVENT\nDTSTART;TZID=America/New_York:20260826T090000\nSUMMARY:Opening Assembly\nLOCATION:Meetinghouse\nEND:VEVENT\nEND:VCALENDAR"
+      with:
+        "BEGIN:VEVENT\nDTSTART;TZID=America/New_York:20260826T090000\nSUMMARY:Opening Assembly\nLOCATION:Meetinghouse\nEND:VEVENT\nEND:VCALENDAR"
     )
     XCTAssertEqual(ICSParser.parseEvents(from: duplicatedEvent).count, 2)
   }
@@ -87,6 +89,41 @@ final class RooMateCoreTests: XCTestCase {
     )
   }
 
+  func testAnnouncementParserUsesProductionWorkbookContract() throws {
+    let csv = """
+      ID,Title,Message,Priority,Icon,Start Date,End Date,Link,Dismissible,Minimum Version,Status
+      welcome,Welcome,"Hello, RooMate!",success,sparkles,8/26/2026,9/1/2026,https://example.com,TRUE,6.0,Published
+      draft,Draft Notice,This should stay hidden,warning,exclamationmark.triangle.fill,,,,TRUE,6.0,Draft
+      """
+
+    let announcements = try RemoteAnnouncementService.parseAnnouncements(csv)
+    XCTAssertEqual(announcements.count, 1)
+    XCTAssertEqual(announcements.first?.id, "welcome")
+    XCTAssertEqual(announcements.first?.title, "Welcome")
+    XCTAssertEqual(announcements.first?.message, "Hello, RooMate!")
+    XCTAssertEqual(announcements.first?.level, .success)
+    XCTAssertEqual(announcements.first?.icon, "sparkles")
+    XCTAssertEqual(announcements.first?.linkURL?.absoluteString, "https://example.com")
+    XCTAssertEqual(announcements.first?.dismissible, true)
+    XCTAssertEqual(announcements.first?.minVersion, "6.0")
+    XCTAssertNotNil(announcements.first?.startDate)
+    XCTAssertNotNil(announcements.first?.endDate)
+  }
+
+  func testAnnouncementParserAcceptsIntentionalHeaderOnlyFeed() throws {
+    let csv =
+      "ID,Title,Message,Priority,Icon,Start Date,End Date,Link,Dismissible,Minimum Version,Status\n"
+    XCTAssertTrue(try RemoteAnnouncementService.parseAnnouncements(csv).isEmpty)
+  }
+
+  func testAnnouncementParserRejectsUnrelatedGoogleResponse() {
+    XCTAssertThrowsError(
+      try RemoteAnnouncementService.parseAnnouncements(
+        "Error,Requested entity was not found\n"
+      )
+    )
+  }
+
   func testWeeklyScheduleHasOrderedNonOverlappingPrimaryBlocks() {
     XCTAssertEqual(BellSchedule.weekly.count, Weekday.allCases.count)
     for weekday in Weekday.allCases {
@@ -102,10 +139,11 @@ final class RooMateCoreTests: XCTestCase {
 
   func testMondayBlockBoundariesUseHalfOpenIntervals() throws {
     let monday = try XCTUnwrap(BellSchedule.weekly[.monday])
-    let firstClass = try XCTUnwrap(monday.first(where: {
-      if case .level(.level1) = $0.kind { return true }
-      return false
-    }))
+    let firstClass = try XCTUnwrap(
+      monday.first(where: {
+        if case .level(.level1) = $0.kind { return true }
+        return false
+      }))
     XCTAssertEqual(firstClass.start.hour, 8)
     XCTAssertEqual(firstClass.start.minute, 15)
     XCTAssertEqual(firstClass.end.hour, 9)
@@ -117,5 +155,82 @@ final class RooMateCoreTests: XCTestCase {
     let end = (firstClass.end.hour ?? 0) * 60 + (firstClass.end.minute ?? 0)
     XCTAssertTrue(atStart >= start && atStart < end)
     XCTAssertFalse(atEnd >= start && atEnd < end)
+  }
+
+  func testThemeCollectionBalancesLightAndDarkChoices() {
+    let customThemes = RooMateTheme.allCases.filter { $0 != .system }
+    XCTAssertEqual(customThemes.filter { !$0.isDark }.count, 3)
+    XCTAssertEqual(customThemes.filter(\.isDark).count, 3)
+    XCTAssertEqual(Set(customThemes.map(\.title)).count, customThemes.count)
+  }
+
+  func testOLEDThemeUsesTrueBlackCanvasAndLayeredSurfaces() {
+    let palette = DesignTokens.Colors.palette(for: .oled)
+    XCTAssertEqual(palette.background, 0x000000)
+    XCTAssertNotEqual(palette.surface, palette.background)
+    XCTAssertNotEqual(palette.surfaceElevated, palette.surface)
+  }
+
+  func testThemeTextAndFeatureColorsMeetContrastTargets() {
+    for theme in RooMateTheme.allCases where theme != .system {
+      let palette = DesignTokens.Colors.palette(for: theme)
+      let surfaces: [(String, UInt32)] = [
+        ("canvas", palette.background),
+        ("sidebar", palette.sidebar),
+        ("surface", palette.surface),
+        ("elevated surface", palette.surfaceElevated),
+      ]
+      let textColors: [(String, UInt32)] = [
+        ("primary text", palette.primaryText),
+        ("secondary text", palette.secondaryText),
+        ("subtle text", palette.subtleText),
+      ]
+
+      for (textName, foreground) in textColors {
+        for (surfaceName, background) in surfaces {
+          XCTAssertGreaterThanOrEqual(
+            contrastRatio(foreground, background),
+            4.5,
+            "\(theme.title) \(textName) on \(surfaceName)"
+          )
+        }
+      }
+
+      let featureColors: [(String, UInt32)] = [
+        ("Today", palette.today), ("Schedule", palette.schedule),
+        ("PacTrack", palette.pacTrack), ("Dining", palette.dining),
+        ("Athletics", palette.athletics), ("Events", palette.events),
+        ("Links", palette.links), ("Settings", palette.settings),
+        ("Success", palette.success), ("Warning", palette.warning),
+        ("Destructive", palette.destructive), ("Info", palette.info),
+      ]
+      for (name, foreground) in featureColors {
+        XCTAssertGreaterThanOrEqual(
+          contrastRatio(foreground, palette.surface),
+          4.5,
+          "\(theme.title) \(name) on a card surface"
+        )
+      }
+    }
+  }
+
+  private func contrastRatio(_ first: UInt32, _ second: UInt32) -> Double {
+    let firstLuminance = relativeLuminance(first)
+    let secondLuminance = relativeLuminance(second)
+    return (max(firstLuminance, secondLuminance) + 0.05)
+      / (min(firstLuminance, secondLuminance) + 0.05)
+  }
+
+  private func relativeLuminance(_ hex: UInt32) -> Double {
+    let components = [
+      Double((hex >> 16) & 0xFF) / 255,
+      Double((hex >> 8) & 0xFF) / 255,
+      Double(hex & 0xFF) / 255,
+    ].map { component in
+      component <= 0.04045
+        ? component / 12.92
+        : pow((component + 0.055) / 1.055, 2.4)
+    }
+    return 0.2126 * components[0] + 0.7152 * components[1] + 0.0722 * components[2]
   }
 }

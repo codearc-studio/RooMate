@@ -5,33 +5,36 @@ import SwiftUI
 /// lighter than the RooMate v6 visual language.
 struct BackgroundView: View {
   @Environment(\.colorScheme) private var colorScheme
+  @ObservedObject private var store = UserScheduleStore.shared
 
   var body: some View {
     ZStack {
       if colorScheme == .dark {
         DesignTokens.Colors.background
 
-        // A restrained RooMate glow keeps the near-black canvas from
-        // feeling generic while preserving the dark foundation.
-        RadialGradient(
-          colors: [
-            DesignTokens.Colors.today.opacity(0.030),
-            Color.clear,
-          ],
-          center: .topLeading,
-          startRadius: 0,
-          endRadius: 520
-        )
+        if store.theme != .oled {
+          // A restrained RooMate glow keeps dark canvases warm. OLED Black
+          // intentionally skips these layers so the main canvas stays #000.
+          RadialGradient(
+            colors: [
+              DesignTokens.Colors.today.opacity(0.030),
+              Color.clear,
+            ],
+            center: .topLeading,
+            startRadius: 0,
+            endRadius: 520
+          )
 
-        RadialGradient(
-          colors: [
-            DesignTokens.Colors.events.opacity(0.016),
-            Color.clear,
-          ],
-          center: .topTrailing,
-          startRadius: 0,
-          endRadius: 620
-        )
+          RadialGradient(
+            colors: [
+              DesignTokens.Colors.events.opacity(0.016),
+              Color.clear,
+            ],
+            center: .topTrailing,
+            startRadius: 0,
+            endRadius: 620
+          )
+        }
       } else {
         LinearGradient(
           colors: [
@@ -442,12 +445,17 @@ struct RemoteDataStatusLabel: View {
 
   var body: some View {
     if let lastUpdated {
-      Label(statusText(lastUpdated), systemImage: usingSavedData ? "clock.badge.exclamationmark" : "checkmark.circle")
-        .font(.system(size: 9.5, weight: .medium))
-        .foregroundStyle(
-          usingSavedData ? DesignTokens.Colors.warning : DesignTokens.Colors.subtleText
-        )
-        .help(usingSavedData ? "RooMate will try again when you’re connected." : "The latest school data is loaded.")
+      Label(
+        statusText(lastUpdated),
+        systemImage: usingSavedData ? "clock.badge.exclamationmark" : "checkmark.circle"
+      )
+      .font(.system(size: 9.5, weight: .medium))
+      .foregroundStyle(
+        usingSavedData ? DesignTokens.Colors.warning : DesignTokens.Colors.subtleText
+      )
+      .help(
+        usingSavedData
+          ? "RooMate will try again when you’re connected." : "The latest school data is loaded.")
     }
   }
 

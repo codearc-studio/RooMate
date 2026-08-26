@@ -112,6 +112,10 @@
 
           Button("Search RooMate") { postQuickAction("search") }
             .keyboardShortcut("k", modifiers: .command)
+
+          Button("Announcements") {
+            NotificationCenter.default.post(name: .rooMateShowAnnouncements, object: nil)
+          }
         }
 
         CommandMenu("Tools") {

@@ -89,9 +89,13 @@ final class ClubDirectoryStore: ObservableObject {
         sheetName: Self.sheetName
       )
       let parsed = try Self.parseDirectory(csv)
-      guard !parsed.isEmpty else { throw DirectoryError.emptyFeed }
       guard generation == refreshGeneration else { return }
 
+      // An empty, valid Sheet is authoritative. This matters when the shared
+      // directory is intentionally cleared between school years: keeping the
+      // last-known-good cache in that case would make deleted clubs live forever.
+      // Network/format failures still fall through to the catch block and keep
+      // the cache, but a successful response with zero published clubs clears it.
       clubs = parsed.sorted {
         $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
       }
@@ -102,7 +106,11 @@ final class ClubDirectoryStore: ObservableObject {
       RemoteDataHealthStore.shared.recordSuccess(.clubs, refreshedAt: refreshedAt)
       isLoading = false
       #if DEBUG
-        print("[ClubDirectory] Loaded \(clubs.count) published clubs.")
+        if clubs.isEmpty {
+          print("[ClubDirectory] Loaded a valid empty directory; cleared saved clubs.")
+        } else {
+          print("[ClubDirectory] Loaded \(clubs.count) published clubs.")
+        }
       #endif
     } catch is CancellationError {
       guard generation == refreshGeneration else { return }
@@ -184,7 +192,7 @@ final class ClubDirectoryStore: ObservableObject {
       .filter { row in row.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
       }
 
-    guard let header = rows.first else { return [] }
+    guard let header = rows.first else { throw DirectoryError.invalidText }
 
     let normalizedHeader = header.map(normalized)
     func column(_ names: [String]) -> Int? {
@@ -208,6 +216,16 @@ final class ClubDirectoryStore: ObservableObject {
     let colorColumn = resolvedColumn(["colorhex", "color", "hex"], fallback: 6)
     let featuredColumn = resolvedColumn(["featured", "feature"], fallback: 7)
     let publishedColumn = resolvedColumn(["published", "active", "visible"], fallback: 8)
+
+    // A header-only response is a legitimate empty directory, but only when
+    // it still looks like our Sheet contract. This prevents an unrelated or
+    // malformed HTTP-200 response from wiping a good saved directory.
+    if rows.count == 1 {
+      let hasNameHeader = column(["name", "club", "clubname"]) != nil
+      let hasPublishedHeader = column(["published", "active", "visible"]) != nil
+      guard hasNameHeader, hasPublishedHeader else { throw DirectoryError.badResponse }
+      return []
+    }
 
     func value(_ row: [String], _ index: Int?) -> String {
       guard let index, row.indices.contains(index) else { return "" }
@@ -313,7 +331,6 @@ final class ClubDirectoryStore: ObservableObject {
     case invalidURL
     case badResponse
     case invalidText
-    case emptyFeed
 
     var errorDescription: String? {
       switch self {
@@ -321,7 +338,6 @@ final class ClubDirectoryStore: ObservableObject {
       case .invalidURL: "RooMate could not build the club directory URL."
       case .badResponse: "The club directory did not return a valid response."
       case .invalidText: "RooMate could not read the club directory data."
-      case .emptyFeed: "The club directory did not contain any published clubs."
       }
     }
   }

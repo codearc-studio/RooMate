@@ -210,7 +210,8 @@
         #if DEBUG
           print("[LaunchAtLogin] \(error.localizedDescription)")
         #endif
-        launchAtLoginError = "RooMate couldn’t change this setting. Try again, or use Login Items in System Settings."
+        launchAtLoginError =
+          "RooMate couldn’t change this setting. Try again, or use Login Items in System Settings."
       }
 
       refreshLaunchAtLoginStatus()
@@ -782,21 +783,7 @@
           icon: "paintbrush",
           tint: DesignTokens.Colors.primary
         ) {
-          VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 9) {
-              Text("APPEARANCE")
-                .font(.system(size: 9, weight: .bold))
-                .tracking(0.75)
-                .foregroundStyle(DesignTokens.Colors.subtleText)
-
-              HStack(spacing: 10) {
-                ForEach(AppearancePreference.allCases) { option in
-                  appearanceOption(option)
-                }
-              }
-            }
-
-          }
+          RooMateThemePicker(selection: $store.theme, style: .settings)
         }
 
         settingsCard(
@@ -904,8 +891,20 @@
           VStack(spacing: 0) {
             compactToggle(
               title: "Enable notifications",
-              subtitle: "Master switch for every RooMate reminder below.",
+              subtitle: "Master switch for RooMate reminders and announcement alerts.",
               isOn: notificationsEnabledBinding
+            )
+
+            Divider().overlay(DesignTokens.Colors.border)
+
+            infoRow(
+              icon: "megaphone.fill",
+              title: "Announcements are always on",
+              subtitle:
+                notificationsAreActive
+                ? "Published RooMate announcements notify automatically. There is no separate announcement switch."
+                : "Announcement alerts start automatically whenever RooMate notifications are enabled.",
+              tint: DesignTokens.Colors.today
             )
 
             Divider().overlay(DesignTokens.Colors.border)
@@ -1143,7 +1142,8 @@
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.info)
             .frame(width: 32, height: 32)
-            .background(DesignTokens.Colors.info.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+            .background(
+              DesignTokens.Colors.info.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
           VStack(alignment: .leading, spacing: 2) {
             Text(title)
               .font(.system(size: 12.5, weight: .semibold))
@@ -1323,186 +1323,6 @@
         }
       }
       .buttonStyle(.plain)
-    }
-
-    private func appearanceOption(
-      _ option: AppearancePreference
-    ) -> some View {
-      let selected = store.appearance == option
-
-      return Button {
-        withAnimation(DesignTokens.Animation.snappy) {
-          store.appearance = option
-        }
-      } label: {
-        VStack(alignment: .leading, spacing: 9) {
-          appearancePreview(option)
-            .frame(height: 54)
-
-          HStack(spacing: 6) {
-            Image(systemName: option.systemImage)
-              .font(.system(size: 9.5, weight: .semibold))
-              .foregroundStyle(
-                selected
-                  ? DesignTokens.Colors.primary
-                  : DesignTokens.Colors.secondaryText
-              )
-
-            Text(option.title)
-              .font(.system(size: 11.5, weight: .semibold))
-              .foregroundStyle(
-                DesignTokens.Colors.primaryText
-              )
-
-            Spacer()
-
-            if selected {
-              Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 11.5, weight: .semibold))
-                .foregroundStyle(
-                  DesignTokens.Colors.primary
-                )
-            }
-          }
-        }
-        .padding(9)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-          selected
-            ? DesignTokens.Colors.primary.opacity(
-              colorScheme == .light ? 0.075 : 0.11
-            )
-            : DesignTokens.Colors.hover.opacity(0.20),
-          in: RoundedRectangle(
-            cornerRadius: 12,
-            style: .continuous
-          )
-        )
-        .overlay {
-          RoundedRectangle(
-            cornerRadius: 12,
-            style: .continuous
-          )
-          .strokeBorder(
-            selected
-              ? DesignTokens.Colors.primary.opacity(0.38)
-              : DesignTokens.Colors.border,
-            lineWidth: 1
-          )
-        }
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func appearancePreview(
-      _ option: AppearancePreference
-    ) -> some View {
-      let corner: CGFloat = 8
-
-      switch option {
-      case .system:
-        HStack(spacing: 0) {
-          ZStack {
-            Color(hex: 0xF3F0EB)
-            previewWindowContents(
-              dark: false,
-              accent: DesignTokens.Colors.schedule
-            )
-          }
-
-          ZStack {
-            Color(hex: 0x111316)
-            previewWindowContents(
-              dark: true,
-              accent: DesignTokens.Colors.schedule
-            )
-          }
-        }
-        .clipShape(
-          RoundedRectangle(
-            cornerRadius: corner,
-            style: .continuous
-          )
-        )
-
-      case .light:
-        ZStack {
-          Color(hex: 0xF3F0EB)
-          previewWindowContents(
-            dark: false,
-            accent: DesignTokens.Colors.schedule
-          )
-        }
-        .clipShape(
-          RoundedRectangle(
-            cornerRadius: corner,
-            style: .continuous
-          )
-        )
-
-      case .dark:
-        ZStack {
-          Color(hex: 0x111316)
-          previewWindowContents(
-            dark: true,
-            accent: DesignTokens.Colors.schedule
-          )
-        }
-        .clipShape(
-          RoundedRectangle(
-            cornerRadius: corner,
-            style: .continuous
-          )
-        )
-      }
-    }
-
-    private func previewWindowContents(
-      dark: Bool,
-      accent: Color
-    ) -> some View {
-      VStack(spacing: 6) {
-        HStack(spacing: 4) {
-          Circle()
-            .fill(accent.opacity(0.90))
-            .frame(width: 5, height: 5)
-
-          RoundedRectangle(cornerRadius: 2)
-            .fill(
-              dark
-                ? Color.white.opacity(0.35)
-                : Color.black.opacity(0.22)
-            )
-            .frame(width: 28, height: 4)
-
-          Spacer()
-        }
-
-        HStack(spacing: 5) {
-          RoundedRectangle(cornerRadius: 3)
-            .fill(
-              dark
-                ? Color.white.opacity(0.08)
-                : Color.black.opacity(0.06)
-            )
-            .frame(width: 17)
-
-          VStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 3)
-              .fill(accent.opacity(0.24))
-
-            RoundedRectangle(cornerRadius: 3)
-              .fill(
-                dark
-                  ? Color.white.opacity(0.09)
-                  : Color.black.opacity(0.055)
-              )
-          }
-        }
-      }
-      .padding(7)
     }
 
     private func cardStyleOption(
@@ -1714,7 +1534,7 @@
           Text(
             isPaused
               ? notificationPauseSubtitle(reference: reference)
-              : "Silence reminders temporarily without turning them off."
+              : "Silence routine reminders temporarily. RooMate announcements still come through."
           )
           .font(.system(size: 10.5))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -1794,7 +1614,7 @@
       guard let pauseUntil = store.notificationPauseUntil,
         pauseUntil > reference
       else {
-        return "Schedule reminders are active."
+        return "Routine reminders are active; announcements always remain enabled."
       }
 
       var calendar = Calendar.current
@@ -2075,7 +1895,7 @@
     private var specialSchedulesCard: some View {
       settingsCard(
         title: "School Special Schedules",
-        subtitle: "RooMate checks for school-wide schedule changes automatically.",
+        subtitle: "RooMate checks school dates and school-wide schedule changes automatically.",
         icon: "calendar.badge.clock",
         tint: DesignTokens.Colors.schedule
       ) {
@@ -2091,7 +1911,7 @@
             .frame(width: 38, height: 38)
 
             VStack(alignment: .leading, spacing: 3) {
-              Text("Updates happen automatically")
+              Text("School calendar updates happen automatically")
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(DesignTokens.Colors.primaryText)
 
@@ -2105,16 +1925,17 @@
             Button {
               Task {
                 await store.refreshOfficialSpecialSchedules(force: true)
+                await store.refreshOfficialSchoolDates(force: true)
               }
             } label: {
               HStack(spacing: 6) {
-                if store.remoteSpecialSchedulesRefreshing {
+                if store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing {
                   ProgressView()
                     .controlSize(.small)
                 } else {
                   Image(systemName: "arrow.clockwise")
                 }
-                Text(store.remoteSpecialSchedulesRefreshing ? "Refreshing" : "Refresh")
+                Text(store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing ? "Refreshing" : "Refresh")
               }
               .font(.system(size: 11.5, weight: .semibold))
               .padding(.horizontal, 11)
@@ -2122,7 +1943,7 @@
               .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(store.remoteSpecialSchedulesRefreshing)
+            .disabled(store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing)
             .background(
               DesignTokens.Colors.selection,
               in: RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -2133,7 +1954,9 @@
             HStack(alignment: .top, spacing: 8) {
               Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(DesignTokens.Colors.warning)
-              Text("RooMate couldn’t update special schedules. Your saved schedule is still available.")
+              Text(
+                "RooMate couldn’t update special schedules. Your saved schedule is still available."
+              )
               .font(.system(size: 10.5))
               .foregroundStyle(DesignTokens.Colors.secondaryText)
               .fixedSize(horizontal: false, vertical: true)
@@ -2159,7 +1982,7 @@
           .foregroundStyle(DesignTokens.Colors.secondaryText)
 
           Text(
-            "RooMate updates special schedules automatically. They can’t be changed here."
+            "RooMate updates special schedules and school-year dates automatically. They can’t be changed here."
           )
           .font(.system(size: 10.5))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -2169,9 +1992,10 @@
     }
 
     private var officialScheduleStatusText: String {
-      guard let date = store.officialSpecialSchedulesLastUpdated else {
-        return "Not updated yet."
-      }
+      let date = [store.officialSpecialSchedulesLastUpdated, store.officialSchoolDatesLastUpdated]
+        .compactMap { $0 }
+        .max()
+      guard let date else { return "Not updated yet." }
 
       let formatter = RelativeDateTimeFormatter()
       formatter.unitsStyle = .full
@@ -2360,13 +2184,15 @@
           infoRow(
             icon: "sportscourt.fill",
             title: "Games are still available",
-            subtitle: "Every matchup remains in Sports, including the teams playing, date, time, location, status, and notes.",
+            subtitle:
+              "Every matchup remains in Sports, including the teams playing, date, time, location, status, and notes.",
             tint: DesignTokens.Colors.athletics
           )
           infoRow(
             icon: "arrow.clockwise",
             title: "Team tools will return later",
-            subtitle: "Existing team choices are preserved privately on this Mac, but they no longer affect RooMate while the feature is being refreshed.",
+            subtitle:
+              "Existing team choices are preserved privately on this Mac, but they no longer affect RooMate while the feature is being refreshed.",
             tint: DesignTokens.Colors.info
           )
         }
@@ -2381,7 +2207,8 @@
         ) {
           infoRow(
             icon: notificationsAreActive ? "bell.fill" : "bell.slash.fill",
-            title: notificationsAreActive ? "Reminders are enabled" : "RooMate notifications are off",
+            title: notificationsAreActive
+              ? "Reminders are enabled" : "RooMate notifications are off",
             subtitle: notificationsAreActive
               ? "RooMate sends one local reminder an hour before each selected game with a known start time."
               : "Your selected games stay saved. Turn notifications on in General when you want reminders delivered.",
@@ -2674,7 +2501,7 @@
         )
 
         settingsCard(
-          title: "Version \(shortVersion)",
+          title: "RooMate \(shortVersion)",
           icon: "shippingbox",
           tint: DesignTokens.Colors.info
         ) {
@@ -2737,7 +2564,7 @@
 
         settingsCard(
           title: appName,
-          subtitle: "Version \(shortVersion)",
+          subtitle: "RooMate \(shortVersion)",
           icon: "app.badge",
           tint: DesignTokens.Colors.primary
         ) {
@@ -2808,7 +2635,8 @@
               .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
-          .background(DesignTokens.Colors.primary.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
+          .background(
+            DesignTokens.Colors.primary.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
         }
 
         settingsCard(
@@ -2822,13 +2650,15 @@
               title: "Report a Problem",
               subtitle: "Open a report draft",
               symbol: "exclamationmark.bubble",
-              url: "https://github.com/codearc-studio/RooMate/issues/new?labels=bug&title=RooMate%20problem%3A%20"
+              url:
+                "https://github.com/codearc-studio/RooMate/issues/new?labels=bug&title=RooMate%20problem%3A%20"
             )
             feedbackButton(
               title: "Suggest a Feature",
               subtitle: "Share an idea for RooMate",
               symbol: "lightbulb",
-              url: "https://github.com/codearc-studio/RooMate/issues/new?labels=enhancement&title=RooMate%20idea%3A%20"
+              url:
+                "https://github.com/codearc-studio/RooMate/issues/new?labels=enhancement&title=RooMate%20idea%3A%20"
             )
           }
 
@@ -2838,10 +2668,12 @@
             VStack(alignment: .leading, spacing: 3) {
               Text("Info for a bug report")
                 .font(.system(size: 12.5, weight: .semibold))
-              Text("See exactly what will be copied: RooMate version, macOS version, Mac type, time, and whether school data loaded.")
-                .font(.system(size: 10.5))
-                .foregroundStyle(DesignTokens.Colors.secondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+              Text(
+                "See exactly what will be copied: RooMate version, macOS version, Mac type, time, and whether school data loaded."
+              )
+              .font(.system(size: 10.5))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+              .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             Button("View Bug Report Info") { showDiagnostics = true }
@@ -2877,7 +2709,7 @@
           VStack(alignment: .leading, spacing: 2) {
             Text(appName)
               .font(.system(size: 18, weight: .semibold))
-            Text("Version \(shortVersion)")
+            Text("RooMate \(shortVersion)")
               .font(DesignTokens.Typography.caption)
               .foregroundStyle(DesignTokens.Colors.secondaryText)
           }
@@ -2911,7 +2743,7 @@
             .foregroundStyle(DesignTokens.Colors.info)
         }
 
-        Text("Version \(shortVersion)")
+        Text("RooMate \(shortVersion)")
           .font(.system(size: 13, weight: .semibold))
 
         Text(
@@ -3726,7 +3558,7 @@
   }
 
   struct ThemeButton: View {
-    let option: AppearancePreference
+    let option: RooMateTheme
     let isSelected: Bool
     let action: () -> Void
 

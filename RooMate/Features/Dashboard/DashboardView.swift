@@ -19,6 +19,7 @@ struct DashboardView: View {
   var onOpenPacTrack: () -> Void = {}
   var onOpenScheduleFocus: () -> Void = {}
   var onSearch: () -> Void = {}
+  var onShowAnnouncements: () -> Void = {}
 
   @State private var now = Date()
   private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -93,6 +94,10 @@ struct DashboardView: View {
 
   private var todaySpecialSchedule: RemoteSpecialScheduleDay? {
     store.remoteSpecialScheduleDay(on: now)
+  }
+
+  private var todaySchoolDateState: SchoolDateState? {
+    store.schoolDateState(on: now)
   }
 
   private func date(on reference: Date, components: DateComponents) -> Date? {
@@ -699,6 +704,36 @@ struct DashboardView: View {
 
   private var announcementsSection: some View {
     VStack(alignment: .leading, spacing: 10) {
+      HStack(spacing: 8) {
+        Label("Announcements", systemImage: "megaphone.fill")
+          .font(.system(size: 11.5, weight: .semibold))
+          .foregroundStyle(DesignTokens.Colors.primaryText)
+
+        Text("\(store.visibleAnnouncements(at: now).count)")
+          .font(.system(size: 9.5, weight: .bold, design: .rounded))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .padding(.horizontal, 7)
+          .padding(.vertical, 3)
+          .background(DesignTokens.Colors.selection, in: Capsule())
+
+        Spacer()
+
+        Button {
+          onShowAnnouncements()
+        } label: {
+          HStack(spacing: 5) {
+            Text("View All")
+            Image(systemName: "chevron.right")
+              .font(.system(size: 8, weight: .bold))
+          }
+          .font(.system(size: 10.5, weight: .semibold))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+      }
+      .padding(.horizontal, 2)
+
       ForEach(Array(store.activeAnnouncements(at: now).prefix(3))) { announcement in
         announcementCard(announcement)
       }
@@ -886,6 +921,28 @@ struct DashboardView: View {
           .buttonStyle(.plain)
           .rooInteractiveGlass(cornerRadius: 11)
 
+          Button(action: onShowAnnouncements) {
+            ZStack(alignment: .topTrailing) {
+              Image(systemName: "megaphone")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignTokens.Colors.primaryText)
+                .frame(width: 34, height: 34)
+                .contentShape(Rectangle())
+
+              if !store.visibleAnnouncements(at: now).isEmpty {
+                Text("\(min(store.visibleAnnouncements(at: now).count, 9))")
+                  .font(.system(size: 7.5, weight: .bold, design: .rounded))
+                  .foregroundStyle(.white)
+                  .frame(minWidth: 14, minHeight: 14)
+                  .background(DesignTokens.Colors.today, in: Circle())
+                  .offset(x: 2, y: -2)
+              }
+            }
+          }
+          .buttonStyle(.plain)
+          .rooInteractiveGlass(cornerRadius: 11)
+          .help("Announcements")
+
           Button(action: onSearch) {
             HStack(spacing: 8) {
               Image(systemName: "magnifyingglass")
@@ -962,6 +1019,12 @@ struct DashboardView: View {
         Text(day.displayTitle)
           .font(.system(size: 13.5, weight: .semibold))
           .foregroundStyle(DesignTokens.Colors.primaryText)
+        if day.isAwaitingSchedule {
+          Text("Exact bell times haven’t been published yet. RooMate will update this day automatically when the schedule is available.")
+            .font(.system(size: 11))
+            .foregroundStyle(DesignTokens.Colors.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
         if !day.note.isEmpty {
           Text(day.note)
             .font(.system(size: 11))
@@ -1135,43 +1198,144 @@ struct DashboardView: View {
       ZStack {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
           .fill(DesignTokens.Colors.today.opacity(0.12))
-        Image(systemName: todayWeekday == nil ? "sun.max.fill" : "checkmark.circle.fill")
+        Image(systemName: noSchoolHeroSymbol)
           .font(.system(size: 27))
           .foregroundStyle(DesignTokens.Colors.today)
       }
       .frame(width: 62, height: 62)
 
       VStack(alignment: .leading, spacing: 4) {
-        let closedDay = todaySpecialSchedule?.isSchoolClosed == true
-        Text(closedDay || todayWeekday == nil ? "NO SCHOOL TODAY" : "SCHOOL DAY COMPLETE")
+        Text(noSchoolHeroEyebrow)
           .font(.system(size: 11, weight: .semibold))
           .tracking(0.8)
           .foregroundStyle(DesignTokens.Colors.today)
-        Text(
-          closedDay
-            ? (todaySpecialSchedule?.displayTitle ?? "School Closed")
-            : (todayWeekday == nil ? "Enjoy the weekend" : "You're done for today")
-        )
-        .font(DesignTokens.Typography.heroTitle)
-        let closedDayNote = todaySpecialSchedule.flatMap { schedule -> String? in
-          let trimmed = schedule.note.trimmingCharacters(in: .whitespacesAndNewlines)
-          return trimmed.isEmpty ? nil : trimmed
-        }
-        Text(
-          closedDay
-            ? (closedDayNote ?? "There are no classes scheduled today.")
-            : (todayWeekday == nil
-              ? "Your school-day tools are still here when you need them."
-              : "Check what's coming up next or plan ahead for tomorrow.")
-        )
-        .font(DesignTokens.Typography.subheadline)
-        .foregroundStyle(DesignTokens.Colors.secondaryText)
+        Text(noSchoolHeroTitle)
+          .font(DesignTokens.Typography.heroTitle)
+        Text(noSchoolHeroMessage)
+          .font(DesignTokens.Typography.subheadline)
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
       Spacer()
+
+      if let countdown = schoolStartCountdown {
+        VStack(alignment: .trailing, spacing: 2) {
+          Text(countdown.value)
+            .font(.system(size: 30, weight: .semibold, design: .rounded))
+            .foregroundStyle(DesignTokens.Colors.today)
+            .contentTransition(.numericText())
+          Text(countdown.label.uppercased())
+            .font(.system(size: 9, weight: .bold))
+            .tracking(0.7)
+            .foregroundStyle(DesignTokens.Colors.secondaryText)
+        }
+        .padding(.horizontal, 14)
+        .frame(minWidth: 92, minHeight: 72)
+        .background(
+          DesignTokens.Colors.today.opacity(0.08),
+          in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+      }
     }
     .padding(DesignTokens.Spacing.xl)
-    .frame(minHeight: 180)
+    .frame(minHeight: 220)
     .rooSurface(cornerRadius: DesignTokens.Radius.lg, elevated: true)
+  }
+
+  private var schoolStartCountdown: (value: String, label: String)? {
+    guard case .beforeSchoolYear(let period) = todaySchoolDateState,
+      let startDate = RemoteSchoolDateService.date(from: period.startDateKey)
+    else {
+      return nil
+    }
+
+    let today = Calendar.current.startOfDay(for: now)
+    let start = Calendar.current.startOfDay(for: startDate)
+    let days = max(0, Calendar.current.dateComponents([.day], from: today, to: start).day ?? 0)
+
+    return (
+      value: "\(days)",
+      label: days == 1 ? "day to go" : "days to go"
+    )
+  }
+
+  private var noSchoolHeroEyebrow: String {
+    if todaySpecialSchedule?.isSchoolClosed == true { return "NO SCHOOL TODAY" }
+    if todaySpecialSchedule?.isAwaitingSchedule == true { return "SPECIAL SCHEDULE" }
+    if let state = todaySchoolDateState {
+      switch state {
+      case .breakPeriod: return "SCHOOL BREAK"
+      case .beforeSchoolYear: return "SCHOOL STARTS SOON"
+      case .afterSchoolYear: return "SCHOOL YEAR COMPLETE"
+      case .inSession: break
+      }
+    }
+    return todayWeekday == nil ? "NO SCHOOL TODAY" : "SCHOOL DAY COMPLETE"
+  }
+
+  private var noSchoolHeroTitle: String {
+    if let special = todaySpecialSchedule, special.isSchoolClosed || special.isAwaitingSchedule {
+      return special.displayTitle
+    }
+    if let state = todaySchoolDateState {
+      switch state {
+      case .breakPeriod(let period): return period.displayTitle
+      case .beforeSchoolYear(let period): return "School starts \(shortSchoolDate(period.startDateKey))"
+      case .afterSchoolYear: return "See you next school year"
+      case .inSession: break
+      }
+    }
+    return todayWeekday == nil ? "Enjoy the weekend" : "You're done for today"
+  }
+
+  private var noSchoolHeroMessage: String {
+    if let special = todaySpecialSchedule {
+      let note = special.note.trimmingCharacters(in: .whitespacesAndNewlines)
+      if special.isSchoolClosed {
+        return note.isEmpty ? "There are no classes scheduled today." : note
+      }
+      if special.isAwaitingSchedule {
+        return note.isEmpty
+          ? "Exact bell times haven’t been published yet. RooMate will update automatically when they’re available."
+          : "\(note) Exact bell times haven’t been published yet."
+      }
+    }
+    if let state = todaySchoolDateState {
+      switch state {
+      case .breakPeriod(let period):
+        let message = period.message.trimmingCharacters(in: .whitespacesAndNewlines)
+        return message.isEmpty ? "There are no regular classes during this break." : message
+      case .beforeSchoolYear:
+        return "RooMate will switch to your normal school-day schedule when the school year begins."
+      case .afterSchoolYear:
+        return "The regular school-year schedule has ended."
+      case .inSession: break
+      }
+    }
+    return todayWeekday == nil
+      ? "Your school-day tools are still here when you need them."
+      : "Check what's coming up next or plan ahead for tomorrow."
+  }
+
+  private var noSchoolHeroSymbol: String {
+    if todaySpecialSchedule?.isSchoolClosed == true { return "calendar.badge.minus" }
+    if todaySpecialSchedule?.isAwaitingSchedule == true { return "hourglass" }
+    if let state = todaySchoolDateState {
+      switch state {
+      case .breakPeriod: return "beach.umbrella.fill"
+      case .beforeSchoolYear: return "calendar.badge.clock"
+      case .afterSchoolYear: return "checkmark.circle.fill"
+      case .inSession: break
+      }
+    }
+    return todayWeekday == nil ? "sun.max.fill" : "checkmark.circle.fill"
+  }
+
+  private func shortSchoolDate(_ key: String) -> String {
+    guard let date = RemoteSchoolDateService.date(from: key) else { return key }
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "MMMM d"
+    return formatter.string(from: date)
   }
 
   // MARK: - Day overview
@@ -1673,6 +1837,247 @@ struct DashboardView: View {
 }
 
 // MARK: - Today components
+
+struct RooMateAnnouncementsSheet: View {
+  @ObservedObject var store: UserScheduleStore
+  @Environment(\.dismiss) private var dismiss
+  @Environment(\.openURL) private var openURL
+  @State private var now = Date()
+
+  private var announcements: [RooMateAnnouncement] {
+    store.visibleAnnouncements(at: now)
+  }
+
+  var body: some View {
+    VStack(spacing: 0) {
+      HStack(spacing: 12) {
+        ZStack {
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(DesignTokens.Colors.today.opacity(0.12))
+          Image(systemName: "megaphone.fill")
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.today)
+        }
+        .frame(width: 42, height: 42)
+
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Announcements")
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.primaryText)
+          Text(
+            announcements.isEmpty
+              ? "No current RooMate announcements."
+              : "\(announcements.count) current announcement\(announcements.count == 1 ? "" : "s")"
+          )
+          .font(.system(size: 10.5, weight: .medium))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+        }
+
+        Spacer()
+
+        Button {
+          Task { await store.refreshAnnouncements(force: true) }
+        } label: {
+          Image(systemName: "arrow.clockwise")
+            .font(.system(size: 12, weight: .semibold))
+            .frame(width: 30, height: 30)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(store.announcementsRefreshing)
+        .help("Refresh announcements")
+
+        Button("Done") {
+          dismiss()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(DesignTokens.Colors.today)
+        .controlSize(.small)
+      }
+      .padding(18)
+
+      Divider()
+        .overlay(DesignTokens.Colors.border)
+
+      if announcements.isEmpty {
+        VStack(spacing: 12) {
+          Image(systemName: store.announcementError == nil ? "megaphone" : "wifi.exclamationmark")
+            .font(.system(size: 28, weight: .medium))
+            .foregroundStyle(
+              store.announcementError == nil
+                ? DesignTokens.Colors.subtleText
+                : DesignTokens.Colors.warning
+            )
+
+          Text(
+            store.announcementError == nil
+              ? "Nothing to announce right now"
+              : "Announcements couldn’t be updated"
+          )
+          .font(.system(size: 13.5, weight: .semibold))
+          .foregroundStyle(DesignTokens.Colors.primaryText)
+
+          Text(
+            store.announcementError == nil
+              ? "New published announcements will appear here and at the top of Today."
+              : "RooMate will keep trying automatically and use saved announcements when available."
+          )
+          .font(.system(size: 10.5, weight: .medium))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: 360)
+
+          Button("Refresh Now") {
+            Task { await store.refreshAnnouncements(force: true) }
+          }
+          .buttonStyle(.bordered)
+          .controlSize(.small)
+          .disabled(store.announcementsRefreshing)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(28)
+      } else {
+        ScrollView {
+          LazyVStack(alignment: .leading, spacing: 10) {
+            ForEach(announcements) { announcement in
+              announcementRow(announcement)
+            }
+
+            RemoteDataStatusLabel(
+              lastUpdated: store.announcementsLastUpdated,
+              usingSavedData: store.announcementsUsingSavedData
+            )
+            .padding(.top, 4)
+          }
+          .padding(18)
+        }
+      }
+    }
+    .frame(minWidth: 560, minHeight: 470)
+    .background(BackgroundView())
+    .onAppear {
+      now = Date()
+      TelemetryTracker.trackAnnouncementCenterOpened()
+    }
+  }
+
+  private func announcementRow(_ announcement: RooMateAnnouncement) -> some View {
+    let tint = announcementTint(announcement.level)
+    let isDismissed = store.dismissedAnnouncementIDs.contains(announcement.id)
+
+    return HStack(alignment: .top, spacing: 12) {
+      ZStack {
+        RoundedRectangle(cornerRadius: 11, style: .continuous)
+          .fill(tint.opacity(0.13))
+        Image(
+          systemName: announcement.icon.isEmpty
+            ? announcementIcon(announcement.level)
+            : announcement.icon
+        )
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(tint)
+      }
+      .frame(width: 40, height: 40)
+
+      VStack(alignment: .leading, spacing: 5) {
+        HStack(spacing: 7) {
+          Text(announcement.level == .warning ? "IMPORTANT" : "FROM ROOMATE")
+            .font(.system(size: 9, weight: .bold))
+            .tracking(0.55)
+            .foregroundStyle(tint)
+
+          if isDismissed {
+            Text("HIDDEN FROM TODAY")
+              .font(.system(size: 8, weight: .bold))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(DesignTokens.Colors.selection, in: Capsule())
+          }
+        }
+
+        Text(announcement.title)
+          .font(.system(size: 13.5, weight: .semibold))
+          .foregroundStyle(DesignTokens.Colors.primaryText)
+
+        Text(announcement.message)
+          .font(.system(size: 10.5, weight: .medium))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .fixedSize(horizontal: false, vertical: true)
+
+        HStack(spacing: 12) {
+          if let url = announcement.linkURL {
+            Button {
+              TelemetryTracker.trackAnnouncementLinkOpened(level: announcement.level.rawValue)
+              openURL(url)
+            } label: {
+              Label(
+                announcement.linkLabel.isEmpty ? "Learn More" : announcement.linkLabel,
+                systemImage: "arrow.up.right"
+              )
+              .font(.system(size: 10, weight: .semibold))
+              .foregroundStyle(tint)
+              .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+          }
+
+          if announcement.dismissible {
+            Button {
+              withAnimation(DesignTokens.Animation.quick) {
+                if isDismissed {
+                  store.restoreAnnouncement(announcement)
+                } else {
+                  store.dismissAnnouncement(announcement)
+                }
+              }
+            } label: {
+              Label(
+                isDismissed ? "Show on Today" : "Hide from Today",
+                systemImage: isDismissed ? "eye" : "eye.slash"
+              )
+              .font(.system(size: 10, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+              .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+          }
+        }
+        .padding(.top, 2)
+      }
+
+      Spacer(minLength: 8)
+    }
+    .padding(14)
+    .background(
+      tint.opacity(isDismissed ? 0.025 : 0.055),
+      in: RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+    )
+    .overlay {
+      RoundedRectangle(cornerRadius: DesignTokens.Radius.lg, style: .continuous)
+        .strokeBorder(tint.opacity(isDismissed ? 0.10 : 0.18), lineWidth: 1)
+    }
+    .opacity(isDismissed ? 0.72 : 1)
+  }
+
+  private func announcementTint(_ level: RooMateAnnouncementLevel) -> Color {
+    switch level {
+    case .info: DesignTokens.Colors.info
+    case .success: DesignTokens.Colors.success
+    case .important: DesignTokens.Colors.primary
+    case .warning: DesignTokens.Colors.warning
+    }
+  }
+
+  private func announcementIcon(_ level: RooMateAnnouncementLevel) -> String {
+    switch level {
+    case .info: "megaphone.fill"
+    case .success: "checkmark.circle.fill"
+    case .important: "bell.badge.fill"
+    case .warning: "exclamationmark.triangle.fill"
+    }
+  }
+}
 
 private struct SectionLabel: View {
   let text: String

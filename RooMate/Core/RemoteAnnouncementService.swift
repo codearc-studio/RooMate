@@ -16,6 +16,21 @@ enum RooMateAnnouncementLevel: String, Hashable, Sendable, Codable {
   }
 }
 
+private enum AnnouncementCSVEndpoint: CaseIterable, Sendable {
+  // The Visualization endpoint is intentionally first because it reliably
+  // targets a worksheet by name. Google's /export CSV endpoint primarily
+  // targets worksheets by gid and may ignore a `sheet=` name parameter.
+  case visualization
+  case directExport
+
+  var debugName: String {
+    switch self {
+    case .directExport: "direct CSV export"
+    case .visualization: "Visualization CSV"
+    }
+  }
+}
+
 struct RooMateAnnouncement: Identifiable, Hashable, Sendable, Codable {
   let id: String
   let title: String
@@ -59,11 +74,49 @@ enum RemoteAnnouncementService {
     let sheetName = Self.sheetName
     guard !spreadsheetID.isEmpty else { return [] }
 
-    let csv = try await fetchCSV(
-      spreadsheetID: spreadsheetID,
-      sheetName: sheetName
-    )
-    return try parseAnnouncements(csv)
+    var lastError: Error?
+    var validEmptyFeed: [RooMateAnnouncement]?
+
+    for endpoint in AnnouncementCSVEndpoint.allCases {
+      do {
+        let csv = try await fetchCSV(
+          spreadsheetID: spreadsheetID,
+          sheetName: sheetName,
+          endpoint: endpoint
+        )
+        let announcements = try parseAnnouncements(
+          csv,
+          requireFullContract: endpoint == .directExport
+        )
+
+        #if DEBUG
+          print(
+            "[Announcements] Loaded \(announcements.count) published row\(announcements.count == 1 ? "" : "s") via \(endpoint.debugName)."
+          )
+        #endif
+
+        // A valid but empty feed is meaningful, but do not stop after the
+        // first endpoint. This prevents a misleading empty response from the
+        // generic /export endpoint from masking a populated Announcements tab.
+        if announcements.isEmpty {
+          validEmptyFeed = announcements
+          continue
+        }
+
+        return announcements
+      } catch {
+        lastError = error
+        #if DEBUG
+          print("[Announcements] \(endpoint.debugName) failed: \(error.localizedDescription)")
+        #endif
+      }
+    }
+
+    if let validEmptyFeed {
+      return validEmptyFeed
+    }
+
+    throw lastError ?? AnnouncementError.badResponse
   }
 
   private static var spreadsheetID: String {
@@ -78,27 +131,44 @@ enum RemoteAnnouncementService {
 
   nonisolated private static func fetchCSV(
     spreadsheetID: String,
-    sheetName: String
+    sheetName: String,
+    endpoint: AnnouncementCSVEndpoint
   ) async throws -> String {
-    guard
-      var components = URLComponents(
+    let components: URLComponents?
+
+    switch endpoint {
+    case .directExport:
+      var export = URLComponents(
+        string: "https://docs.google.com/spreadsheets/d/\(spreadsheetID)/export"
+      )
+      export?.queryItems = [
+        URLQueryItem(name: "format", value: "csv"),
+        URLQueryItem(name: "sheet", value: sheetName),
+      ]
+      components = export
+
+    case .visualization:
+      var visualization = URLComponents(
         string: "https://docs.google.com/spreadsheets/d/\(spreadsheetID)/gviz/tq"
       )
-    else {
-      throw AnnouncementError.invalidURL
-    }
-    components.queryItems = [
-      URLQueryItem(name: "tqx", value: "out:csv"),
-      URLQueryItem(name: "sheet", value: sheetName),
-      URLQueryItem(name: "tq", value: "select A,B,C,D,E,F,G,H,I,J,K"),
-      URLQueryItem(name: "headers", value: "1"),
-    ]
-
-    guard let url = components.url else {
-      throw AnnouncementError.invalidURL
+      visualization?.queryItems = [
+        URLQueryItem(name: "tqx", value: "out:csv"),
+        URLQueryItem(name: "sheet", value: sheetName),
+        URLQueryItem(name: "headers", value: "1"),
+        URLQueryItem(name: "_", value: String(Int(Date().timeIntervalSince1970))),
+      ]
+      components = visualization
     }
 
-    let (data, response) = try await URLSession.shared.data(from: url)
+    guard let url = components?.url else {
+      throw AnnouncementError.invalidURL
+    }
+
+    var request = URLRequest(url: url)
+    request.cachePolicy = .reloadIgnoringLocalCacheData
+    request.timeoutInterval = 20
+
+    let (data, response) = try await URLSession.shared.data(for: request)
     guard let http = response as? HTTPURLResponse,
       (200..<300).contains(http.statusCode)
     else {
@@ -109,11 +179,20 @@ enum RemoteAnnouncementService {
       throw AnnouncementError.invalidText
     }
 
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty,
+      !trimmed.localizedCaseInsensitiveContains("<html"),
+      !trimmed.localizedCaseInsensitiveContains("<!doctype")
+    else {
+      throw AnnouncementError.badResponse
+    }
+
     return text
   }
 
-  nonisolated private static func parseAnnouncements(
-    _ csv: String
+  nonisolated static func parseAnnouncements(
+    _ csv: String,
+    requireFullContract: Bool = false
   ) throws -> [RooMateAnnouncement] {
     let rows = parseCSV(csv)
       .filter { row in
@@ -127,13 +206,32 @@ enum RemoteAnnouncementService {
       normalizedHeader.firstIndex { aliases.contains($0) }
     }
 
-    // A missing tab is an invalid response. Callers retain their last-known-good
-    // cache instead of accepting this Google error document as an empty feed.
-    if csv.localizedCaseInsensitiveContains("error")
-      || csv.localizedCaseInsensitiveContains("unable to parse")
-      || csv.localizedCaseInsensitiveContains("not found")
+    if csv.localizedCaseInsensitiveContains("unable to parse")
+      || csv.localizedCaseInsensitiveContains("requested entity was not found")
+      || csv.localizedCaseInsensitiveContains("google visualization api query language")
     {
       throw AnnouncementError.badResponse
+    }
+
+    guard
+      column(["title", "heading", "name"]) != nil,
+      column(["message", "body", "text", "description"]) != nil,
+      column(["status", "published", "active", "visible"]) != nil
+    else {
+      throw AnnouncementError.missingRequiredColumns
+    }
+
+    if requireFullContract {
+      let requiredAnnouncementColumns: [[String]] = [
+        ["id", "announcementid", "key"],
+        ["priority", "type", "level", "style"],
+        ["dismissible", "canhide", "allowdismiss"],
+        ["minimumversion", "minversion", "version"],
+      ]
+
+      guard requiredAnnouncementColumns.allSatisfy({ column($0) != nil }) else {
+        throw AnnouncementError.missingRequiredColumns
+      }
     }
 
     func resolvedColumn(_ aliases: [String], fallback: Int) -> Int {
@@ -156,14 +254,6 @@ enum RemoteAnnouncementService {
     let minVersionColumn = resolvedColumn(
       ["minimumversion", "minversion", "version"], fallback: 9)
     let statusColumn = resolvedColumn(["status", "published", "active", "visible"], fallback: 10)
-
-    guard
-      rows.contains(where: {
-        $0.indices.contains(titleColumn) && $0.indices.contains(messageColumn)
-      })
-    else {
-      throw AnnouncementError.missingRequiredColumns
-    }
 
     func value(_ row: [String], _ index: Int?) -> String {
       guard let index, row.indices.contains(index) else { return "" }

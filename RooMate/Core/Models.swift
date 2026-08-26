@@ -35,6 +35,8 @@ enum CardColorStyle: String, CaseIterable, Identifiable, Codable, Equatable {
 
 // MARK: - Appearance
 
+/// Kept for decoding preferences written by RooMate 5/6. New versions migrate
+/// this three-way setting into `RooMateTheme` on first launch.
 enum AppearancePreference: String, CaseIterable, Identifiable, Codable, Equatable {
   case system
   case light
@@ -63,6 +65,89 @@ enum AppearancePreference: String, CaseIterable, Identifiable, Codable, Equatabl
     case .system: nil
     case .light: .light
     case .dark: .dark
+    }
+  }
+}
+
+enum RooMateTheme: String, CaseIterable, Identifiable, Codable, Equatable {
+  case system
+  case rooLight
+  case sunrise
+  case courtyard
+  case rooDark
+  case midnight
+  case oled
+
+  var id: String { rawValue }
+
+  var title: String {
+    switch self {
+    case .system: "System"
+    case .rooLight: "Roo Light"
+    case .sunrise: "Sunrise"
+    case .courtyard: "Courtyard"
+    case .rooDark: "Roo Dark"
+    case .midnight: "Midnight"
+    case .oled: "OLED Black"
+    }
+  }
+
+  var subtitle: String {
+    switch self {
+    case .system: "Matches your Mac"
+    case .rooLight: "Warm and familiar"
+    case .sunrise: "Soft peach and cream"
+    case .courtyard: "Calm paper and sage"
+    case .rooDark: "The classic dark look"
+    case .midnight: "Deep blue study hours"
+    case .oled: "True black, minimal glow"
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .system: "circle.lefthalf.filled"
+    case .rooLight: "sun.max.fill"
+    case .sunrise: "sunrise.fill"
+    case .courtyard: "leaf.fill"
+    case .rooDark: "moon.fill"
+    case .midnight: "moon.stars.fill"
+    case .oled: "circle.inset.filled"
+    }
+  }
+
+  var colorScheme: ColorScheme? {
+    switch self {
+    case .system: nil
+    case .rooLight, .sunrise, .courtyard: .light
+    case .rooDark, .midnight, .oled: .dark
+    }
+  }
+
+  var isDark: Bool {
+    switch self {
+    case .rooDark, .midnight, .oled: true
+    case .system, .rooLight, .sunrise, .courtyard: false
+    }
+  }
+
+  var appearanceLabel: String {
+    switch self {
+    case .system: "Automatic"
+    case .rooLight, .sunrise, .courtyard: "Light"
+    case .rooDark, .midnight, .oled: "Dark"
+    }
+  }
+
+  var longDescription: String {
+    switch self {
+    case .system: "Moves between Roo Light and Roo Dark with your Mac's appearance."
+    case .rooLight: "A warm, neutral canvas designed for a clear school day."
+    case .sunrise: "Soft cream and peach tones with a little early-morning energy."
+    case .courtyard: "Quiet paper whites and sage accents for an easy, focused feel."
+    case .rooDark: "RooMate's familiar charcoal look with warm, colorful accents."
+    case .midnight: "Deep navy surfaces made for late study sessions."
+    case .oled: "True black surfaces with restrained glow and crisp text contrast."
     }
   }
 }

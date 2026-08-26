@@ -61,6 +61,14 @@ struct RemoteSpecialScheduleDay: Identifiable, Codable, Hashable, Sendable {
     let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
     return trimmed.isEmpty ? (isSchoolClosed ? "School Closed" : "Special Schedule") : trimmed
   }
+
+  var hasDetailedSchedule: Bool {
+    !isSchoolClosed && !items.isEmpty
+  }
+
+  var isAwaitingSchedule: Bool {
+    !isSchoolClosed && items.isEmpty
+  }
 }
 
 struct RemoteSpecialScheduleFeed: Codable, Hashable, Sendable {
@@ -189,12 +197,20 @@ enum RemoteSpecialScheduleService {
       }
 
       guard let tab = entry.tabName, !tab.isEmpty else {
-        // A published, open-school day must have a tab. Preserve a last-known-good
-        // copy if one exists; otherwise skip the malformed entry instead of breaking
-        // every user's normal schedule.
-        if let cached = priorByDate[entry.dateKey], !cached.isSchoolClosed {
-          days.append(cached)
-        }
+        // A published special day is still useful even before the exact bell
+        // schedule is available. Keep it in the feed with an empty timeline so
+        // RooMate can show an "awaiting schedule" state and notify students.
+        debugLog("\(entry.dateKey): published special day is awaiting a schedule tab.")
+        days.append(
+          RemoteSpecialScheduleDay(
+            dateKey: entry.dateKey,
+            title: entry.title,
+            note: entry.note,
+            isSchoolClosed: false,
+            tabName: nil,
+            items: []
+          )
+        )
         continue
       }
 
@@ -214,9 +230,23 @@ enum RemoteSpecialScheduleService {
       } catch {
         debugLog("\(entry.dateKey): failed to load ‘\(tab)’ — \(error.localizedDescription)")
         // A single broken tab should never wipe out the rest of the official feed.
-        if let cached = priorByDate[entry.dateKey], !cached.isSchoolClosed {
+        // Prefer a cached detailed schedule, but if RooMate has never loaded one,
+        // retain the published day itself as an awaiting-schedule placeholder.
+        if let cached = priorByDate[entry.dateKey], cached.hasDetailedSchedule {
           debugLog("\(entry.dateKey): keeping cached last-known-good schedule.")
           days.append(cached)
+        } else {
+          debugLog("\(entry.dateKey): no cached detail; keeping awaiting-schedule day.")
+          days.append(
+            RemoteSpecialScheduleDay(
+              dateKey: entry.dateKey,
+              title: entry.title,
+              note: entry.note,
+              isSchoolClosed: false,
+              tabName: tab,
+              items: []
+            )
+          )
         }
       }
     }
@@ -263,6 +293,10 @@ enum RemoteSpecialScheduleService {
       // INDEX has one real header row. Day tabs intentionally mix metadata
       // rows with the schedule table, so they are parsed as raw rows.
       URLQueryItem(name: "headers", value: isIndex ? "1" : "0"),
+      // Google Visualization can briefly cache edited sheets. A changing,
+      // ignored query value makes an explicit/manual refresh actually reach
+      // the newest published sheet contents.
+      URLQueryItem(name: "rm_refresh", value: String(Int(Date().timeIntervalSince1970))),
     ]
 
     components.queryItems = queryItems
@@ -334,7 +368,23 @@ enum RemoteSpecialScheduleService {
       )
     }
 
-    guard !result.isEmpty else {
+    if result.isEmpty {
+      // A header-only INDEX is an intentional, authoritative empty feed. This
+      // lets the school clear old special schedules without every installed
+      // copy of RooMate continuing to show its last-known-good cache forever.
+      // We only accept this as empty when the fixed A:F header is recognizable;
+      // malformed/HTML/incorrect responses still fail and preserve saved data.
+      let header = rows.first?.map { normalized($0) } ?? []
+      let expectedHeader = ["date", "title", "note", "status", "school closed", "tab"]
+      let isValidEmptyIndex =
+        header.count >= expectedHeader.count
+        && Array(header.prefix(expectedHeader.count)) == expectedHeader
+
+      if isValidEmptyIndex {
+        debugLog("INDEX is valid but empty; clearing cached official special schedules.")
+        return []
+      }
+
       let preview = rows.prefix(5)
         .map { $0.map(clean).joined(separator: " | ") }
         .joined(separator: " || ")
@@ -672,5 +722,276 @@ enum RemoteSpecialScheduleService {
 
   private static func minutes(_ components: DateComponents) -> Int {
     (components.hour ?? 0) * 60 + (components.minute ?? 0)
+  }
+}
+
+// MARK: - Official school dates
+
+struct RemoteSchoolDatePeriod: Identifiable, Codable, Hashable, Sendable {
+  let id: String
+  let startDateKey: String
+  let endDateKey: String
+  let type: String
+  let title: String
+  let message: String
+
+  var normalizedType: String {
+    type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+  }
+
+  var isSchoolYear: Bool { normalizedType == "school-year" }
+  var isBreak: Bool { normalizedType == "break" }
+
+  var displayTitle: String {
+    let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !trimmed.isEmpty { return trimmed }
+    return isBreak ? "School Break" : "School Year"
+  }
+
+  func contains(dateKey: String) -> Bool {
+    startDateKey <= dateKey && dateKey <= endDateKey
+  }
+}
+
+struct RemoteSchoolDateFeed: Codable, Hashable, Sendable {
+  let refreshedAt: Date
+  let periods: [RemoteSchoolDatePeriod]
+
+  static let empty = RemoteSchoolDateFeed(refreshedAt: .distantPast, periods: [])
+}
+
+enum RemoteSchoolDateServiceError: LocalizedError {
+  case invalidURL
+  case badHTTPStatus(Int)
+  case unreadableSheet
+
+  var errorDescription: String? {
+    switch self {
+    case .invalidURL:
+      "The school-dates feed URL is invalid."
+    case .badHTTPStatus(let status):
+      "The school-dates feed returned HTTP \(status)."
+    case .unreadableSheet:
+      "RooMate couldn't read the SchoolDates sheet."
+    }
+  }
+}
+
+enum RemoteSchoolDateService {
+  static let spreadsheetID = "13J7fdyIG2kyzIxY19mOWmUL2kwjw1ndMSBm0jgVJAtQ"
+  static let tabName = "SchoolDates"
+
+  private static let cacheKey = "OfficialSchoolDateFeedCacheV1"
+  private static var defaults: UserDefaults {
+    UserDefaults(suiteName: "dev.roomate.prefs") ?? .standard
+  }
+
+  private actor RefreshCoordinator {
+    var inFlight: Task<RemoteSchoolDateFeed, Error>?
+
+    func run() async throws -> RemoteSchoolDateFeed {
+      if let inFlight { return try await inFlight.value }
+      let task = Task { try await RemoteSchoolDateService.performRefresh() }
+      inFlight = task
+      defer { inFlight = nil }
+      return try await task.value
+    }
+  }
+
+  private static let refreshCoordinator = RefreshCoordinator()
+
+  private static var schoolCalendar: Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+    return calendar
+  }
+
+  static func cachedFeed() -> RemoteSchoolDateFeed {
+    guard let data = defaults.data(forKey: cacheKey),
+      let feed = try? JSONDecoder().decode(RemoteSchoolDateFeed.self, from: data)
+    else { return .empty }
+    return feed
+  }
+
+  static func refresh() async throws -> RemoteSchoolDateFeed {
+    try await refreshCoordinator.run()
+  }
+
+  static func clearCache() {
+    defaults.removeObject(forKey: cacheKey)
+  }
+
+  static func dateKey(for date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = schoolCalendar
+    formatter.timeZone = schoolCalendar.timeZone
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+  }
+
+  static func date(from dateKey: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = schoolCalendar
+    formatter.timeZone = schoolCalendar.timeZone
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: dateKey)
+  }
+
+  private static func performRefresh() async throws -> RemoteSchoolDateFeed {
+    guard let url = csvURL() else { throw RemoteSchoolDateServiceError.invalidURL }
+
+    var request = URLRequest(url: url)
+    request.cachePolicy = .reloadIgnoringLocalCacheData
+    request.timeoutInterval = 20
+    request.setValue("text/csv,text/plain;q=0.9,*/*;q=0.8", forHTTPHeaderField: "Accept")
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+    if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+      throw RemoteSchoolDateServiceError.badHTTPStatus(http.statusCode)
+    }
+
+    let rows = parseCSV(data)
+    let periods = try parseRows(rows)
+    let feed = RemoteSchoolDateFeed(
+      refreshedAt: Date(),
+      periods: periods.sorted {
+        if $0.startDateKey == $1.startDateKey { return $0.endDateKey < $1.endDateKey }
+        return $0.startDateKey < $1.startDateKey
+      }
+    )
+
+    if let encoded = try? JSONEncoder().encode(feed) {
+      defaults.set(encoded, forKey: cacheKey)
+    }
+    return feed
+  }
+
+  private static func csvURL() -> URL? {
+    var components = URLComponents()
+    components.scheme = "https"
+    components.host = "docs.google.com"
+    components.path = "/spreadsheets/d/\(spreadsheetID)/gviz/tq"
+    components.queryItems = [
+      URLQueryItem(name: "tqx", value: "out:csv"),
+      URLQueryItem(name: "sheet", value: tabName),
+      URLQueryItem(name: "tq", value: "select A,B,C,D,E,F,G"),
+      URLQueryItem(name: "headers", value: "1"),
+      URLQueryItem(name: "rm_refresh", value: String(Int(Date().timeIntervalSince1970))),
+    ]
+    return components.url
+  }
+
+  private static func parseRows(_ rows: [[String]]) throws -> [RemoteSchoolDatePeriod] {
+    let header = rows.first?.map(normalized) ?? []
+    let expected = ["id", "start date", "end date", "type", "title", "message", "status"]
+    guard header.count >= expected.count, Array(header.prefix(expected.count)) == expected else {
+      throw RemoteSchoolDateServiceError.unreadableSheet
+    }
+
+    var result: [RemoteSchoolDatePeriod] = []
+
+    for row in rows.dropFirst() {
+      let id = clean(value(at: 0, in: row))
+      guard !id.isEmpty,
+        let start = canonicalDateKey(value(at: 1, in: row))
+      else { continue }
+
+      let status = normalized(value(at: 6, in: row))
+      guard status == "published" else { continue }
+
+      let end = canonicalDateKey(value(at: 2, in: row)) ?? start
+      let lower = min(start, end)
+      let upper = max(start, end)
+
+      result.append(
+        RemoteSchoolDatePeriod(
+          id: id,
+          startDateKey: lower,
+          endDateKey: upper,
+          type: clean(value(at: 3, in: row)),
+          title: clean(value(at: 4, in: row)),
+          message: clean(value(at: 5, in: row))
+        )
+      )
+    }
+
+    // Header-only or all-Draft sheets are authoritative empty feeds.
+    return result
+  }
+
+  private static func canonicalDateKey(_ raw: String) -> String? {
+    let value = clean(raw)
+    guard !value.isEmpty else { return nil }
+
+    for format in ["yyyy-MM-dd", "M/d/yyyy", "MM/dd/yyyy", "M/d/yy", "MMM d, yyyy", "MMMM d, yyyy"] {
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.calendar = schoolCalendar
+      formatter.timeZone = schoolCalendar.timeZone
+      formatter.dateFormat = format
+      if let date = formatter.date(from: value) { return dateKey(for: date) }
+    }
+    return nil
+  }
+
+  private static func parseCSV(_ data: Data) -> [[String]] {
+    let string = String(data: data, encoding: .utf8) ?? ""
+    var rows: [[String]] = []
+    var row: [String] = []
+    var field = ""
+    var inQuotes = false
+    var index = string.startIndex
+
+    func flushRow() {
+      row.append(field)
+      if row.contains(where: { !clean($0).isEmpty }) { rows.append(row) }
+      row = []
+      field = ""
+    }
+
+    while index < string.endIndex {
+      let character = string[index]
+      switch character {
+      case "\"":
+        let next = string.index(after: index)
+        if inQuotes, next < string.endIndex, string[next] == "\"" {
+          field.append("\"")
+          index = next
+        } else {
+          inQuotes.toggle()
+        }
+      case "," where !inQuotes:
+        row.append(field)
+        field = ""
+      case "\n" where !inQuotes:
+        flushRow()
+      case "\r" where !inQuotes:
+        let next = string.index(after: index)
+        if next < string.endIndex, string[next] == "\n" { index = next }
+        flushRow()
+      default:
+        field.append(character)
+      }
+      index = string.index(after: index)
+    }
+
+    if !field.isEmpty || !row.isEmpty { flushRow() }
+    return rows
+  }
+
+  nonisolated private static func clean(_ value: String) -> String {
+    value.replacingOccurrences(of: "\u{feff}", with: "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  nonisolated private static func normalized(_ value: String) -> String {
+    clean(value).lowercased()
+  }
+
+  private static func value(at index: Int, in row: [String]) -> String {
+    guard row.indices.contains(index) else { return "" }
+    return row[index]
   }
 }

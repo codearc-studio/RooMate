@@ -22,6 +22,30 @@ extension Notification.Name {
     "RooMateSportsPreferencesDidChange")
   static let rooMateEventPreferencesDidChange = Notification.Name(
     "RooMateEventPreferencesDidChange")
+  static let rooMateShowAnnouncements = Notification.Name("RooMateShowAnnouncements")
+}
+
+
+enum SchoolDateState: Equatable {
+  case inSession(RemoteSchoolDatePeriod)
+  case breakPeriod(RemoteSchoolDatePeriod)
+  case beforeSchoolYear(RemoteSchoolDatePeriod)
+  case afterSchoolYear(RemoteSchoolDatePeriod)
+
+  var period: RemoteSchoolDatePeriod {
+    switch self {
+    case .inSession(let period), .breakPeriod(let period),
+      .beforeSchoolYear(let period), .afterSchoolYear(let period):
+      return period
+    }
+  }
+
+  var suppressesRegularSchedule: Bool {
+    switch self {
+    case .inSession: false
+    case .breakPeriod, .beforeSchoolYear, .afterSchoolYear: true
+    }
+  }
 }
 
 struct ScheduleBlockPresentation {
@@ -63,8 +87,8 @@ final class UserScheduleStore: ObservableObject {
   @Published var clubs: [Club] = [] {
     didSet { persistScheduleChange(refreshNotifications: true) }
   }
-  @Published var appearance: AppearancePreference = .system {
-    didSet { persistAppearanceChange() }
+  @Published var theme: RooMateTheme = .system {
+    didSet { persistThemeChange() }
   }
 
   // V6 uses the full class color treatment everywhere. Keep this property for
@@ -73,12 +97,16 @@ final class UserScheduleStore: ObservableObject {
   @Published private(set) var remoteSpecialScheduleFeed: RemoteSpecialScheduleFeed = .empty
   @Published private(set) var remoteSpecialSchedulesRefreshing = false
   @Published private(set) var remoteSpecialScheduleError: String?
+  @Published private(set) var remoteSchoolDateFeed: RemoteSchoolDateFeed = .empty
+  @Published private(set) var remoteSchoolDatesRefreshing = false
+  @Published private(set) var remoteSchoolDateError: String?
   @Published private(set) var remoteAnnouncements: [RooMateAnnouncement] = []
   @Published private(set) var announcementsRefreshing = false
   @Published private(set) var announcementError: String?
   @Published private(set) var announcementsLastUpdated: Date?
   @Published private(set) var announcementsUsingSavedData = false
   @Published private(set) var dismissedAnnouncementIDs: Set<String> = []
+  @Published private(set) var notifiedAnnouncementIDs: Set<String> = []
 
   // Semester Planner ships in V6 and stays separate from the larger Study Planner,
   // which remains future work for V7.
@@ -159,6 +187,7 @@ final class UserScheduleStore: ObservableObject {
   private let specialFreeDefaultsKey = "UserSpecialBlockFree"
   private let specialBlockReplacementsKey = "UserSpecialBlockReplacements"
   private let clubsDefaultsKey = "UserClubs"
+  private let themeDefaultsKey = "UserThemePreference"
   private let appearanceDefaultsKey = "UserAppearancePreference"
   private let cardStyleDefaultsKey = "UserCardColorStyle"
   private let semesterPlanAssignmentsKey = "SemesterPlanAssignments"
@@ -182,10 +211,14 @@ final class UserScheduleStore: ObservableObject {
   private let sidebarFavoritesKey = "SidebarFavorites"
   private let sidebarHiddenKey = "SidebarHidden"
   private let dismissedAnnouncementsKey = "DismissedAnnouncementIDs"
+  private let notifiedAnnouncementsKey = "NotifiedAnnouncementIDs"
   private let legacyRooPacPlannedCreditsKey = "RooPACPlannedCredits"
   private let scheduleNotificationPrefix = "roomate.schedule."
+  private let announcementNotificationPrefix = "roomate.announcements."
   private var notificationRefreshTask: Task<Void, Never>?
+  private var announcementNotificationTask: Task<Void, Never>?
   private var remoteSpecialScheduleRefreshTask: Task<Void, Never>?
+  private var remoteSchoolDateRefreshTask: Task<Void, Never>?
   private var remoteSpecialSchedulePeriodicTask: Task<Void, Never>?
   private var announcementRefreshTask: Task<Void, Never>?
   private var announcementPeriodicTask: Task<Void, Never>?
@@ -193,6 +226,7 @@ final class UserScheduleStore: ObservableObject {
 
   init() {
     remoteSpecialScheduleFeed = RemoteSpecialScheduleService.cachedFeed()
+    remoteSchoolDateFeed = RemoteSchoolDateService.cachedFeed()
     if let cached = PersistentRemoteCache.load(
       [RooMateAnnouncement].self,
       named: "announcements"
@@ -209,6 +243,7 @@ final class UserScheduleStore: ObservableObject {
     Task {
       await refreshNotificationStatus()
       await refreshOfficialSpecialSchedules(force: true)
+      await refreshOfficialSchoolDates(force: true)
       await refreshAnnouncements(force: true)
       await refreshScheduleNotifications()
     }
@@ -219,7 +254,9 @@ final class UserScheduleStore: ObservableObject {
 
   deinit {
     notificationRefreshTask?.cancel()
+    announcementNotificationTask?.cancel()
     remoteSpecialScheduleRefreshTask?.cancel()
+    remoteSchoolDateRefreshTask?.cancel()
     remoteSpecialSchedulePeriodicTask?.cancel()
     announcementRefreshTask?.cancel()
     announcementPeriodicTask?.cancel()
@@ -266,17 +303,19 @@ final class UserScheduleStore: ObservableObject {
     }
   }
 
-  private func persistAppearanceChange() {
+  private func persistThemeChange() {
     guard !isLoadingPersistedState else { return }
 
-    Task { @MainActor [weak self] in
-      guard let self else { return }
-      self.save()
-      NotificationCenter.default.post(
-        name: .rooMateAppearanceDidChange,
-        object: nil
-      )
+    // Theme colors are resolved from this shared defaults suite by dynamic
+    // platform colors. Write the new value immediately so the same SwiftUI
+    // render pass cannot briefly reuse the previous palette.
+    if let data = try? JSONEncoder().encode(theme) {
+      Self.defaults.set(data, forKey: themeDefaultsKey)
     }
+    NotificationCenter.default.post(
+      name: .rooMateAppearanceDidChange,
+      object: nil
+    )
   }
 
   var profileDisplayName: String {
@@ -347,12 +386,42 @@ final class UserScheduleStore: ObservableObject {
     return remoteSpecialScheduleFeed.days.first { $0.dateKey == key }
   }
 
+  func schoolDateState(on date: Date) -> SchoolDateState? {
+    let key = RemoteSchoolDateService.dateKey(for: date)
+
+    if let breakPeriod = remoteSchoolDateFeed.periods
+      .filter(\.isBreak)
+      .first(where: { $0.contains(dateKey: key) })
+    {
+      return .breakPeriod(breakPeriod)
+    }
+
+    let schoolYears = remoteSchoolDateFeed.periods
+      .filter(\.isSchoolYear)
+      .sorted { $0.startDateKey < $1.startDateKey }
+
+    if let current = schoolYears.first(where: { $0.contains(dateKey: key) }) {
+      return .inSession(current)
+    }
+
+    if let upcoming = schoolYears.first(where: { key < $0.startDateKey }) {
+      return .beforeSchoolYear(upcoming)
+    }
+
+    if let previous = schoolYears.last(where: { key > $0.endDateKey }) {
+      return .afterSchoolYear(previous)
+    }
+
+    return nil
+  }
+
   func isSchoolClosed(on date: Date) -> Bool {
     remoteSpecialScheduleDay(on: date)?.isSchoolClosed == true
   }
 
   func scheduleWeekday(for date: Date) -> Weekday? {
     if isSchoolClosed(on: date) { return nil }
+    if schoolDateState(on: date)?.suppressesRegularSchedule == true { return nil }
 
     switch scheduleCalendar().component(.weekday, from: date) {
     case 2: return .monday
@@ -377,6 +446,42 @@ final class UserScheduleStore: ObservableObject {
   var officialSpecialSchedulesLastUpdated: Date? {
     let date = remoteSpecialScheduleFeed.refreshedAt
     return date == .distantPast ? nil : date
+  }
+
+  var officialSchoolDatesLastUpdated: Date? {
+    let date = remoteSchoolDateFeed.refreshedAt
+    return date == .distantPast ? nil : date
+  }
+
+  func refreshOfficialSchoolDates(force: Bool = false) async {
+    if !force, let lastUpdated = officialSchoolDatesLastUpdated,
+      Date().timeIntervalSince(lastUpdated) < 15 * 60
+    {
+      return
+    }
+
+    remoteSchoolDateRefreshTask?.cancel()
+    remoteSchoolDatesRefreshing = true
+    let previous = remoteSchoolDateFeed
+
+    let task = Task { @MainActor in
+      do {
+        let feed = try await RemoteSchoolDateService.refresh()
+        guard !Task.isCancelled else { return }
+        remoteSchoolDateFeed = feed
+        remoteSchoolDateError = nil
+        NotificationCenter.default.post(name: .rooMateScheduleDidChange, object: nil)
+      } catch {
+        guard !Task.isCancelled else { return }
+        remoteSchoolDateError = error.localizedDescription
+        remoteSchoolDateFeed = previous
+      }
+      remoteSchoolDatesRefreshing = false
+      await refreshScheduleNotifications()
+    }
+
+    remoteSchoolDateRefreshTask = task
+    await task.value
   }
 
   func refreshOfficialSpecialSchedules(force: Bool = false) async {
@@ -433,6 +538,7 @@ final class UserScheduleStore: ObservableObject {
         try? await Task.sleep(nanoseconds: 2 * 60 * 60 * 1_000_000_000)
         guard !Task.isCancelled, let self else { return }
         await self.refreshOfficialSpecialSchedules(force: true)
+        await self.refreshOfficialSchoolDates(force: true)
       }
     }
   }
@@ -505,10 +611,12 @@ final class UserScheduleStore: ObservableObject {
         notificationPauseUntil = nil
         notificationsEnabled = false
         clearScheduleNotifications()
+        clearAnnouncementNotifications()
       }
 
       await refreshNotificationStatus()
       await refreshScheduleNotifications()
+      await refreshAnnouncementNotifications()
     #else
       notificationsEnabled = enabled
     #endif
@@ -516,7 +624,8 @@ final class UserScheduleStore: ObservableObject {
 
   /// Rebuild the next few school days of local reminders. RooMate keeps one
   /// bounded schedule bucket so class, club, Dining, and special-day reminders
-  /// leave room for Sports and saved-event notifications under Apple's pending limit.
+  /// leave room for Sports, Events, and required announcement notifications
+  /// under Apple's pending-notification limit.
   func refreshScheduleNotifications() async {
     #if canImport(UserNotifications)
       notificationRefreshTask?.cancel()
@@ -600,12 +709,14 @@ final class UserScheduleStore: ObservableObject {
                 body: note.isEmpty
                   ? (specialDay.isSchoolClosed
                     ? "RooMate has no school-day schedule for today."
-                    : "RooMate has already updated today's schedule.")
+                    : (specialDay.isAwaitingSchedule
+                      ? "This is a special schedule day. Exact bell times have not been published yet."
+                      : "RooMate has already updated today's schedule."))
                   : note
               )
             )
 
-            if requests.count >= 40 { break }
+            if requests.count >= 34 { break }
           }
         }
 
@@ -701,7 +812,7 @@ final class UserScheduleStore: ObservableObject {
                   )
                 }
               }
-              if requests.count >= 40 { break }
+              if requests.count >= 34 { break }
               continue
             }
 
@@ -748,12 +859,12 @@ final class UserScheduleStore: ObservableObject {
               }
             }
 
-            if requests.count >= 40 { break }
+            if requests.count >= 34 { break }
           }
 
           // Additional My Clubs meetings live alongside the bell schedule
           // instead of replacing a class, so schedule them separately.
-          if clubReminders, requests.count < 40 {
+          if clubReminders, requests.count < 34 {
             let calendarWeekday = calendar.component(.weekday, from: schoolDay.date)
 
             for club in clubs {
@@ -792,17 +903,17 @@ final class UserScheduleStore: ObservableObject {
                   )
                 )
 
-                if requests.count >= 40 { break }
+                if requests.count >= 34 { break }
               }
 
-              if requests.count >= 40 { break }
+              if requests.count >= 34 { break }
             }
           }
 
-          if requests.count >= 40 { break }
+          if requests.count >= 34 { break }
         }
 
-        for request in requests.prefix(40) {
+        for request in requests.prefix(34) {
           try? await center.add(request)
         }
       }
@@ -1339,9 +1450,8 @@ final class UserScheduleStore: ObservableObject {
     Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
   }
 
-  func activeAnnouncements(at reference: Date = Date()) -> [RooMateAnnouncement] {
+  func visibleAnnouncements(at reference: Date = Date()) -> [RooMateAnnouncement] {
     remoteAnnouncements
-      .filter { !dismissedAnnouncementIDs.contains($0.id) }
       .filter { $0.isActive(at: reference, appVersion: currentAppVersion) }
       .sorted {
         if $0.level.priority != $1.level.priority {
@@ -1351,10 +1461,20 @@ final class UserScheduleStore: ObservableObject {
       }
   }
 
+  func activeAnnouncements(at reference: Date = Date()) -> [RooMateAnnouncement] {
+    visibleAnnouncements(at: reference)
+      .filter { !dismissedAnnouncementIDs.contains($0.id) }
+  }
+
   func dismissAnnouncement(_ announcement: RooMateAnnouncement) {
     guard announcement.dismissible else { return }
     dismissedAnnouncementIDs.insert(announcement.id)
     TelemetryTracker.trackAnnouncementDismissed(level: announcement.level.rawValue)
+    save()
+  }
+
+  func restoreAnnouncement(_ announcement: RooMateAnnouncement) {
+    guard dismissedAnnouncementIDs.remove(announcement.id) != nil else { return }
     save()
   }
 
@@ -1395,9 +1515,11 @@ final class UserScheduleStore: ObservableObject {
         if force || previousIDs != newIDs {
           TelemetryTracker.trackAnnouncementFeedLoaded(
             totalCount: announcements.count,
-            activeCount: self.activeAnnouncements().count
+            activeCount: self.visibleAnnouncements().count
           )
         }
+
+        await self.refreshAnnouncementNotifications()
       } catch {
         guard !Task.isCancelled else { return }
         TelemetryTracker.trackScraperFailure(
@@ -1422,6 +1544,10 @@ final class UserScheduleStore: ObservableObject {
         #if DEBUG
           print("[Announcements] Refresh failed: \(error.localizedDescription)")
         #endif
+
+        // Cached announcements are still trustworthy when the network is not.
+        // If one has not been announced locally yet, it can still be delivered.
+        await self.refreshAnnouncementNotifications()
       }
     }
 
@@ -1429,12 +1555,194 @@ final class UserScheduleStore: ObservableObject {
     await task.value
   }
 
+  /// Announcement notifications are intentionally not a per-feature preference.
+  /// If the user has enabled RooMate notifications and macOS allows them, every
+  /// published announcement gets one local notification. Routine-reminder pause
+  /// windows do not suppress announcements.
+  func refreshAnnouncementNotifications() async {
+    #if canImport(UserNotifications)
+      announcementNotificationTask?.cancel()
+
+      let announcements = remoteAnnouncements
+      let enabled = notificationsEnabled
+      let appVersion = currentAppVersion
+      let alreadyNotified = notifiedAnnouncementIDs
+
+      let task = Task { @MainActor [weak self] in
+        guard let self else { return }
+        try? await Task.sleep(nanoseconds: 120_000_000)
+        guard !Task.isCancelled else { return }
+
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        self.notificationAuthStatus = settings.authorizationStatus
+
+        let authorized =
+          settings.authorizationStatus == .authorized
+          || settings.authorizationStatus == .provisional
+
+        let pending = await center.pendingNotificationRequests()
+        let pendingAnnouncementRequests = pending.filter {
+          $0.identifier.hasPrefix(self.announcementNotificationPrefix)
+        }
+        let feedNotificationIDs = Set(
+          announcements.map { self.announcementNotificationIdentifier(for: $0) }
+        )
+        let stalePendingIDs =
+          pendingAnnouncementRequests
+          .map(\.identifier)
+          .filter { !feedNotificationIDs.contains($0) }
+
+        if !stalePendingIDs.isEmpty {
+          center.removePendingNotificationRequests(withIdentifiers: stalePendingIDs)
+
+          // These were future announcements that had been scheduled but were
+          // removed/unpublished before delivery. Let the same ID notify again
+          // if it is intentionally republished later.
+          for identifier in stalePendingIDs {
+            let announcementID = String(
+              identifier.dropFirst(self.announcementNotificationPrefix.count)
+            )
+            self.notifiedAnnouncementIDs.remove(announcementID)
+          }
+          self.save()
+        }
+
+        guard enabled, authorized else {
+          let allPendingIDs = pendingAnnouncementRequests.map(\.identifier)
+          if !allPendingIDs.isEmpty {
+            center.removePendingNotificationRequests(withIdentifiers: allPendingIDs)
+          }
+          return
+        }
+
+        let now = Date()
+        let pendingIDs = Set(pendingAnnouncementRequests.map(\.identifier))
+        var newlyNotified = self.notifiedAnnouncementIDs
+        var scheduledCount = 0
+
+        for announcement in announcements {
+          guard !Task.isCancelled else { return }
+          guard !alreadyNotified.contains(announcement.id) else { continue }
+
+          if !announcement.minVersion.isEmpty,
+            RemoteAnnouncementService.compareVersions(appVersion, announcement.minVersion)
+              == .orderedAscending
+          {
+            continue
+          }
+
+          if let endDate = announcement.endDate, endDate < now {
+            continue
+          }
+
+          let identifier = self.announcementNotificationIdentifier(for: announcement)
+          if pendingIDs.contains(identifier) {
+            continue
+          }
+
+          let fireDate: Date
+          if let startDate = announcement.startDate, startDate > now {
+            fireDate = startDate
+          } else {
+            fireDate = now.addingTimeInterval(1)
+          }
+
+          if let endDate = announcement.endDate, fireDate > endDate {
+            continue
+          }
+
+          let content = UNMutableNotificationContent()
+          content.title = announcement.title
+          content.body = announcement.message
+          content.sound = .default
+          content.threadIdentifier = "roomate.announcements"
+          content.categoryIdentifier = "ROOMATE_ANNOUNCEMENT"
+          content.userInfo = [
+            "RooMateAnnouncementID": announcement.id,
+            "RooMateAnnouncementLevel": announcement.level.rawValue,
+          ]
+
+          let trigger: UNNotificationTrigger
+          if fireDate.timeIntervalSince(now) <= 2 {
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+          } else {
+            var components = self.scheduleNotificationCalendar().dateComponents(
+              [.year, .month, .day, .hour, .minute, .second],
+              from: fireDate
+            )
+            components.timeZone = self.scheduleNotificationCalendar().timeZone
+            trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+          }
+
+          do {
+            try await center.add(
+              UNNotificationRequest(
+                identifier: identifier,
+                content: content,
+                trigger: trigger
+              )
+            )
+            newlyNotified.insert(announcement.id)
+            scheduledCount += 1
+            TelemetryTracker.trackAnnouncementNotificationScheduled(
+              level: announcement.level.rawValue,
+              scheduledForFuture: fireDate.timeIntervalSince(now) > 2
+            )
+          } catch {
+            #if DEBUG
+              print(
+                "[Announcements] Could not schedule notification for \(announcement.id): \(error.localizedDescription)"
+              )
+            #endif
+          }
+
+          // RooMate reserves a small dedicated bucket for announcements so they
+          // cannot be crowded out by class/game/event reminders.
+          if scheduledCount >= 8 { break }
+        }
+
+        if newlyNotified != self.notifiedAnnouncementIDs {
+          self.notifiedAnnouncementIDs = newlyNotified
+          self.save()
+        }
+      }
+
+      announcementNotificationTask = task
+      await task.value
+    #endif
+  }
+
+  func clearAnnouncementNotifications() {
+    #if canImport(UserNotifications)
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        let center = UNUserNotificationCenter.current()
+        let pending = await center.pendingNotificationRequests()
+        let identifiers =
+          pending
+          .map(\.identifier)
+          .filter { $0.hasPrefix(self.announcementNotificationPrefix) }
+
+        if !identifiers.isEmpty {
+          center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        }
+      }
+    #endif
+  }
+
+  private func announcementNotificationIdentifier(
+    for announcement: RooMateAnnouncement
+  ) -> String {
+    "\(announcementNotificationPrefix)\(announcement.id)"
+  }
+
   private func startAnnouncementRefreshLoop() {
     announcementPeriodicTask?.cancel()
 
     announcementPeriodicTask = Task { @MainActor [weak self] in
       while !Task.isCancelled {
-        try? await Task.sleep(nanoseconds: 10 * 60 * 1_000_000_000)
+        try? await Task.sleep(nanoseconds: 5 * 60 * 1_000_000_000)
         guard !Task.isCancelled, let self else { return }
         await self.refreshAnnouncements()
       }
@@ -1464,7 +1772,7 @@ final class UserScheduleStore: ObservableObject {
       specialBlockReplacements, forKey: specialBlockReplacementsKey,
       label: "special block replacements")
     encodeAndSet(clubs, forKey: clubsDefaultsKey, label: "clubs")
-    encodeAndSet(appearance, forKey: appearanceDefaultsKey, label: "appearance")
+    encodeAndSet(theme, forKey: themeDefaultsKey, label: "theme")
     encodeAndSet(
       semesterPlanAssignments, forKey: semesterPlanAssignmentsKey, label: "semester plan")
     encodeAndSet(Array(completedTodoIDs), forKey: completedTodosKey, label: "completed IDs")
@@ -1487,6 +1795,9 @@ final class UserScheduleStore: ObservableObject {
     encodeAndSet(
       Array(dismissedAnnouncementIDs), forKey: dismissedAnnouncementsKey,
       label: "dismissed announcements")
+    encodeAndSet(
+      Array(notifiedAnnouncementIDs), forKey: notifiedAnnouncementsKey,
+      label: "notified announcements")
     encodeAndSet(rooPACCurrentGrade, forKey: rooPACCurrentGradeKey, label: "RooPAC grade")
     encodeAndSet(rooPacPlans, forKey: rooPacPlansKey, label: "RooPAC planner")
 
@@ -1519,7 +1830,7 @@ final class UserScheduleStore: ObservableObject {
     specialFree = [:]
     specialBlockReplacements = [:]
     clubs = []
-    appearance = .system
+    theme = .system
     cardColorStyle = .colors
     semesterPlanAssignments = [:]
     completedTodoIDs = []
@@ -1541,6 +1852,8 @@ final class UserScheduleStore: ObservableObject {
     sidebarFavorites = []
     sidebarHidden = []
     dismissedAnnouncementIDs = []
+    notifiedAnnouncementIDs = []
+    clearAnnouncementNotifications()
     syncDerivedMusicClubsFreeState()
 
     isLoadingPersistedState = false
@@ -1583,9 +1896,17 @@ final class UserScheduleStore: ObservableObject {
     if let data = d.data(forKey: clubsDefaultsKey) {
       if let decoded = try? JSONDecoder().decode([Club].self, from: data) { self.clubs = decoded }
     }
-    if let data = d.data(forKey: appearanceDefaultsKey) {
-      if let decoded = try? JSONDecoder().decode(AppearancePreference.self, from: data) {
-        self.appearance = decoded
+    if let data = d.data(forKey: themeDefaultsKey),
+      let decoded = try? JSONDecoder().decode(RooMateTheme.self, from: data)
+    {
+      self.theme = decoded
+    } else if let data = d.data(forKey: appearanceDefaultsKey),
+      let legacy = try? JSONDecoder().decode(AppearancePreference.self, from: data)
+    {
+      switch legacy {
+      case .system: self.theme = .system
+      case .light: self.theme = .rooLight
+      case .dark: self.theme = .rooDark
       }
     }
     d.removeObject(forKey: cardStyleDefaultsKey)
@@ -1686,6 +2007,11 @@ final class UserScheduleStore: ObservableObject {
       let decoded = try? JSONDecoder().decode([String].self, from: data)
     {
       self.dismissedAnnouncementIDs = Set(decoded)
+    }
+    if let data = d.data(forKey: notifiedAnnouncementsKey),
+      let decoded = try? JSONDecoder().decode([String].self, from: data)
+    {
+      self.notifiedAnnouncementIDs = Set(decoded)
     }
   }
 }

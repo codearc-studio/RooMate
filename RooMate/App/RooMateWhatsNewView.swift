@@ -8,12 +8,36 @@ struct RooMateWhatsNewView: View {
   let onDismiss: () -> Void
 
   private let highlights: [(String, String, String, Color)] = [
-    ("sparkles", "A redesigned Today", "See what’s happening now, what comes next, announcements, and the day at a glance.", DesignTokens.Colors.primary),
-    ("calendar", "Day, Week, and Plan", "Move between today’s schedule, a complete week, and the Semester Planner in one place.", DesignTokens.Colors.schedule),
-    ("fork.knife", "Dining, Sports, Clubs, and Events", "School life beyond the bell schedule now has a home in RooMate.", DesignTokens.Colors.dining),
-    ("chart.bar.xaxis", "PacTrack", "Keep an on-device view of RooPAC progress and future choices.", DesignTokens.Colors.pacTrack),
-    ("magnifyingglass", "Search with Command-K", "Jump straight to pages, classes, games, events, dining, and settings.", DesignTokens.Colors.info),
-    ("menubar.rectangle", "There when you need it", "Use the menu bar companion, floating timer, improved reminders, and new customization.", DesignTokens.Colors.events),
+    (
+      "paintpalette.fill", "Seven RooMate themes",
+      "Pick from three light themes, three dark themes, or let RooMate follow your Mac.",
+      DesignTokens.Colors.primary
+    ),
+    (
+      "circle.inset.filled", "True-black OLED",
+      "Use exact black surfaces, restrained glow, and crisp text for a focused dark look.",
+      DesignTokens.Colors.events
+    ),
+    (
+      "rectangle.grid.2x2.fill", "A visual theme gallery",
+      "See a real preview and clear appearance details before choosing a theme.",
+      DesignTokens.Colors.schedule
+    ),
+    (
+      "sparkles", "Make it yours from the start",
+      "Choose from the complete theme collection while setting up RooMate.",
+      DesignTokens.Colors.pacTrack
+    ),
+    (
+      "textformat", "Contrast you can count on",
+      "Text, buttons, feature colors, and states stay readable throughout every theme.",
+      DesignTokens.Colors.dining
+    ),
+    (
+      "circle.lefthalf.filled", "System stays effortless",
+      "Keep RooMate in step with your Mac as it moves between light and dark.",
+      DesignTokens.Colors.info
+    ),
   ]
 
   var body: some View {
@@ -23,9 +47,9 @@ struct RooMateWhatsNewView: View {
           .resizable()
           .scaledToFit()
           .frame(width: 66, height: 66)
-        Text("What’s New in RooMate 6")
+        Text("What’s New in RooMate 6.0.4")
           .font(.system(size: 25, weight: .semibold))
-        Text("A more complete, dependable companion for the school day.")
+        Text("A more personal look for every school day.")
           .font(.system(size: 12))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }
@@ -103,9 +127,12 @@ struct RooMateDiagnosticsView: View {
       .overlay { RoundedRectangle(cornerRadius: 12).stroke(DesignTokens.Colors.border) }
 
       HStack {
-        Label("Your classes, notes, searches, and other personal school information are not included.", systemImage: "lock.shield")
-          .font(.system(size: 10.5))
-          .foregroundStyle(DesignTokens.Colors.secondaryText)
+        Label(
+          "Your classes, notes, searches, and other personal school information are not included.",
+          systemImage: "lock.shield"
+        )
+        .font(.system(size: 10.5))
+        .foregroundStyle(DesignTokens.Colors.secondaryText)
         Spacer()
         Button {
           #if canImport(AppKit)
@@ -114,7 +141,9 @@ struct RooMateDiagnosticsView: View {
           #endif
           copied = true
         } label: {
-          Label(copied ? "Copied" : "Copy Bug Report Info", systemImage: copied ? "checkmark" : "doc.on.doc")
+          Label(
+            copied ? "Copied" : "Copy Bug Report Info",
+            systemImage: copied ? "checkmark" : "doc.on.doc")
         }
         .buttonStyle(.borderedProminent)
       }

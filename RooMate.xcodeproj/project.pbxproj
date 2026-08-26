@@ -11,7 +11,6 @@
 		3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3F156B6A2FA7D490000ED49C /* Sparkle */; };
 		3F18D7342E99F16D00C1DA28 /* RooMate.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3F18D7332E99F16D00C1DA28 /* RooMate.icon */; };
 		3FC78D7C2EA2C4190042FFED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FC78D7B2EA2C4190042FFED /* Assets.xcassets */; };
-		A4F64B9B303800E600227DE1 /* RooMate.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3F18D7332E99F16D00C1DA28 /* RooMate.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,11 +24,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000001 /* RooMateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RooMateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F0D6E7A2FD08035009DBF37 /* RooMate iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RooMate iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F18D71F2E99F05500C1DA28 /* RooMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RooMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F18D7332E99F16D00C1DA28 /* RooMate.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = RooMate.icon; sourceTree = "<group>"; };
 		3FC78D7B2EA2C4190042FFED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000000000000000000001 /* RooMateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RooMateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -43,16 +41,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A10000000000000000000002 /* RooMateTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = RooMateTests;
-			sourceTree = "<group>";
-		};
-		3F0D6E7B2FD08035009DBF37 /* RooMate iOS */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "RooMate iOS";
-			sourceTree = "<group>";
-		};
 		3F18D7212E99F05500C1DA28 /* RooMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -61,29 +49,27 @@
 			path = RooMate;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000002 /* RooMateTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RooMateTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A10000000000000000000003 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F0D6E772FD08035009DBF37 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		3F18D71C2E99F05500C1DA28 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				3F156B6B2FA7D490000ED49C /* Sparkle in Frameworks */,
 				3F0D6E922FD084BC009DBF37 /* TelemetryDeck in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,7 +82,6 @@
 				3FC78D7B2EA2C4190042FFED /* Assets.xcassets */,
 				3F18D7332E99F16D00C1DA28 /* RooMate.icon */,
 				3F18D7212E99F05500C1DA28 /* RooMate */,
-				3F0D6E7B2FD08035009DBF37 /* RooMate iOS */,
 				A10000000000000000000002 /* RooMateTests */,
 				3F18D7202E99F05500C1DA28 /* Products */,
 			);
@@ -106,7 +91,6 @@
 			isa = PBXGroup;
 			children = (
 				3F18D71F2E99F05500C1DA28 /* RooMate.app */,
-				3F0D6E7A2FD08035009DBF37 /* RooMate iOS.app */,
 				A10000000000000000000001 /* RooMateTests.xctest */,
 			);
 			name = Products;
@@ -115,51 +99,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000000000000000000006 /* RooMateTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A1000000000000000000000B /* Build configuration list for PBXNativeTarget "RooMateTests" */;
-			buildPhases = (
-				A10000000000000000000004 /* Sources */,
-				A10000000000000000000003 /* Frameworks */,
-				A10000000000000000000005 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				A10000000000000000000008 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				A10000000000000000000002 /* RooMateTests */,
-			);
-			name = RooMateTests;
-			packageProductDependencies = (
-			);
-			productName = RooMateTests;
-			productReference = A10000000000000000000001 /* RooMateTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		3F0D6E792FD08035009DBF37 /* RooMate iOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 3F0D6E822FD08036009DBF37 /* Build configuration list for PBXNativeTarget "RooMate iOS" */;
-			buildPhases = (
-				3F0D6E762FD08035009DBF37 /* Sources */,
-				3F0D6E772FD08035009DBF37 /* Frameworks */,
-				3F0D6E782FD08035009DBF37 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				3F0D6E7B2FD08035009DBF37 /* RooMate iOS */,
-			);
-			name = "RooMate iOS";
-			packageProductDependencies = (
-			);
-			productName = "RooMate iOS";
-			productReference = 3F0D6E7A2FD08035009DBF37 /* RooMate iOS.app */;
-			productType = "com.apple.product-type.application";
-		};
 		3F18D71E2E99F05500C1DA28 /* RooMate */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3F18D72A2E99F05600C1DA28 /* Build configuration list for PBXNativeTarget "RooMate" */;
@@ -184,6 +123,29 @@
 			productReference = 3F18D71F2E99F05500C1DA28 /* RooMate.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A10000000000000000000006 /* RooMateTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000000B /* Build configuration list for PBXNativeTarget "RooMateTests" */;
+			buildPhases = (
+				A10000000000000000000004 /* Sources */,
+				A10000000000000000000003 /* Frameworks */,
+				A10000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A10000000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A10000000000000000000002 /* RooMateTests */,
+			);
+			name = RooMateTests;
+			packageProductDependencies = (
+			);
+			productName = RooMateTests;
+			productReference = A10000000000000000000001 /* RooMateTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -194,15 +156,12 @@
 				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					3F18D71E2E99F05500C1DA28 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					A10000000000000000000006 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 3F18D71E2E99F05500C1DA28;
-					};
-					3F0D6E792FD08035009DBF37 = {
-						CreatedOnToolsVersion = 26.5;
-					};
-					3F18D71E2E99F05500C1DA28 = {
-						CreatedOnToolsVersion = 26.0;
 					};
 				};
 			};
@@ -226,27 +185,11 @@
 			targets = (
 				3F18D71E2E99F05500C1DA28 /* RooMate */,
 				A10000000000000000000006 /* RooMateTests */,
-				3F0D6E792FD08035009DBF37 /* RooMate iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A10000000000000000000005 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F0D6E782FD08035009DBF37 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A4F64B9B303800E600227DE1 /* RooMate.icon in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		3F18D71D2E99F05500C1DA28 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,24 +199,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A10000000000000000000004 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F0D6E762FD08035009DBF37 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		3F18D71B2E99F05500C1DA28 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000004 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -291,129 +234,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		A10000000000000000000009 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMateTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RooMate.app/Contents/MacOS/RooMate";
-			};
-			name = Debug;
-		};
-		A1000000000000000000000A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMateTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RooMate.app/Contents/MacOS/RooMate";
-			};
-			name = Release;
-		};
-		3F0D6E832FD08036009DBF37 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "RooMate iOS";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codearc.RooMate-iOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		3F0D6E842FD08036009DBF37 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = RooMate;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "RooMate iOS";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codearc.RooMate-iOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		3F18D7282E99F05600C1DA28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -547,7 +367,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
 				ENABLE_APP_SANDBOX = YES;
@@ -563,7 +383,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 6.0.3;
+				MARKETING_VERSION = 6.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -584,7 +404,7 @@
 				CODE_SIGN_ENTITLEMENTS = RooMate/RooMate.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
 				ENABLE_APP_SANDBOX = YES;
@@ -600,7 +420,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 6.0.3;
+				MARKETING_VERSION = 6.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -613,27 +433,53 @@
 			};
 			name = Release;
 		};
+		A10000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMateTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RooMate.app/Contents/MacOS/RooMate";
+			};
+			name = Debug;
+		};
+		A1000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5KFXU6Q8VM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codearc.RooMateTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RooMate.app/Contents/MacOS/RooMate";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1000000000000000000000B /* Build configuration list for PBXNativeTarget "RooMateTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A10000000000000000000009 /* Debug */,
-				A1000000000000000000000A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		3F0D6E822FD08036009DBF37 /* Build configuration list for PBXNativeTarget "RooMate iOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				3F0D6E832FD08036009DBF37 /* Debug */,
-				3F0D6E842FD08036009DBF37 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		3F18D71A2E99F05500C1DA28 /* Build configuration list for PBXProject "RooMate" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -648,6 +494,15 @@
 			buildConfigurations = (
 				3F18D72B2E99F05600C1DA28 /* Debug */,
 				3F18D72C2E99F05600C1DA28 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000B /* Build configuration list for PBXNativeTarget "RooMateTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000009 /* Debug */,
+				A1000000000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

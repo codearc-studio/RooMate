@@ -1432,9 +1432,11 @@ private struct RooPACActivityPickerSheet: View {
       Divider().opacity(0.35)
 
       HStack {
-        Text("If an activity can earn different amounts, leave it as a range until you know your final amount.")
-          .font(.system(size: 9))
-          .foregroundStyle(DesignTokens.Colors.secondaryText)
+        Text(
+          "If an activity can earn different amounts, leave it as a range until you know your final amount."
+        )
+        .font(.system(size: 9))
+        .foregroundStyle(DesignTokens.Colors.secondaryText)
 
         Spacer()
 
@@ -1520,7 +1522,7 @@ private struct RooPACActivityPickerSheet: View {
           if selected {
             Image(systemName: "checkmark")
               .font(.system(size: 9, weight: .bold))
-              .foregroundStyle(.white)
+              .foregroundStyle(color.accessibleForegroundColor)
           }
         }
       }

@@ -1242,13 +1242,13 @@ struct MenuView: View {
 
   private var diningSafetyNote: some View {
     HStack(alignment: .top, spacing: 8) {
-      Image(systemName: "info.circle")
+      Image(systemName: "exclamationmark.triangle.fill")
         .font(.system(size: 10, weight: .semibold))
-        .foregroundStyle(DesignTokens.Colors.subtleText)
+        .foregroundStyle(DesignTokens.Colors.warning)
         .padding(.top, 1)
 
       Text(
-        "Menu items, nutrition details, and allergen information can change. If you have food allergies or specific dietary concerns, check with dining staff for the most up-to-date information."
+        "Dining information can sometimes be incomplete or incorrect, including the lunch menu, nutrition details, and allergen information. Check with dining staff for the most up-to-date information, especially if you have food allergies or dietary concerns."
       )
       .font(.system(size: 9))
       .foregroundStyle(DesignTokens.Colors.subtleText)

@@ -98,10 +98,24 @@ struct ICSParser {
           parameters: property.parameters
         )
       case "DTEND":
-        endDate = parseICSDate(
+        if let parsedEnd = parseICSDate(
           property.value,
           parameters: property.parameters
-        )
+        ) {
+          // RFC 5545 date-only DTEND is exclusive. Convert it to the final
+          // calendar day the event actually occupies so RooMate can display
+          // intuitive ranges and keep multi-day events on every covered day.
+          let isDateOnly =
+            property.parameters["VALUE"]?.uppercased() == "DATE"
+            || !property.value.contains("T")
+          if isDateOnly {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = schoolTimeZone
+            endDate = calendar.date(byAdding: .day, value: -1, to: parsedEnd)
+          } else {
+            endDate = parsedEnd
+          }
+        }
       case "LOCATION":
         location = decodeICSText(property.value)
       default:

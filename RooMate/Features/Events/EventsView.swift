@@ -1065,6 +1065,20 @@ struct EventsView: View {
   }
 
   private var groupedVisibleEvents: [EventsDayGroup] {
+    // In Day mode, an event that began on an earlier date but still spans the
+    // selected day belongs under the selected day's heading. Grouping only by
+    // DTSTART made an event shown on September 2 look like it was somehow in a
+    // September 1 section.
+    if selectedGrouping == .day {
+      guard !visibleEvents.isEmpty else { return [] }
+      return [
+        EventsDayGroup(
+          date: calendar.startOfDay(for: selectedDate),
+          events: visibleEvents
+        )
+      ]
+    }
+
     let grouped = Dictionary(grouping: visibleEvents) {
       calendar.startOfDay(for: $0.startDate)
     }
@@ -1085,7 +1099,7 @@ struct EventsView: View {
 
     return store.events
       .filter { event in
-        (event.endDate ?? event.startDate) >= now
+        effectiveEventEnd(event) >= now
       }
       .sorted {
         $0.startDate < $1.startDate
@@ -1166,10 +1180,21 @@ struct EventsView: View {
     _ event: CalendarEvent,
     interval: DateInterval
   ) -> Bool {
-    let end = event.endDate ?? event.startDate
+    let end = effectiveEventEnd(event)
 
     return event.startDate < interval.end
       && end >= interval.start
+  }
+
+  private func effectiveEventEnd(_ event: CalendarEvent) -> Date {
+    let end = event.endDate ?? event.startDate
+    guard isLikelyAllDay(event) else { return end }
+
+    // ICS date-only events are stored with an inclusive final calendar day.
+    // Treat that whole final day as active for filtering and overlap checks,
+    // instead of letting the event disappear at midnight on its last day.
+    let endDay = calendar.startOfDay(for: end)
+    return calendar.date(byAdding: DateComponents(day: 1, second: -1), to: endDay) ?? end
   }
 
   private func moveReferenceDate(by amount: Int) {
@@ -1386,6 +1411,12 @@ struct EventsView: View {
     if isLikelyAllDay(event) {
       let formatter = DateFormatter()
       formatter.timeZone = eventsSchoolTimeZone
+      formatter.dateFormat = "EEE, MMM d"
+
+      if event.isMultiDay, let end = event.endDate {
+        return "\(formatter.string(from: event.startDate)) – \(formatter.string(from: end)) • All Day"
+      }
+
       formatter.dateFormat = "EEEE, MMM d"
       return "\(formatter.string(from: event.startDate)) • All Day"
     }
@@ -1394,13 +1425,16 @@ struct EventsView: View {
     formatter.timeZone = eventsSchoolTimeZone
     formatter.dateFormat = "EEE, MMM d • h:mm a"
 
-    if let end = event.endDate,
-      calendar.isDate(end, inSameDayAs: event.startDate)
-    {
+    if let end = event.endDate {
       let endFormatter = DateFormatter()
       endFormatter.timeZone = eventsSchoolTimeZone
-      endFormatter.dateFormat = "h:mm a"
 
+      if calendar.isDate(end, inSameDayAs: event.startDate) {
+        endFormatter.dateFormat = "h:mm a"
+        return "\(formatter.string(from: event.startDate)) – \(endFormatter.string(from: end))"
+      }
+
+      endFormatter.dateFormat = "EEE, MMM d • h:mm a"
       return "\(formatter.string(from: event.startDate)) – \(endFormatter.string(from: end))"
     }
 
@@ -1413,12 +1447,19 @@ struct EventsView: View {
     formatter.dateFormat = "MMM d"
 
     if isLikelyAllDay(event) {
+      if event.isMultiDay, let end = event.endDate {
+        return "\(formatter.string(from: event.startDate))–\(formatter.string(from: end)) • All Day"
+      }
       return "\(formatter.string(from: event.startDate)) • All Day"
     }
 
     let time = DateFormatter()
     time.timeZone = eventsSchoolTimeZone
     time.dateFormat = "h:mm a"
+
+    if let end = event.endDate, !calendar.isDate(end, inSameDayAs: event.startDate) {
+      return "\(formatter.string(from: event.startDate)) \(time.string(from: event.startDate))–\(formatter.string(from: end)) \(time.string(from: end))"
+    }
 
     return "\(formatter.string(from: event.startDate)) • \(time.string(from: event.startDate))"
   }
@@ -1666,6 +1707,11 @@ private struct EventDashboardRow: View {
     let formatter = DateFormatter()
     formatter.timeZone = eventsSchoolTimeZone
     formatter.dateFormat = "EEE, MMM d"
+
+    if event.isMultiDay, let end = event.endDate {
+      return "\(formatter.string(from: event.startDate)) – \(formatter.string(from: end))"
+    }
+
     return formatter.string(from: event.startDate)
   }
 

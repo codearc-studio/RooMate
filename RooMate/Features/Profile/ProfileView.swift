@@ -933,7 +933,7 @@ struct ProfileView: View {
         if selected {
           Image(systemName: "checkmark")
             .font(.system(size: 8.5, weight: .bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(choice.color.accessibleForegroundColor)
         }
       }
       .frame(width: 30, height: 30)

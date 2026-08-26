@@ -160,6 +160,33 @@
     ) {
       completionHandler([.banner, .sound])
     }
+
+    func userNotificationCenter(
+      _ center: UNUserNotificationCenter,
+      didReceive response: UNNotificationResponse,
+      withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+      let isAnnouncement =
+        response.notification.request.identifier.hasPrefix("roomate.announcements.")
+        || response.notification.request.content.userInfo["RooMateAnnouncementID"] != nil
+
+      guard isAnnouncement else {
+        completionHandler()
+        return
+      }
+
+      UserDefaults.standard.set(true, forKey: "RooMateOpenAnnouncementsOnLaunch")
+      completionHandler()
+
+      Task { @MainActor in
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Give SwiftUI's main scene a moment to finish restoring when the app
+        // was launched from a notification click, then open the announcement center.
+        try? await Task.sleep(nanoseconds: 180_000_000)
+        NotificationCenter.default.post(name: .rooMateShowAnnouncements, object: nil)
+      }
+    }
   }
 
   @MainActor
@@ -917,7 +944,9 @@
 
     private var emptyState: (title: String, detail: String, symbol: String) {
       if let specialDay = store.remoteSpecialScheduleDay(on: now), specialDay.isSchoolClosed {
-        return (specialDay.displayTitle, "No classes are scheduled", "calendar.badge.exclamationmark")
+        return (
+          specialDay.displayTitle, "No classes are scheduled", "calendar.badge.exclamationmark"
+        )
       }
       let weekday = Calendar.current.component(.weekday, from: now)
       if weekday == 1 || weekday == 7 {
@@ -1022,7 +1051,7 @@
       )
       .accessibilityElement(children: .combine)
       .accessibilityLabel(accessibilityText)
-      .preferredColorScheme(store.appearance.colorScheme)
+      .preferredColorScheme(store.theme.colorScheme)
     }
 
     private var timerHeader: some View {
@@ -1650,7 +1679,7 @@
       .padding(16)
       .frame(width: 320)
       .onReceive(timer) { now = $0 }
-      .preferredColorScheme(store.appearance.colorScheme)
+      .preferredColorScheme(store.theme.colorScheme)
     }
 
     private var quickActionsSection: some View {

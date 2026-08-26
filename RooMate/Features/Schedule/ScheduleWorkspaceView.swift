@@ -31,12 +31,13 @@
     private enum ScheduleMode: String, CaseIterable, Identifiable {
       case day = "Day"
       case week = "Week"
-      // Semester Planner ships in V6. The separate Study Planner remains V7 work.
+      case special = "Special"
+      // Semester Planner ships in RooMate 6. The separate Study Planner remains future work.
       case planner = "Plan"
       var id: String { rawValue }
     }
 
-    private var v6VisibleModes: [ScheduleMode] { [.day, .week, .planner] }
+    private var visibleModes: [ScheduleMode] { [.day, .week, .special, .planner] }
 
     private struct ScheduleEntry: Identifiable {
       let id: UUID
@@ -60,6 +61,14 @@
       }
     }
 
+    private struct ScheduleDayContext {
+      let title: String
+      let message: String
+      let status: String
+      let systemImage: String
+      let color: Color
+    }
+
     private var selectedWeekday: Weekday? {
       weekday(for: selectedDate)
     }
@@ -68,25 +77,49 @@
       store.remoteSpecialScheduleDay(on: selectedDate)
     }
 
+    private var selectedDayContext: ScheduleDayContext? {
+      scheduleDayContext(on: selectedDate)
+    }
+
     private var scheduleStatusTitle: String {
       if let special = selectedSpecialSchedule {
-        return special.isSchoolClosed ? "School closed" : "Special schedule"
+        if special.isSchoolClosed { return "School closed" }
+        return special.isAwaitingSchedule ? "Special schedule pending" : "Special schedule"
+      }
+      if let state = store.schoolDateState(on: selectedDate) {
+        switch state {
+        case .breakPeriod: return "School break"
+        case .beforeSchoolYear: return "School hasn’t started"
+        case .afterSchoolYear: return "School year complete"
+        case .inSession: break
+        }
       }
       return selectedWeekday == nil ? "No school" : "Regular schedule"
     }
 
     private var scheduleStatusInfoValue: String {
       if let special = selectedSpecialSchedule {
-        return special.isSchoolClosed ? "School closed" : "Special day"
+        if special.isSchoolClosed { return "School closed" }
+        return special.isAwaitingSchedule ? "Awaiting schedule" : "Special day"
+      }
+      if let state = store.schoolDateState(on: selectedDate) {
+        switch state {
+        case .breakPeriod(let period): return period.displayTitle
+        case .beforeSchoolYear: return "Before school year"
+        case .afterSchoolYear: return "School year complete"
+        case .inSession: break
+        }
       }
       return selectedWeekday == nil ? "No school" : "Regular day"
     }
 
     private var scheduleStatusColor: Color {
       if let special = selectedSpecialSchedule {
-        return special.isSchoolClosed
-          ? DesignTokens.Colors.subtleText
-          : DesignTokens.Colors.schedule
+        if special.isSchoolClosed { return DesignTokens.Colors.subtleText }
+        return special.isAwaitingSchedule ? DesignTokens.Colors.warning : DesignTokens.Colors.schedule
+      }
+      if let state = store.schoolDateState(on: selectedDate), state.suppressesRegularSchedule {
+        return DesignTokens.Colors.events
       }
       return selectedWeekday == nil
         ? DesignTokens.Colors.subtleText
@@ -95,7 +128,16 @@
 
     private var scheduleStatusSystemImage: String {
       if let special = selectedSpecialSchedule {
-        return special.isSchoolClosed ? "calendar.badge.minus" : "calendar.badge.clock"
+        if special.isSchoolClosed { return "calendar.badge.minus" }
+        return special.isAwaitingSchedule ? "hourglass" : "calendar.badge.clock"
+      }
+      if let state = store.schoolDateState(on: selectedDate) {
+        switch state {
+        case .breakPeriod: return "beach.umbrella.fill"
+        case .beforeSchoolYear: return "calendar.badge.clock"
+        case .afterSchoolYear: return "checkmark.circle.fill"
+        case .inSession: break
+        }
       }
       return selectedWeekday == nil ? "moon.zzz.fill" : "circle.fill"
     }
@@ -192,17 +234,28 @@
     }
 
     private var schedulePageTitle: String {
-      mode == .planner ? "Semester Planner" : "Schedule"
+      switch mode {
+      case .planner: return "Semester Planner"
+      case .special: return "School Calendar"
+      case .day, .week: return "Schedule"
+      }
     }
 
     private var schedulePageSubtitle: String {
-      if mode == .planner {
+      switch mode {
+      case .planner:
         return "Planning \(nextSemesterTitle) • separate from your current schedule"
+      case .special:
+        return "Official special schedules, closures, breaks, and school-year dates"
+      case .day, .week:
+        if let special = selectedSpecialSchedule {
+          return "\(longDate(selectedDate)) • \(special.displayTitle)"
+        }
+        if case .breakPeriod(let period) = store.schoolDateState(on: selectedDate) {
+          return "\(longDate(selectedDate)) • \(period.displayTitle)"
+        }
+        return longDate(selectedDate)
       }
-      if let special = selectedSpecialSchedule {
-        return "\(longDate(selectedDate)) • \(special.displayTitle)"
-      }
-      return longDate(selectedDate)
     }
 
     private var savedGameIDs: Set<String> {
@@ -341,7 +394,7 @@
           .padding(.bottom, 16)
           .zIndex(10)
 
-        if mode != .planner, let special = selectedSpecialSchedule {
+        if mode == .day, let special = selectedSpecialSchedule {
           officialSpecialScheduleBanner(special)
             .padding(.horizontal, 24)
             .padding(.bottom, 12)
@@ -355,6 +408,9 @@
           case .week:
             weekWorkspace
               .transition(.opacity.combined(with: .scale(scale: 0.995)))
+          case .special:
+            specialSchedulesWorkspace
+              .transition(.opacity.combined(with: .move(edge: .trailing)))
           case .planner:
             semesterPlannerWorkspace
               .transition(.opacity.combined(with: .move(edge: .trailing)))
@@ -437,6 +493,12 @@
           Text(day.displayTitle)
             .font(.system(size: 12.5, weight: .semibold))
             .foregroundStyle(DesignTokens.Colors.primaryText)
+          if day.isAwaitingSchedule {
+            Text("Exact bell times haven’t been published yet. RooMate will update this day automatically when they’re available.")
+              .font(.system(size: 10.5))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+              .fixedSize(horizontal: false, vertical: true)
+          }
           if !day.note.isEmpty {
             Text(day.note)
               .font(.system(size: 10.5))
@@ -467,7 +529,7 @@
 
           Spacer()
 
-          if mode != .planner {
+          if mode == .day || mode == .week {
             RooGlassEffectGroup(spacing: 8) {
               HStack(spacing: 8) {
                 Button {
@@ -532,6 +594,8 @@
 
           if mode == .planner {
             semesterPlannerToolbar
+          } else if mode == .special {
+            officialScheduleToolbar
           } else {
             dateNavigation
 
@@ -573,7 +637,7 @@
 
     private var modePicker: some View {
       HStack(spacing: 3) {
-        ForEach(v6VisibleModes) { item in
+        ForEach(visibleModes) { item in
           Button {
             showFilters = false
 
@@ -581,7 +645,7 @@
               isFocusMode = false
             }
 
-            if item == .planner {
+            if item == .planner || item == .special {
               showFilters = false
               searchText = ""
             }
@@ -598,7 +662,7 @@
                   ? DesignTokens.Colors.primaryText
                   : DesignTokens.Colors.secondaryText
               )
-              .frame(width: 62, height: 34)
+              .frame(width: item == .special ? 70 : 62, height: 34)
               .contentShape(Rectangle())
               .background {
                 if mode == item {
@@ -659,6 +723,347 @@
       }
       .buttonStyle(.plain)
       .rooInteractiveGlass(cornerRadius: 9)
+    }
+
+    private var officialScheduleToolbar: some View {
+      HStack(spacing: 8) {
+        Button {
+          refreshOfficialScheduleData()
+        } label: {
+          HStack(spacing: 7) {
+            if store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing {
+              ProgressView()
+                .controlSize(.small)
+            } else {
+              Image(systemName: "arrow.clockwise")
+                .font(.system(size: 11, weight: .semibold))
+            }
+            Text(store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing ? "Refreshing" : "Refresh")
+              .font(.system(size: 11.5, weight: .semibold))
+          }
+          .padding(.horizontal, 12)
+          .frame(height: 36)
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .rooInteractiveGlass(cornerRadius: 10)
+        .disabled(store.remoteSpecialSchedulesRefreshing || store.remoteSchoolDatesRefreshing)
+        .help("Reload official school dates and special schedules")
+
+        if let updated = latestOfficialScheduleUpdate {
+          RemoteDataStatusLabel(lastUpdated: updated, usingSavedData: false)
+        }
+      }
+    }
+
+    private var latestOfficialScheduleUpdate: Date? {
+      [store.officialSpecialSchedulesLastUpdated, store.officialSchoolDatesLastUpdated]
+        .compactMap { $0 }
+        .max()
+    }
+
+    private func refreshOfficialScheduleData() {
+      Task {
+        await store.refreshOfficialSpecialSchedules(force: true)
+        await store.refreshOfficialSchoolDates(force: true)
+      }
+    }
+
+    private var specialSchedulesWorkspace: some View {
+      ScrollView {
+        VStack(alignment: .leading, spacing: 18) {
+          officialScheduleHero
+
+          if let error = store.remoteSpecialScheduleError ?? store.remoteSchoolDateError {
+            HStack(alignment: .top, spacing: 10) {
+              Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(DesignTokens.Colors.warning)
+              VStack(alignment: .leading, spacing: 3) {
+                Text("Some school calendar data couldn’t be updated")
+                  .font(.system(size: 11.5, weight: .semibold))
+                Text(error)
+                  .font(.system(size: 10))
+                  .foregroundStyle(DesignTokens.Colors.secondaryText)
+                  .fixedSize(horizontal: false, vertical: true)
+              }
+              Spacer()
+            }
+            .padding(12)
+            .background(
+              DesignTokens.Colors.warning.opacity(0.08),
+              in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+          }
+
+          schoolDatesOverviewSection
+          allSpecialSchedulesSection
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
+      }
+      .scrollIndicators(.hidden)
+    }
+
+    private var officialScheduleHero: some View {
+      HStack(spacing: 16) {
+        ZStack {
+          RoundedRectangle(cornerRadius: 15, style: .continuous)
+            .fill(DesignTokens.Colors.schedule.opacity(0.11))
+          Image(systemName: "calendar.badge.clock")
+            .font(.system(size: 24, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.schedule)
+        }
+        .frame(width: 62, height: 62)
+
+        VStack(alignment: .leading, spacing: 4) {
+          Text("Official School Calendar")
+            .font(.system(size: 19, weight: .semibold, design: .rounded))
+            .foregroundStyle(DesignTokens.Colors.primaryText)
+          Text("RooMate keeps special schedules and school-year dates together.")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(DesignTokens.Colors.secondaryText)
+          Text("Updates are checked automatically every two hours, and you can refresh them anytime.")
+            .font(.system(size: 10.5))
+            .foregroundStyle(DesignTokens.Colors.subtleText)
+        }
+
+        Spacer()
+      }
+      .padding(16)
+      .rooSurface(cornerRadius: DesignTokens.Radius.lg, elevated: true)
+    }
+
+    private var schoolDatesOverviewSection: some View {
+      VStack(alignment: .leading, spacing: 11) {
+        HStack(alignment: .firstTextBaseline) {
+          VStack(alignment: .leading, spacing: 3) {
+            Text("School Dates")
+              .font(.system(size: 16, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+            Text("School-year boundaries and longer breaks from RooMate’s official calendar.")
+              .font(.system(size: 10.5))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+          }
+          Spacer()
+        }
+
+        if store.remoteSchoolDateFeed.periods.isEmpty {
+          ContentUnavailableView(
+            "No school dates available",
+            systemImage: "calendar",
+            description: Text("RooMate hasn’t received school-year dates yet.")
+          )
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 16)
+          .rooSurface(cornerRadius: DesignTokens.Radius.lg)
+        } else {
+          LazyVGrid(
+            columns: [
+              GridItem(.adaptive(minimum: 260, maximum: 420), spacing: 12)
+            ],
+            alignment: .leading,
+            spacing: 12
+          ) {
+            ForEach(store.remoteSchoolDateFeed.periods) { period in
+              schoolDateCard(period)
+            }
+          }
+        }
+      }
+    }
+
+    private func schoolDateCard(_ period: RemoteSchoolDatePeriod) -> some View {
+      let accent = period.isBreak ? DesignTokens.Colors.events : DesignTokens.Colors.schedule
+      let icon = period.isBreak ? "beach.umbrella.fill" : "calendar.badge.checkmark"
+
+      return HStack(alignment: .top, spacing: 12) {
+        ZStack {
+          RoundedRectangle(cornerRadius: 11, style: .continuous)
+            .fill(accent.opacity(0.11))
+          Image(systemName: icon)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(accent)
+        }
+        .frame(width: 42, height: 42)
+
+        VStack(alignment: .leading, spacing: 4) {
+          Text(period.isBreak ? "SCHOOL BREAK" : "SCHOOL YEAR")
+            .font(.system(size: 8.5, weight: .bold))
+            .tracking(0.6)
+            .foregroundStyle(accent)
+          Text(period.displayTitle)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.primaryText)
+          Text(schoolDateRange(period))
+            .font(.system(size: 10.5, weight: .medium))
+            .foregroundStyle(DesignTokens.Colors.secondaryText)
+          if !period.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text(period.message)
+              .font(.system(size: 10))
+              .foregroundStyle(DesignTokens.Colors.subtleText)
+              .fixedSize(horizontal: false, vertical: true)
+          }
+        }
+        Spacer(minLength: 0)
+      }
+      .padding(14)
+      .frame(height: 126, alignment: .topLeading)
+      .frame(maxWidth: .infinity, alignment: .topLeading)
+      .rooSurface(cornerRadius: 14)
+    }
+
+    private var allSpecialSchedulesSection: some View {
+      VStack(alignment: .leading, spacing: 11) {
+        HStack(alignment: .firstTextBaseline) {
+          VStack(alignment: .leading, spacing: 3) {
+            Text("Special Schedules")
+              .font(.system(size: 16, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+            Text("Published special days stay visible even while RooMate is waiting for the exact bell schedule.")
+              .font(.system(size: 10.5))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+          }
+          Spacer()
+        }
+
+        if store.remoteSpecialScheduleFeed.days.isEmpty {
+          ContentUnavailableView(
+            "No special schedules published",
+            systemImage: "calendar.badge.clock",
+            description: Text("Published special schedules will appear here automatically.")
+          )
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 18)
+          .rooSurface(cornerRadius: DesignTokens.Radius.lg)
+        } else {
+          VStack(spacing: 9) {
+            ForEach(store.remoteSpecialScheduleFeed.days) { day in
+              specialScheduleListRow(day)
+            }
+          }
+        }
+      }
+    }
+
+    private func specialScheduleListRow(_ day: RemoteSpecialScheduleDay) -> some View {
+      Button {
+        if let date = RemoteSchoolDateService.date(from: day.dateKey) {
+          selectedDate = date
+          mode = .day
+        }
+      } label: {
+        HStack(spacing: 13) {
+          VStack(spacing: 2) {
+            Text(specialScheduleMonth(day.dateKey).uppercased())
+              .font(.system(size: 8, weight: .bold))
+              .foregroundStyle(DesignTokens.Colors.schedule)
+            Text(specialScheduleDayNumber(day.dateKey))
+              .font(.system(size: 18, weight: .semibold, design: .rounded))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+          }
+          .frame(width: 46, height: 46)
+          .background(
+            DesignTokens.Colors.schedule.opacity(0.09),
+            in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+          )
+
+          VStack(alignment: .leading, spacing: 3) {
+            Text(day.displayTitle)
+              .font(.system(size: 12.5, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+              .lineLimit(1)
+            Text(specialScheduleLongDate(day.dateKey))
+              .font(.system(size: 10))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+            if !day.note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+              Text(day.note)
+                .font(.system(size: 9.5))
+                .foregroundStyle(DesignTokens.Colors.subtleText)
+                .lineLimit(2)
+            }
+          }
+
+          Spacer(minLength: 8)
+
+          specialScheduleStatusBadge(day)
+
+          Image(systemName: "chevron.right")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.subtleText)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .rooSurface(cornerRadius: 13)
+    }
+
+    private func specialScheduleStatusBadge(_ day: RemoteSpecialScheduleDay) -> some View {
+      let label: String = {
+        if day.isSchoolClosed { return "Closed" }
+        if day.isAwaitingSchedule { return "Awaiting schedule" }
+        return "Schedule ready"
+      }()
+      let icon: String = {
+        if day.isSchoolClosed { return "calendar.badge.minus" }
+        if day.isAwaitingSchedule { return "hourglass" }
+        return "checkmark.circle.fill"
+      }()
+      let color: Color = day.isSchoolClosed
+        ? DesignTokens.Colors.secondaryText
+        : (day.isAwaitingSchedule ? DesignTokens.Colors.warning : DesignTokens.Colors.schedule)
+
+      return Label(label, systemImage: icon)
+        .font(.system(size: 9.5, weight: .semibold))
+        .foregroundStyle(color)
+        .padding(.horizontal, 9)
+        .frame(height: 27)
+        .background(color.opacity(0.09), in: Capsule())
+    }
+
+    private func schoolDateRange(_ period: RemoteSchoolDatePeriod) -> String {
+      guard let start = RemoteSchoolDateService.date(from: period.startDateKey),
+        let end = RemoteSchoolDateService.date(from: period.endDateKey)
+      else { return period.startDateKey == period.endDateKey ? period.startDateKey : "\(period.startDateKey) – \(period.endDateKey)" }
+
+      let schoolTimeZone = TimeZone(identifier: "America/New_York") ?? .current
+      var schoolCalendar = Calendar(identifier: .gregorian)
+      schoolCalendar.timeZone = schoolTimeZone
+
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.timeZone = schoolTimeZone
+      formatter.dateFormat = "MMM d, yyyy"
+
+      if schoolCalendar.isDate(start, inSameDayAs: end) {
+        return formatter.string(from: start)
+      }
+
+      return "\(formatter.string(from: start)) – \(formatter.string(from: end))"
+    }
+
+    private func specialScheduleLongDate(_ key: String) -> String {
+      guard let date = RemoteSchoolDateService.date(from: key) else { return key }
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+      formatter.dateFormat = "EEEE, MMMM d, yyyy"
+      return formatter.string(from: date)
+    }
+
+    private func specialScheduleMonth(_ key: String) -> String {
+      guard let date = RemoteSchoolDateService.date(from: key) else { return "" }
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+      formatter.dateFormat = "MMM"
+      return formatter.string(from: date)
+    }
+
+    private func specialScheduleDayNumber(_ key: String) -> String {
+      guard let date = RemoteSchoolDateService.date(from: key) else { return "—" }
+      return String(Calendar.current.component(.day, from: date))
     }
 
     private var semesterPlannerToolbar: some View {
@@ -1136,7 +1541,7 @@
             if isOn.wrappedValue {
               Image(systemName: "checkmark")
                 .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(color.accessibleForegroundColor)
             }
           }
         }
@@ -1164,8 +1569,12 @@
             ScrollView {
               VStack(spacing: 14) {
                 calendarCard
-                scheduleInfoCard
-                legendCard
+                if let context = selectedDayContext {
+                  dayContextInfoCard(context)
+                } else {
+                  scheduleInfoCard
+                  legendCard
+                }
               }
             }
             .scrollIndicators(.hidden)
@@ -1179,14 +1588,22 @@
           if !isFocusMode {
             ScrollView {
               VStack(spacing: 14) {
-                currentClassCard
-                upNextCard
+                if let context = selectedDayContext {
+                  selectedDayContextCard(context)
 
-                if !reminderGamesForSelectedDate.isEmpty {
-                  gameRemindersCard
+                  if !reminderGamesForSelectedDate.isEmpty {
+                    gameRemindersCard
+                  }
+                } else {
+                  currentClassCard
+                  upNextCard
+
+                  if !reminderGamesForSelectedDate.isEmpty {
+                    gameRemindersCard
+                  }
+
+                  daySummaryCard
                 }
-
-                daySummaryCard
               }
             }
             .scrollIndicators(.hidden)
@@ -1285,7 +1702,7 @@
         equalTo: selectedDate,
         toGranularity: .month
       )
-      let hasSchool = weekday(for: date) != nil
+      let hasSchool = store.scheduleWeekday(for: date) != nil
       let day = calendar.component(.day, from: date)
 
       return Button {
@@ -1375,6 +1792,23 @@
       .rooSurface(cornerRadius: DesignTokens.Radius.lg)
     }
 
+    private func dayContextInfoCard(_ context: ScheduleDayContext) -> some View {
+      VStack(alignment: .leading, spacing: 12) {
+        sectionLabel("ABOUT THIS DAY")
+
+        infoRow("Date", value: mediumDate(selectedDate))
+        infoRow("Schedule", value: context.status, color: context.color)
+
+        Text(context.message)
+          .font(.system(size: 10.5))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .rooSurface(cornerRadius: DesignTokens.Radius.lg)
+    }
+
     private var legendCard: some View {
       let legend = Array(unfilteredSelectedEntries.filter { !$0.isFree }.prefix(6))
 
@@ -1427,14 +1861,8 @@
         .padding(.top, 16)
 
         if selectedEntries.isEmpty {
-          ContentUnavailableView(
-            selectedWeekday == nil ? "No school" : "No matching blocks",
-            systemImage: selectedWeekday == nil ? "moon.zzz" : "magnifyingglass",
-            description: Text(
-              selectedWeekday == nil
-                ? "Choose a weekday to see your schedule." : "Try clearing your search or filters.")
-          )
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          scheduleEmptyState
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
           ScrollViewReader { proxy in
             ScrollView {
@@ -1467,6 +1895,33 @@
         }
       }
       .rooSurface(cornerRadius: DesignTokens.Radius.lg)
+    }
+
+    @ViewBuilder
+    private var scheduleEmptyState: some View {
+      if let context = selectedDayContext {
+        ContentUnavailableView(
+          context.title,
+          systemImage: context.systemImage,
+          description: Text(context.message)
+        )
+      } else {
+        ContentUnavailableView(
+          "No matching blocks",
+          systemImage: "magnifyingglass",
+          description: Text("Try clearing your search or filters.")
+        )
+      }
+    }
+
+    private func schoolDateStartText(_ period: RemoteSchoolDatePeriod) -> String {
+      guard let date = RemoteSchoolDateService.date(from: period.startDateKey) else {
+        return period.startDateKey
+      }
+      let formatter = DateFormatter()
+      formatter.locale = Locale(identifier: "en_US_POSIX")
+      formatter.dateFormat = "EEEE, MMMM d"
+      return formatter.string(from: date)
     }
 
     private func timelineBoundaryLabel(_ label: String, time: String) -> some View {
@@ -1627,7 +2082,7 @@
       HStack(spacing: 0) {
         Text(timeString(now))
           .font(.system(size: 9, weight: .bold, design: .rounded))
-          .foregroundStyle(.white)
+          .foregroundStyle(DesignTokens.Colors.schedule.accessibleForegroundColor)
           .padding(.horizontal, 6)
           .frame(height: 18)
           .background(DesignTokens.Colors.schedule, in: Capsule())
@@ -1688,6 +2143,11 @@
             VStack(alignment: .leading, spacing: 3) {
               Text(weekday.title)
                 .font(.system(size: 18, weight: .semibold))
+              if !isViewingToday {
+                Text(mediumDate(selectedDate))
+                  .font(.system(size: 11, weight: .medium))
+                  .foregroundStyle(DesignTokens.Colors.secondaryText)
+              }
               Text("\(classEntries.count) classes · \(freeEntries.count) free periods")
                 .font(.system(size: 11))
                 .foregroundStyle(DesignTokens.Colors.secondaryText)
@@ -1711,6 +2171,41 @@
       .padding(16)
       .frame(maxWidth: .infinity, alignment: .topLeading)
       .frame(minHeight: 190, alignment: .topLeading)
+      .rooSurface(cornerRadius: DesignTokens.Radius.lg, elevated: true)
+    }
+
+    private func selectedDayContextCard(_ context: ScheduleDayContext) -> some View {
+      VStack(alignment: .leading, spacing: 14) {
+        sectionLabel("SELECTED DAY")
+
+        HStack(alignment: .top, spacing: 12) {
+          ZStack {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+              .fill(context.color.opacity(0.12))
+            Image(systemName: context.systemImage)
+              .font(.system(size: 17, weight: .semibold))
+              .foregroundStyle(context.color)
+          }
+          .frame(width: 44, height: 44)
+
+          VStack(alignment: .leading, spacing: 3) {
+            Text(context.title)
+              .font(.system(size: 17, weight: .semibold))
+              .foregroundStyle(DesignTokens.Colors.primaryText)
+              .fixedSize(horizontal: false, vertical: true)
+            Text(mediumDate(selectedDate))
+              .font(.system(size: 11, weight: .medium))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+          }
+        }
+
+        Text(context.message)
+          .font(.system(size: 11))
+          .foregroundStyle(DesignTokens.Colors.secondaryText)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)
       .rooSurface(cornerRadius: DesignTokens.Radius.lg, elevated: true)
     }
 
@@ -1945,6 +2440,7 @@
       let items = entries(for: weekday, on: date).filter(matchesFilters)
       let athletics = reminderGames(on: date)
       let today = calendar.isDate(date, inSameDayAs: now)
+      let context = scheduleDayContext(on: date)
 
       return VStack(alignment: .leading, spacing: 10) {
         HStack {
@@ -1963,53 +2459,49 @@
           }
         }
 
-        ForEach(items) { entry in
+        if let context {
           Button {
             selectedDate = date
             mode = .day
           } label: {
-            VStack(alignment: .leading, spacing: 4) {
-              HStack {
-                Circle().fill(entry.color).frame(width: 7, height: 7)
-                Text(timeString(entry.startDate))
-                  .font(.system(size: 9, weight: .medium, design: .rounded))
-                  .foregroundStyle(DesignTokens.Colors.secondaryText)
-                Spacer()
-                if entry.timelineType != .marker {
-                  Text("\(entry.durationMinutes)m")
-                    .font(.system(size: 8))
-                    .foregroundStyle(DesignTokens.Colors.subtleText)
-                }
-              }
-              Text(entry.title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(DesignTokens.Colors.primaryText)
-                .lineLimit(2)
-              if !entry.subtitle.isEmpty {
-                Text(entry.subtitle)
-                  .font(.system(size: 9))
-                  .foregroundStyle(DesignTokens.Colors.secondaryText)
-                  .lineLimit(1)
-              }
-            }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-            .contentShape(Rectangle())
-            .background {
+            VStack(alignment: .leading, spacing: 8) {
               ZStack {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                  .fill(DesignTokens.Colors.surfaceElevated)
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                  .fill(entry.color.opacity(0.055))
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                  .fill(context.color.opacity(0.11))
+                Image(systemName: context.systemImage)
+                  .font(.system(size: 14, weight: .semibold))
+                  .foregroundStyle(context.color)
               }
+              .frame(width: 36, height: 36)
+
+              Text(context.title)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(DesignTokens.Colors.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+              Text(context.message)
+                .font(.system(size: 9.5))
+                .foregroundStyle(DesignTokens.Colors.secondaryText)
+                .lineLimit(4)
+                .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 142, alignment: .topLeading)
+            .contentShape(Rectangle())
+            .background(
+              context.color.opacity(0.045),
+              in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+            )
             .overlay {
               RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(entry.color.opacity(0.12), lineWidth: 1)
+                .stroke(context.color.opacity(0.14), lineWidth: 1)
             }
           }
           .buttonStyle(.plain)
+        } else {
+          ForEach(items) { entry in
+            weekScheduleEntryCard(entry, date: date)
+          }
         }
 
         if !athletics.isEmpty {
@@ -2037,6 +2529,55 @@
       }
       .padding(14)
       .rooSurface(cornerRadius: DesignTokens.Radius.lg)
+    }
+
+    private func weekScheduleEntryCard(_ entry: ScheduleEntry, date: Date) -> some View {
+      Button {
+        selectedDate = date
+        mode = .day
+      } label: {
+        VStack(alignment: .leading, spacing: 4) {
+          HStack {
+            Circle().fill(entry.color).frame(width: 7, height: 7)
+            Text(timeString(entry.startDate))
+              .font(.system(size: 9, weight: .medium, design: .rounded))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+            Spacer()
+            if entry.timelineType != .marker {
+              Text("\(entry.durationMinutes)m")
+                .font(.system(size: 8))
+                .foregroundStyle(DesignTokens.Colors.subtleText)
+            }
+          }
+          Text(entry.title)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(DesignTokens.Colors.primaryText)
+            .lineLimit(2)
+          if !entry.subtitle.isEmpty {
+            Text(entry.subtitle)
+              .font(.system(size: 9))
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
+              .lineLimit(1)
+          }
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+        .contentShape(Rectangle())
+        .background {
+          ZStack {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+              .fill(DesignTokens.Colors.surfaceElevated)
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+              .fill(entry.color.opacity(0.055))
+          }
+        }
+        .overlay {
+          RoundedRectangle(cornerRadius: 11, style: .continuous)
+            .stroke(entry.color.opacity(0.12), lineWidth: 1)
+        }
+      }
+      .buttonStyle(.plain)
     }
 
     private func weekAthleticsGameCard(_ game: SportsGame) -> some View {
@@ -2236,6 +2777,12 @@
         }
       }
 
+      // A closure, break, weekend, or out-of-session date should not regain a
+      // school-day timeline just because a recurring club meeting exists.
+      guard scheduleDayContext(on: date) == nil else {
+        return result.sorted { $0.startDate < $1.startDate }
+      }
+
       // My Clubs can have additional meetings at any clock time, including
       // after school. They are added as timeline extras instead of replacing
       // bell-schedule blocks, so an extra meeting can intentionally overlap a
@@ -2301,6 +2848,86 @@
 
         return lhs.endDate < rhs.endDate
       }
+    }
+
+    private func scheduleDayContext(on date: Date) -> ScheduleDayContext? {
+      if let special = store.remoteSpecialScheduleDay(on: date) {
+        let note = special.note.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if special.isSchoolClosed {
+          return ScheduleDayContext(
+            title: special.displayTitle,
+            message: note.isEmpty
+              ? "School is closed on this date. There are no classes scheduled."
+              : note,
+            status: "School closed",
+            systemImage: "calendar.badge.minus",
+            color: DesignTokens.Colors.subtleText
+          )
+        }
+
+        if special.isAwaitingSchedule {
+          return ScheduleDayContext(
+            title: special.displayTitle,
+            message: note.isEmpty
+              ? "The exact bell times haven’t been published yet. RooMate will update this day automatically."
+              : "\(note) Exact bell times haven’t been published yet.",
+            status: "Awaiting schedule",
+            systemImage: "hourglass",
+            color: DesignTokens.Colors.warning
+          )
+        }
+
+        // A published special schedule is authoritative even when it lands
+        // inside a broader break period.
+        return nil
+      }
+
+      if let state = store.schoolDateState(on: date) {
+        switch state {
+        case .breakPeriod(let period):
+          let message = period.message.trimmingCharacters(in: .whitespacesAndNewlines)
+          return ScheduleDayContext(
+            title: period.displayTitle,
+            message: message.isEmpty
+              ? "School is on break. There are no regular classes scheduled."
+              : message,
+            status: "School break",
+            systemImage: "beach.umbrella.fill",
+            color: DesignTokens.Colors.events
+          )
+        case .beforeSchoolYear(let period):
+          return ScheduleDayContext(
+            title: "School hasn’t started yet",
+            message: "The \(period.displayTitle) begins \(schoolDateStartText(period)).",
+            status: "Before school year",
+            systemImage: "calendar.badge.clock",
+            color: DesignTokens.Colors.warning
+          )
+        case .afterSchoolYear:
+          return ScheduleDayContext(
+            title: "School year complete",
+            message: "The regular school-year schedule has ended.",
+            status: "School year complete",
+            systemImage: "checkmark.circle.fill",
+            color: DesignTokens.Colors.athletics
+          )
+        case .inSession:
+          break
+        }
+      }
+
+      if weekday(for: date) == nil {
+        return ScheduleDayContext(
+          title: "No school",
+          message: "There is no regular school-day schedule on weekends.",
+          status: "Weekend",
+          systemImage: "moon.zzz.fill",
+          color: DesignTokens.Colors.subtleText
+        )
+      }
+
+      return nil
     }
 
     private func matchesFilters(_ entry: ScheduleEntry) -> Bool {
