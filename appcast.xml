@@ -3,6 +3,19 @@
     <channel>
         <title>RooMate</title>
         <item>
+            <title>6.0.4</title>
+            <pubDate>Wed, 26 Aug 2026 18:59:46 -0400</pubDate>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>6.0.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.4 adds seven complete themes, a dedicated
+                Announcements center and alerts, clearer official school-date
+                and special-schedule status, and stronger remote-feed handling.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip" length="12297136" type="application/octet-stream" sparkle:edSignature="b78OrS5Yk1AN1n8ubLGRWPjEPk6wPr5ypmRmOrMUTz7BD2zDukVAGQlsN4yA6F8EbMbgfZCteqKT9QGJXAKuCw=="/>
+        </item>
+        <item>
             <title>6.0.3</title>
             <pubDate>Wed, 26 Aug 2026 09:16:27 -0400</pubDate>
             <sparkle:version>6</sparkle:version>
