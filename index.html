@@ -9,6 +9,9 @@
   <meta property="og:description" content="Your school day, together. RooMate 6 is a redesigned native Mac companion for schedule, dining, sports, clubs, events, PacTrack, and more." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="images/og-image.jpg" />
+  <meta name="twitter:title" content="RooMate 6" />
+  <meta name="twitter:description" content="Your school day, together. Schedule, dining, sports games, clubs, events, PacTrack, and more in one native Mac app." />
+  <meta name="twitter:image" content="images/og-image.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <title>RooMate 6 | Your school day, together.</title>
   <link rel="icon" type="image/png" href="images/favicon.png" />
@@ -74,6 +77,7 @@
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
     }
+    main { max-width: 100%; overflow-x: clip; }
 
     a { color: inherit; }
     button, a { -webkit-tap-highlight-color: transparent; }
@@ -265,10 +269,10 @@
     .bento-card.medium .bento-shot { width: 100%; transform: translateY(12px); }
 
     /* SCREENSHOT EXPLORER */
-    .showcase-wrap { margin-top: 44px; }
+    .showcase-wrap { min-width: 0; max-width: 100%; margin-top: 44px; }
     .showcase-frame { padding: 10px; border-radius: 30px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
     .showcase-frame img { width: 100%; border-radius: 22px; background: #0b0c0e; transition: opacity .18s ease, transform .18s ease; }
-    .tabs { display: flex; gap: 8px; padding: 12px 0 0; overflow-x: auto; scrollbar-width: none; }
+    .tabs { display: flex; width: 100%; max-width: 100%; gap: 8px; padding: 12px 0 0; overflow-x: auto; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display:none; }
     .tab {
       flex: 0 0 auto;
@@ -385,7 +389,7 @@
   <div class="nav-wrap">
     <nav class="nav" aria-label="Main navigation">
       <a class="brand" href="#top">
-        <img class="theme-logo" data-light="images/roo-mark-on-light.png" data-dark="images/roo-mark-on-dark.png" src="images/roo-mark-on-dark.png" alt="RooMate mark" />
+        <img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="RooMate mark" />
         <span>RooMate</span>
       </a>
       <div class="nav-links">
@@ -398,7 +402,7 @@
         <button class="icon-btn" id="themeToggle" aria-label="Toggle appearance" title="Toggle appearance">
           <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip">Download</a>
+        <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.2/RooMate-6.0.2.zip">Download</a>
       </div>
     </nav>
   </div>
@@ -407,11 +411,11 @@
     <section class="hero">
       <div class="shell hero-grid">
         <div class="hero-copy reveal">
-          <div class="release-pill"><b>6.0.1</b> RooMate 6 is available now</div>
+          <div class="release-pill"><b>6.0.2</b> Reliability update available</div>
           <h1>Your school day.<br />One place.</h1>
           <p class="lede">RooMate brings your schedule, dining, sports, clubs, events, PacTrack, links, and the context around your day into one native Mac app.</p>
           <div class="hero-actions">
-            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip">
+            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.2/RooMate-6.0.2.zip">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Download RooMate 6
             </a>
@@ -421,8 +425,8 @@
         </div>
 
         <div class="app-frame reveal">
-          <img class="theme-image" data-light="screenshots/today-light.webp" data-dark="screenshots/today-dark.webp" src="screenshots/today-dark.webp" alt="RooMate Today screen in dark mode" />
-          <div class="hero-mark"><img class="theme-logo" data-light="images/roo-mark-on-light.png" data-dark="images/roo-mark-on-dark.png" src="images/roo-mark-on-dark.png" alt="" /></div>
+          <img class="theme-image" data-light="screenshots/today-light.jpg" data-dark="screenshots/today-dark.jpg" src="screenshots/today-dark.jpg" alt="RooMate Today screen in dark mode" />
+          <div class="hero-mark"><img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="" /></div>
         </div>
       </div>
 
@@ -440,7 +444,7 @@
       <div class="shell">
         <div class="eyebrow reveal">RooMate 6</div>
         <h2 class="reveal">A full redesign, not a small update.</h2>
-        <p class="section-copy reveal">RooMate 6 rebuilds the app around the school day. The old Dashboard is now Today, Schedule grows into Day, Week, and Plan, and entirely new areas bring Dining, Clubs, PacTrack, Links, Profile, announcements, global search, and more into the same experience.</p>
+        <p class="section-copy reveal">RooMate 6 rebuilds the app around the school day. Today puts the most useful context first, Schedule grows into Day, Week, and Plan, and new areas bring Dining, Sports, Clubs, Events, PacTrack, Links, Profile, announcements, global search, and more into the same experience.</p>
 
         <div class="bento">
           <article class="bento-card large reveal">
@@ -450,7 +454,7 @@
             <h3>Today, rebuilt around now.</h3>
             <p>See your current class, time remaining, school-day progress, what's up next, upcoming events, contextual actions, and announcements without hunting through the app.</p>
             <div class="mini-tags"><span>Live progress</span><span>Contextual actions</span><span>Announcements</span></div>
-            <img class="bento-shot theme-image" data-light="screenshots/today-light.webp" data-dark="screenshots/today-dark.webp" src="screenshots/today-dark.webp" alt="RooMate Today" loading="lazy" />
+            <img class="bento-shot theme-image" data-light="screenshots/today-light.jpg" data-dark="screenshots/today-dark.jpg" src="screenshots/today-dark.jpg" alt="RooMate Today" loading="lazy" />
           </article>
 
           <article class="bento-card medium reveal">
@@ -460,7 +464,7 @@
             <h3>Schedule becomes a workspace.</h3>
             <p>Move between Day and Week, jump into Focus Mode, and use Plan to map out your next semester without touching your current schedule.</p>
             <div class="mini-tags"><span>Day</span><span>Week</span><span>Semester Planner</span><span>Special schedules</span></div>
-            <img class="bento-shot theme-image" data-light="screenshots/schedule-light.webp" data-dark="screenshots/schedule-dark.webp" src="screenshots/schedule-dark.webp" alt="RooMate Schedule" loading="lazy" />
+            <img class="bento-shot theme-image" data-light="screenshots/schedule-light.jpg" data-dark="screenshots/schedule-dark.jpg" src="screenshots/schedule-dark.jpg" alt="RooMate Schedule" loading="lazy" />
           </article>
 
           <article class="bento-card third reveal">
@@ -471,7 +475,7 @@
           <article class="bento-card third reveal">
             <div class="feature-icon green">▣</div>
             <h3>Sports Hub</h3>
-            <p>Games, Teams, search, filters, following, My Team, calendar views, schedule integration, and reminders.</p>
+            <p>Game schedules, matchup details, search, filters, calendar views, schedule integration, individual reminders, and reliable saved data. Team pages will return in a later update.</p>
           </article>
           <article class="bento-card third reveal">
             <div class="feature-icon blue">●●●</div>
@@ -506,7 +510,7 @@
           <article class="tool-card reveal"><div class="big-number">⌘K</div><h3>Global RooMate Search</h3><p>Find app sections, classes, My Clubs, events, sports games, and currently loaded Dining items from one search.</p></article>
           <article class="tool-card reveal"><div class="big-number">%</div><h3>Menu Bar Companion</h3><p>See your current block, progress, time remaining, what's next, and a compact rest-of-day schedule from the menu bar.</p></article>
           <article class="tool-card reveal"><div class="big-number">13m</div><h3>Floating Timer</h3><p>Keep your current block and progress above other windows in a compact or detailed floating view.</p></article>
-          <article class="tool-card reveal"><div class="big-number">●</div><h3>Smarter Notifications</h3><p>Class starts and endings, club meetings, special schedules, Dining, followed teams, My Team, saved events, and calendar reminders with pause controls.</p></article>
+          <article class="tool-card reveal"><div class="big-number">●</div><h3>Smarter Notifications</h3><p>Class starts and endings, club meetings, special schedules, selected sports games, saved events, and calendar reminders with pause controls.</p></article>
         </div>
       </div>
     </section>
@@ -517,17 +521,16 @@
         <h2 class="reveal">See the app, not a mockup.</h2>
         <p class="section-copy reveal">These are real RooMate 6 screens. Switch the website appearance and the screenshots switch with it.</p>
         <div class="showcase-wrap reveal">
-          <div class="showcase-frame"><img id="showcaseImage" src="screenshots/today-dark.webp" alt="RooMate Today screenshot" /></div>
-          <div class="tabs" id="screenshotTabs">
-            <button class="tab active" data-view="today">Today</button>
-            <button class="tab" data-view="schedule">Schedule</button>
-            <button class="tab" data-view="dining">Dining</button>
-            <button class="tab" data-view="sports-games">Sports</button>
-            <button class="tab" data-view="clubs">Clubs</button>
-            <button class="tab" data-view="events">Events</button>
-            <button class="tab" data-view="pactrack">PacTrack</button>
-            <button class="tab" data-view="links">Links</button>
-            <button class="tab" data-view="settings">Settings</button>
+          <div class="showcase-frame"><img id="showcaseImage" src="screenshots/today-dark.jpg" alt="RooMate Today screenshot" /></div>
+          <div class="tabs" id="screenshotTabs" role="tablist" aria-label="RooMate screenshots">
+            <button class="tab active" data-view="today" role="tab" aria-selected="true">Today</button>
+            <button class="tab" data-view="schedule" role="tab" aria-selected="false">Schedule</button>
+            <button class="tab" data-view="dining" role="tab" aria-selected="false">Dining</button>
+            <button class="tab" data-view="clubs" role="tab" aria-selected="false">Clubs</button>
+            <button class="tab" data-view="events" role="tab" aria-selected="false">Events</button>
+            <button class="tab" data-view="pactrack" role="tab" aria-selected="false">PacTrack</button>
+            <button class="tab" data-view="links" role="tab" aria-selected="false">Links</button>
+            <button class="tab" data-view="settings" role="tab" aria-selected="false">Settings</button>
           </div>
         </div>
       </div>
@@ -538,23 +541,17 @@
         <div class="eyebrow reveal">Latest release</div>
         <h2 class="reveal">What's new in RooMate 6.</h2>
         <div class="release-panel reveal">
-          <div class="release-version">6.0.1<small>Current release · macOS 14+</small></div>
+          <div class="release-version">6.0.2<small>Current release · macOS 14+</small></div>
           <div>
             <ul class="release-list">
-              <li>Completely redesigned Today experience</li>
-              <li>Day, Week, and Semester Planner</li>
-              <li>Dining with search, filters, and favorites</li>
-              <li>Rebuilt Sports Hub with Teams and My Team</li>
-              <li>Full Clubs directory and My Clubs</li>
-              <li>Events search, saves, and calendar views</li>
-              <li>PacTrack, Profile, and Links</li>
-              <li>Command-K global search</li>
-              <li>Menu bar companion and floating timer</li>
-              <li>Expanded notifications and onboarding</li>
-              <li>Remote announcements and special schedules</li>
-              <li>Major reliability and data-loading improvements</li>
+              <li>Reliable saved data for Dining, Sports games, Events, Clubs, announcements, and special schedules</li>
+              <li>Quiet last-updated and saved-data status during temporary outages</li>
+              <li>More specific Command-K results with improved keyboard navigation</li>
+              <li>Individual Sports game reminders while team pages are refreshed</li>
+              <li>What’s New plus privacy-safe feedback diagnostics</li>
+              <li>Floating timer, notification, onboarding, and update reliability fixes</li>
             </ul>
-            <div class="hero-actions" style="margin-top:24px"><a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.1" target="_blank" rel="noopener">View release on GitHub</a></div>
+            <div class="hero-actions" style="margin-top:24px"><a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.2" target="_blank" rel="noopener">View release on GitHub</a></div>
           </div>
         </div>
       </div>
@@ -567,7 +564,7 @@
         <p class="section-copy reveal">The core V6 experience is here. Future work can focus on refinement and larger ideas without holding up the current release.</p>
         <div class="roadmap">
           <article class="road-card reveal"><span class="status now">Now</span><h3>RooMate 6</h3><p>Today, Schedule, Semester Planner, Dining, Sports, Clubs, Events, PacTrack, Links, Profile, notifications, onboarding, announcements, and native Mac tools.</p></article>
-          <article class="road-card reveal"><span class="status next">Next</span><h3>6.x polish</h3><p>Release feedback, bug fixes, data-source improvements, Sports details, and smaller quality-of-life additions.</p></article>
+          <article class="road-card reveal"><span class="status next">Next</span><h3>6.x polish</h3><p>Release feedback, bug fixes, data-source improvements, the return of refreshed Sports team pages, and smaller quality-of-life additions.</p></article>
           <article class="road-card reveal"><span class="status later">Later</span><h3>RooMate 7 and beyond</h3><p>Study Planner and other larger systems that deserve their own release instead of being rushed into V6.</p></article>
         </div>
       </div>
@@ -590,12 +587,12 @@
       <div class="shell">
         <div class="download-panel reveal">
           <img class="download-mark" src="images/roo-mark-on-dark.svg" alt="RooMate" />
-          <div class="eyebrow" style="color:#fdab60">RooMate 6.0.1</div>
+          <div class="eyebrow" style="color:#fdab60">RooMate 6.0.2</div>
           <h2>Ready for your school day?</h2>
           <p class="lede">Download RooMate for macOS and set up your schedule, clubs, events, notifications, Profile, and more in the new V6 onboarding.</p>
           <div class="hero-actions">
-            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip">Download for macOS</a>
-            <a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.1" target="_blank" rel="noopener">Release notes</a>
+            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.2/RooMate-6.0.2.zip">Download for macOS</a>
+            <a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.2" target="_blank" rel="noopener">Release notes</a>
           </div>
           <div class="compat" style="color:rgba(255,243,222,.45)">macOS 14+ · Free · Direct download</div>
         </div>
@@ -607,7 +604,7 @@
     <div class="shell">
       <div class="footer-top">
         <div>
-          <div class="footer-brandline"><img class="theme-logo" data-light="images/roo-mark-on-light.png" data-dark="images/roo-mark-on-dark.png" src="images/roo-mark-on-dark.png" alt="RooMate mark" /><span>RooMate</span></div>
+          <div class="footer-brandline"><img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="RooMate mark" /><span>RooMate</span></div>
           <p class="footer-copy">A native Mac companion that brings the pieces of your school day together. RooMate is an independent student project and is not affiliated with or endorsed by any school.</p>
         </div>
         <div class="footer-col">
@@ -619,8 +616,8 @@
         </div>
         <div class="footer-col">
           <h4>Download</h4>
-          <a href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip">RooMate 6.0.1</a>
-          <a href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.1" target="_blank" rel="noopener">GitHub release</a>
+          <a href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.2/RooMate-6.0.2.zip">RooMate 6.0.2</a>
+          <a href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.2" target="_blank" rel="noopener">GitHub release</a>
           <a href="https://tally.so/r/7RalBZ" target="_blank" rel="noopener">Suggest a feature</a>
         </div>
       </div>
@@ -642,7 +639,6 @@
       'today': 'today',
       'schedule': 'schedule',
       'dining': 'dining',
-      'sports-games': 'sports-games',
       'clubs': 'clubs',
       'events': 'events',
       'pactrack': 'pactrack',
@@ -671,7 +667,7 @@
       showcaseImage.style.opacity = '0';
       showcaseImage.style.transform = 'translateY(5px)';
       setTimeout(() => {
-        showcaseImage.src = `screenshots/${stem}-${theme}.webp`;
+        showcaseImage.src = `screenshots/${stem}-${theme}.jpg`;
         showcaseImage.alt = `RooMate ${currentView.replace('-', ' ')} screenshot`;
         showcaseImage.style.opacity = '1';
         showcaseImage.style.transform = 'none';
@@ -688,8 +684,12 @@
       const button = event.target.closest('.tab');
       if (!button) return;
       currentView = button.dataset.view;
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+      });
       button.classList.add('active');
+      button.setAttribute('aria-selected', 'true');
       updateShowcase();
     });
 
