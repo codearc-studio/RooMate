@@ -3,6 +3,19 @@
     <channel>
         <title>RooMate</title>
         <item>
+            <title>6.0.3</title>
+            <pubDate>Wed, 26 Aug 2026 09:16:27 -0400</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>6.0.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.3 brings clearer wording and friendlier messages,
+                removes duplicate schedule context from the sidebar, keeps
+                Sports focused on games, and improves update reliability.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.3/RooMate-6.0.3.zip" length="11729572" type="application/octet-stream" sparkle:edSignature="5NauARuxml37DGoiRpOSH9noSMnDioSygUNGhPJXH/UV4Sgggl9ssH64F/yVIE9fbC7jPJIv5LF/QvYROCRSCw=="/>
+        </item>
+        <item>
             <title>6.0.2</title>
             <pubDate>Wed, 26 Aug 2026 00:22:00 -0400</pubDate>
             <sparkle:version>5</sparkle:version>
