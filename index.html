@@ -1,707 +1,248 @@
-<!doctype html>
-<html lang="en" data-theme="dark">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="RooMate brings your schedule, dining, sports, clubs, events, PacTrack, and more into one native Mac app." />
-  <meta name="theme-color" content="#0a0b0d" />
-  <meta property="og:title" content="RooMate 6" />
-  <meta property="og:description" content="Your school day, together. RooMate 6 is a redesigned native Mac companion for schedule, dining, sports, clubs, events, PacTrack, and more." />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="images/og-image.jpg" />
-  <meta name="twitter:title" content="RooMate 6" />
-  <meta name="twitter:description" content="Your school day, together. Schedule, dining, sports games, clubs, events, PacTrack, and more in one native Mac app." />
-  <meta name="twitter:image" content="images/og-image.jpg" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <title>RooMate 6 | Your school day, together.</title>
-  <link rel="icon" type="image/png" href="images/favicon.png" />
-  <style>
-    :root {
-      color-scheme: light;
-      --bg: #f6f2eb;
-      --bg-2: #fffaf2;
-      --surface: rgba(255,255,255,.72);
-      --surface-strong: rgba(255,255,255,.92);
-      --surface-muted: rgba(18,24,35,.045);
-      --text: #17191d;
-      --text-2: #5f6066;
-      --text-3: #8b8b90;
-      --line: rgba(17,24,39,.10);
-      --line-strong: rgba(17,24,39,.17);
-      --nav: rgba(247,243,236,.78);
-      --shadow: 0 18px 60px rgba(41,31,20,.10);
-      --shadow-lg: 0 36px 120px rgba(41,31,20,.16);
-      --accent: #f4a45c;
-      --accent-2: #fc7056;
-      --accent-soft: rgba(244,164,92,.14);
-      --navy: #17243a;
-      --cream: #fff1d8;
-      --purple: #aa7ae8;
-      --teal: #36c7bd;
-      --green: #55c985;
-      --blue: #65b7df;
-      --radius: 24px;
-      --radius-sm: 16px;
-      --max: 1180px;
-    }
-
-    [data-theme="dark"] {
-      color-scheme: dark;
-      --bg: #090a0c;
-      --bg-2: #0d0f12;
-      --surface: rgba(28,30,34,.72);
-      --surface-strong: rgba(31,33,37,.94);
-      --surface-muted: rgba(255,255,255,.045);
-      --text: #f4f1ec;
-      --text-2: #b2b1b2;
-      --text-3: #77787d;
-      --line: rgba(255,255,255,.085);
-      --line-strong: rgba(255,255,255,.15);
-      --nav: rgba(9,10,12,.78);
-      --shadow: 0 20px 70px rgba(0,0,0,.34);
-      --shadow-lg: 0 45px 130px rgba(0,0,0,.52);
-      --accent-soft: rgba(244,164,92,.12);
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-width: 320px;
-      background:
-        radial-gradient(900px 500px at 76% -100px, rgba(244,164,92,.15), transparent 68%),
-        radial-gradient(650px 420px at -80px 30%, rgba(170,122,232,.08), transparent 70%),
-        var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    main { max-width: 100%; overflow-x: clip; }
-
-    a { color: inherit; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    img { display: block; max-width: 100%; }
-
-    .shell { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
-    .section { padding: 112px 0; }
-    .section.compact { padding: 76px 0; }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 760;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-    .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 18px rgba(244,164,92,.65); }
-
-    h1, h2, h3, p { margin-top: 0; }
-    h1 {
-      margin-bottom: 20px;
-      font-size: clamp(3.6rem, 8.8vw, 7.8rem);
-      line-height: .92;
-      letter-spacing: -.072em;
-      font-weight: 790;
-    }
-    h2 {
-      margin-bottom: 18px;
-      font-size: clamp(2.35rem, 5vw, 4.5rem);
-      line-height: .98;
-      letter-spacing: -.055em;
-      font-weight: 760;
-    }
-    h3 { letter-spacing: -.025em; }
-    .lede { color: var(--text-2); font-size: clamp(1.06rem, 2vw, 1.28rem); line-height: 1.6; }
-    .section-copy { max-width: 700px; color: var(--text-2); font-size: 1.08rem; line-height: 1.7; }
-
-    /* NAV */
-    .nav-wrap { position: fixed; inset: 0 0 auto; z-index: 50; padding: 14px 0; pointer-events: none; }
-    .nav {
-      pointer-events: auto;
-      width: min(calc(100% - 28px), 1160px);
-      margin: 0 auto;
-      min-height: 58px;
-      padding: 8px 10px 8px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      background: var(--nav);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      backdrop-filter: blur(24px) saturate(1.25);
-      -webkit-backdrop-filter: blur(24px) saturate(1.25);
-      box-shadow: 0 8px 32px rgba(0,0,0,.08);
-    }
-    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 760; letter-spacing: -.03em; }
-    .brand img { width: 34px; height: 34px; object-fit: contain; }
-    .brand span { font-size: 17px; }
-    .nav-links { display: flex; align-items: center; gap: 26px; margin-left: auto; }
-    .nav-links a { color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 650; }
-    .nav-links a:hover { color: var(--text); }
-    .nav-actions { display: flex; align-items: center; gap: 8px; }
-
-    .icon-btn, .btn {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      text-decoration: none;
-      font: inherit;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease;
-    }
-    .icon-btn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
-    .icon-btn:hover, .btn:hover { transform: translateY(-1px); border-color: var(--line-strong); }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 0 18px; border-radius: 13px; font-size: 14px; font-weight: 700; }
-    .btn.primary { border-color: transparent; color: #15171a; background: linear-gradient(135deg, #ffd47b, #fdab60 58%, #fc7056); box-shadow: 0 10px 28px rgba(252,112,86,.17); }
-    .btn.primary:hover { box-shadow: 0 13px 34px rgba(252,112,86,.24); }
-    .btn.ghost { background: var(--surface-muted); }
-
-    /* HERO */
-    .hero { min-height: 100vh; padding: 154px 0 80px; position: relative; }
-    .hero::before {
-      content: "";
-      position: absolute;
-      width: 780px;
-      height: 780px;
-      right: -250px;
-      top: -260px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(253,171,96,.18), transparent 66%);
-      filter: blur(14px);
-      pointer-events: none;
-    }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, .84fr) minmax(520px, 1.16fr); align-items: center; gap: 52px; }
-    .release-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 7px 12px 7px 8px;
-      margin-bottom: 30px;
-      border-radius: 999px;
-      background: var(--surface-muted);
-      border: 1px solid var(--line);
-      color: var(--text-2);
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .release-pill b { color: #161719; background: linear-gradient(135deg, #ffd47b, #fdab60, #fc7056); padding: 4px 8px; border-radius: 999px; }
-    .hero-copy .lede { max-width: 620px; }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-    .compat { margin-top: 18px; color: var(--text-3); font-size: 12px; }
-
-    .app-frame {
-      position: relative;
-      border-radius: 28px;
-      padding: 1px;
-      background: linear-gradient(145deg, rgba(255,255,255,.28), rgba(255,255,255,.02) 45%, rgba(244,164,92,.24));
-      box-shadow: var(--shadow-lg);
-      transform: perspective(1400px) rotateY(-5deg) rotateX(2deg);
-      transform-origin: center;
-      transition: transform .4s ease;
-    }
-    .app-frame:hover { transform: perspective(1400px) rotateY(-1deg) rotateX(0deg) translateY(-4px); }
-    .app-frame img { width: 100%; border-radius: 27px; background: #0d0e10; }
-    .hero-mark {
-      position: absolute;
-      width: 92px;
-      height: 92px;
-      right: -22px;
-      bottom: -28px;
-      border-radius: 26px;
-      padding: 10px;
-      background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-    }
-    .hero-mark img { width: 100%; height: 100%; object-fit: contain; }
-
-    /* SIGNAL STRIP */
-    .signal-strip { padding: 18px 0 0; }
-    .signal-card {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      overflow: hidden;
-      background: var(--line);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-    }
-    .signal { background: color-mix(in srgb, var(--bg-2) 92%, transparent); padding: 22px; }
-    .signal strong { display: block; font-size: 14px; margin-bottom: 4px; }
-    .signal span { color: var(--text-3); font-size: 12px; }
-
-    /* V6 BENTO */
-    .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-top: 42px; }
-    .bento-card {
-      position: relative;
-      overflow: hidden;
-      min-height: 230px;
-      padding: 26px;
-      border-radius: var(--radius);
-      background: var(--surface);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-    }
-    .bento-card.large { grid-column: span 7; min-height: 360px; }
-    .bento-card.medium { grid-column: span 5; min-height: 360px; }
-    .bento-card.third { grid-column: span 4; }
-    .bento-card h3 { font-size: 1.25rem; margin-bottom: 9px; }
-    .bento-card p { margin: 0; color: var(--text-2); font-size: .94rem; line-height: 1.6; max-width: 530px; }
-    .feature-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; margin-bottom: 20px; background: var(--surface-muted); border: 1px solid var(--line); }
-    .feature-icon.orange { color: var(--accent); }
-    .feature-icon.purple { color: var(--purple); }
-    .feature-icon.teal { color: var(--teal); }
-    .feature-icon.green { color: var(--green); }
-    .feature-icon.blue { color: var(--blue); }
-    .mini-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
-    .mini-tags span { color: var(--text-2); background: var(--surface-muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 650; }
-
-    .bento-shot { margin-top: 24px; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 16px 44px rgba(0,0,0,.16); }
-    .bento-card.large .bento-shot { width: 82%; margin-left: auto; transform: translate(30px, 10px); }
-    .bento-card.medium .bento-shot { width: 100%; transform: translateY(12px); }
-
-    /* SCREENSHOT EXPLORER */
-    .showcase-wrap { min-width: 0; max-width: 100%; margin-top: 44px; }
-    .showcase-frame { padding: 10px; border-radius: 30px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
-    .showcase-frame img { width: 100%; border-radius: 22px; background: #0b0c0e; transition: opacity .18s ease, transform .18s ease; }
-    .tabs { display: flex; width: 100%; max-width: 100%; gap: 8px; padding: 12px 0 0; overflow-x: auto; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display:none; }
-    .tab {
-      flex: 0 0 auto;
-      padding: 9px 13px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--surface-muted);
-      color: var(--text-2);
-      cursor: pointer;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 680;
-    }
-    .tab.active { background: linear-gradient(135deg, rgba(255,212,123,.18), rgba(252,112,86,.14)); color: var(--text); border-color: rgba(244,164,92,.34); }
-
-    /* TOOLS */
-    .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
-    .tool-card { min-height: 210px; padding: 28px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); }
-    .tool-card h3 { margin-bottom: 8px; font-size: 1.2rem; }
-    .tool-card p { color: var(--text-2); line-height: 1.65; margin-bottom: 0; }
-    .tool-card .big-number { margin: 22px 0 3px; font-size: 3rem; font-weight: 780; letter-spacing: -.06em; color: var(--accent); }
-
-    /* RELEASE */
-    .release-panel { display: grid; grid-template-columns: .8fr 1.2fr; gap: 34px; margin-top: 40px; padding: 34px; border-radius: 28px; background: linear-gradient(145deg, var(--surface), color-mix(in srgb, var(--accent-soft) 50%, transparent)); border: 1px solid var(--line); box-shadow: var(--shadow); }
-    .release-version { font-size: clamp(3.2rem, 7vw, 6.8rem); line-height: .9; letter-spacing: -.08em; font-weight: 800; }
-    .release-version small { display: block; margin-top: 14px; font-size: 12px; line-height: 1.4; letter-spacing: .02em; color: var(--text-3); font-weight: 650; }
-    .release-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px; margin: 0; padding: 0; list-style: none; }
-    .release-list li { position: relative; padding-left: 18px; color: var(--text-2); line-height: 1.5; font-size: 14px; }
-    .release-list li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-
-    /* ROADMAP */
-    .roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
-    .road-card { padding: 24px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); }
-    .status { display: inline-flex; padding: 5px 9px; border-radius: 999px; font-size: 10px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 16px; }
-    .status.now { color: #172018; background: rgba(85,201,133,.72); }
-    .status.next { color: var(--text); background: var(--accent-soft); border: 1px solid rgba(244,164,92,.18); }
-    .status.later { color: var(--text-2); background: var(--surface-muted); border: 1px solid var(--line); }
-    .road-card h3 { margin-bottom: 8px; }
-    .road-card p { margin: 0; color: var(--text-2); line-height: 1.6; font-size: 14px; }
-
-    /* FAQ */
-    .faq { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 38px; }
-    details { padding: 20px 22px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
-    summary { cursor: pointer; font-weight: 700; list-style: none; }
-    summary::-webkit-details-marker { display: none; }
-    details p { margin: 12px 0 0; color: var(--text-2); line-height: 1.6; font-size: 14px; }
-
-    /* DOWNLOAD */
-    .download-panel {
-      position: relative;
-      overflow: hidden;
-      padding: 58px;
-      border-radius: 34px;
-      background: #101317;
-      color: #fff3de;
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow: var(--shadow-lg);
-    }
-    .download-panel::after { content:""; position:absolute; width:520px; height:520px; right:-180px; bottom:-250px; border-radius:50%; background: radial-gradient(circle, rgba(252,112,86,.24), transparent 67%); }
-    .download-mark { width: 90px; margin-bottom: 28px; }
-    .download-panel h2 { color: #fff3de; max-width: 760px; }
-    .download-panel p { color: rgba(255,243,222,.68); max-width: 620px; }
-    .download-panel .btn.ghost { color: #fff3de; border-color: rgba(255,255,255,.13); background: rgba(255,255,255,.06); }
-
-    /* FOOTER */
-    footer { padding: 50px 0 34px; }
-    .footer-top { display: grid; grid-template-columns: 1.3fr .7fr .7fr; gap: 44px; padding-bottom: 34px; border-bottom: 1px solid var(--line); }
-    .footer-brandline { display:flex; align-items:center; gap:12px; margin-bottom:16px; font-size:22px; font-weight:780; letter-spacing:-.04em; }
-    .footer-brandline img { width:46px; height:46px; object-fit:contain; }
-    .footer-copy { max-width: 480px; color: var(--text-3); font-size: 13px; line-height: 1.65; }
-    .footer-col h4 { margin: 0 0 12px; color: var(--text-3); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
-    .footer-col a { display: block; width: fit-content; margin: 9px 0; color: var(--text-2); font-size: 13px; text-decoration: none; }
-    .footer-col a:hover { color: var(--text); }
-    .footer-bottom { display: flex; justify-content: space-between; gap: 20px; padding-top: 22px; color: var(--text-3); font-size: 12px; }
-
-    .reveal { opacity: 0; transform: translateY(16px); transition: opacity .65s ease, transform .65s ease; }
-    .reveal.visible { opacity: 1; transform: none; }
-
-    @media (max-width: 980px) {
-      .hero { padding-top: 132px; }
-      .hero-grid { grid-template-columns: 1fr; gap: 46px; }
-      .hero-copy { max-width: 780px; }
-      .app-frame { transform: none; }
-      .signal-card { grid-template-columns: 1fr 1fr; }
-      .bento-card.large, .bento-card.medium { grid-column: span 12; }
-      .bento-card.third { grid-column: span 6; }
-      .release-panel { grid-template-columns: 1fr; }
-      .roadmap { grid-template-columns: 1fr; }
-      .footer-top { grid-template-columns: 1fr 1fr; }
-      .footer-top > :first-child { grid-column: 1 / -1; }
-    }
-
-    @media (max-width: 720px) {
-      .shell { width: min(calc(100% - 24px), var(--max)); }
-      .nav-links { display: none; }
-      .nav .btn.primary { display: none; }
-      .section { padding: 84px 0; }
-      h1 { font-size: clamp(3.15rem, 17vw, 5.1rem); }
-      .hero { min-height: auto; padding-bottom: 44px; }
-      .hero-mark { width: 70px; height: 70px; right: -6px; bottom: -18px; border-radius: 20px; }
-      .signal-card { grid-template-columns: 1fr; }
-      .bento-card.third { grid-column: span 12; }
-      .bento-card.large .bento-shot { width: 100%; transform: translateY(10px); }
-      .tools-grid, .faq { grid-template-columns: 1fr; }
-      .release-list { grid-template-columns: 1fr; }
-      .release-panel, .download-panel { padding: 28px; }
-      .footer-top { grid-template-columns: 1fr; }
-      .footer-top > :first-child { grid-column: auto; }
-      .footer-bottom { flex-direction: column; }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RooMate keeps your schedule, lunch menu, clubs, games, events, and what is coming up next in one calm Mac app.">
+  <meta name="theme-color" content="#f7f2e8">
+  <meta property="og:title" content="RooMate — Your school day, all together.">
+  <meta property="og:description" content="Schedule, lunch, clubs, games, events, and what is next—together on your Mac.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://roomate-five.vercel.app/">
+  <meta property="og:image" content="https://roomate-five.vercel.app/images/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RooMate — Your school day, all together.">
+  <meta name="twitter:description" content="Schedule, lunch, clubs, games, events, and what is next—together on your Mac.">
+  <meta name="twitter:image" content="https://roomate-five.vercel.app/images/og-image.png">
+  <title>RooMate — Your school day, all together.</title>
+  <link rel="icon" type="image/svg+xml" href="images/roo-mark-on-light.svg">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="nav-wrap">
-    <nav class="nav" aria-label="Main navigation">
-      <a class="brand" href="#top">
-        <img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="RooMate mark" />
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a class="brand" href="#top" aria-label="RooMate home">
+        <img src="images/roo-mark-on-light.svg" alt="">
         <span>RooMate</span>
       </a>
-      <div class="nav-links">
-        <a href="#v6">What's new</a>
-        <a href="#features">Features</a>
-        <a href="#preview">Preview</a>
-        <a href="#roadmap">Roadmap</a>
-      </div>
-      <div class="nav-actions">
-        <button class="icon-btn" id="themeToggle" aria-label="Toggle appearance" title="Toggle appearance">
-          <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">Download</a>
-      </div>
-    </nav>
-  </div>
 
-  <main id="top">
-    <section class="hero">
-      <div class="shell hero-grid">
-        <div class="hero-copy reveal">
-          <div class="release-pill"><b>6.0.4</b> Themes and school calendar update</div>
-          <h1>Your school day.<br />One place.</h1>
-          <p class="lede">RooMate brings your schedule, dining, sports, clubs, events, PacTrack, links, and the context around your day into one native Mac app.</p>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-menu">Menu</button>
+      <nav class="site-menu" id="site-menu" aria-label="Main navigation">
+        <a href="#day">Your day</a>
+        <a href="#inside">Inside RooMate</a>
+        <a href="#questions">Questions</a>
+        <a class="nav-download" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="kicker">A calmer way through the school day</p>
+          <h1>Your school day,<br><em>all together.</em></h1>
+          <p class="hero-lede">RooMate keeps your schedule, lunch menu, clubs, games, events, and what’s coming up next in one place on your Mac.</p>
           <div class="hero-actions">
-            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download RooMate 6
-            </a>
-            <a class="btn ghost" href="#v6">See what's new</a>
+            <a class="button primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">Download RooMate <span aria-hidden="true">↓</span></a>
+            <a class="text-link" href="#day">See how it helps <span aria-hidden="true">↘</span></a>
           </div>
-          <div class="compat">Free · macOS 14 or later · Apple silicon + Intel</div>
+          <p class="compatibility">Free · macOS 14 or later · Apple silicon and Intel</p>
         </div>
 
-        <div class="app-frame reveal">
-          <img class="theme-image" data-light="screenshots/today-light.jpg" data-dark="screenshots/today-dark.jpg" src="screenshots/today-dark.jpg" alt="RooMate Today screen in dark mode" />
-          <div class="hero-mark"><img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="" /></div>
-        </div>
-      </div>
-
-      <div class="shell signal-strip reveal">
-        <div class="signal-card">
-          <div class="signal"><strong>Today</strong><span>Current class, progress, what's next, and what matters now.</span></div>
-          <div class="signal"><strong>Day · Week · Plan</strong><span>A real schedule workspace, including Semester Planner.</span></div>
-          <div class="signal"><strong>Live school data</strong><span>Dining, sports, clubs, events, announcements, and special schedules.</span></div>
-          <div class="signal"><strong>Native Mac tools</strong><span>Search, notifications, menu bar, floating timer, and Open at Login.</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="v6">
-      <div class="shell">
-        <div class="eyebrow reveal">RooMate 6</div>
-        <h2 class="reveal">A full redesign, not a small update.</h2>
-        <p class="section-copy reveal">RooMate 6 rebuilds the app around the school day. Today puts the most useful context first, Schedule grows into Day, Week, and Plan, and new areas bring Dining, Sports, Clubs, Events, PacTrack, Links, Profile, announcements, global search, and more into the same experience.</p>
-
-        <div class="bento">
-          <article class="bento-card large reveal">
-            <div class="feature-icon orange">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <h3>Today, rebuilt around now.</h3>
-            <p>See your current class, time remaining, school-day progress, what's up next, upcoming events, contextual actions, and announcements without hunting through the app.</p>
-            <div class="mini-tags"><span>Live progress</span><span>Contextual actions</span><span>Announcements</span></div>
-            <img class="bento-shot theme-image" data-light="screenshots/today-light.jpg" data-dark="screenshots/today-dark.jpg" src="screenshots/today-dark.jpg" alt="RooMate Today" loading="lazy" />
-          </article>
-
-          <article class="bento-card medium reveal">
-            <div class="feature-icon purple">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-            <h3>Schedule becomes a workspace.</h3>
-            <p>Move between Day and Week, jump into Focus Mode, and use Plan to map out your next semester without touching your current schedule.</p>
-            <div class="mini-tags"><span>Day</span><span>Week</span><span>Semester Planner</span><span>Special schedules</span></div>
-            <img class="bento-shot theme-image" data-light="screenshots/schedule-light.jpg" data-dark="screenshots/schedule-dark.jpg" src="screenshots/schedule-dark.jpg" alt="RooMate Schedule" loading="lazy" />
-          </article>
-
-          <article class="bento-card third reveal">
-            <div class="feature-icon orange">🍴</div>
-            <h3>Dining</h3>
-            <p>Browse menus by date and meal, search items, filter dietary information, and keep favorites close.</p>
-          </article>
-          <article class="bento-card third reveal">
-            <div class="feature-icon green">▣</div>
-            <h3>Sports Hub</h3>
-            <p>Game schedules, matchup details, search, filters, calendar views, schedule integration, individual reminders, and reliable saved data. Team pages will return in a later update.</p>
-          </article>
-          <article class="bento-card third reveal">
-            <div class="feature-icon blue">●●●</div>
-            <h3>Clubs</h3>
-            <p>A real directory and My Clubs system with blocks, rooms, additional meetings, colors, icons, and schedule integration.</p>
-          </article>
-          <article class="bento-card third reveal">
-            <div class="feature-icon teal">◫</div>
-            <h3>Events</h3>
-            <p>Search, save events, combine the calendars you care about, and browse Day, Week, or Month.</p>
-          </article>
-          <article class="bento-card third reveal">
-            <div class="feature-icon purple">▥</div>
-            <h3>PacTrack</h3>
-            <p>Plan RooPAC requirements by grade, track progress, use custom activities, and handle exemptions.</p>
-          </article>
-          <article class="bento-card third reveal">
-            <div class="feature-icon orange">⌘K</div>
-            <h3>Search + Profile + Links</h3>
-            <p>Command-K searches RooMate. Profile personalizes the app, and Links keeps important resources together.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section compact" id="features">
-      <div class="shell">
-        <div class="eyebrow reveal">Why RooMate</div>
-        <h2 class="reveal">Your day stays visible without getting in the way.</h2>
-        <p class="section-copy reveal">RooMate brings the school-day details that usually live in separate places into one native app. Customize the sidebar by pinning, hiding, and reordering sections, then use the menu bar, floating timer, search, and notifications without keeping the full window front and center.</p>
-        <div class="tools-grid">
-          <article class="tool-card reveal"><div class="big-number">⌘K</div><h3>Global RooMate Search</h3><p>Find app sections, classes, My Clubs, events, sports games, and currently loaded Dining items from one search.</p></article>
-          <article class="tool-card reveal"><div class="big-number">%</div><h3>Menu Bar Companion</h3><p>See your current block, progress, time remaining, what's next, and a compact rest-of-day schedule from the menu bar.</p></article>
-          <article class="tool-card reveal"><div class="big-number">13m</div><h3>Floating Timer</h3><p>Keep your current block and progress above other windows in a compact or detailed floating view.</p></article>
-          <article class="tool-card reveal"><div class="big-number">●</div><h3>Smarter Notifications</h3><p>Class starts and endings, club meetings, special schedules, selected sports games, saved events, and calendar reminders with pause controls.</p></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="preview">
-      <div class="shell">
-        <div class="eyebrow reveal">Inside RooMate</div>
-        <h2 class="reveal">See the app, not a mockup.</h2>
-        <p class="section-copy reveal">These are real RooMate 6 screens. Switch the website appearance and the screenshots switch with it.</p>
-        <div class="showcase-wrap reveal">
-          <div class="showcase-frame"><img id="showcaseImage" src="screenshots/today-dark.jpg" alt="RooMate Today screenshot" /></div>
-          <div class="tabs" id="screenshotTabs" role="tablist" aria-label="RooMate screenshots">
-            <button class="tab active" data-view="today" role="tab" aria-selected="true">Today</button>
-            <button class="tab" data-view="schedule" role="tab" aria-selected="false">Schedule</button>
-            <button class="tab" data-view="dining" role="tab" aria-selected="false">Dining</button>
-            <button class="tab" data-view="clubs" role="tab" aria-selected="false">Clubs</button>
-            <button class="tab" data-view="events" role="tab" aria-selected="false">Events</button>
-            <button class="tab" data-view="pactrack" role="tab" aria-selected="false">PacTrack</button>
-            <button class="tab" data-view="links" role="tab" aria-selected="false">Links</button>
-            <button class="tab" data-view="settings" role="tab" aria-selected="false">Settings</button>
+        <div class="brand-stage" role="img" aria-label="RooMate keeps right now, up next, and the rest of your day together">
+          <div class="stage-rule" aria-hidden="true"></div>
+          <img class="stage-mark" src="images/roo-mark-on-dark.svg" alt="RooMate kangaroo mark">
+          <div class="moment moment-now">
+            <span class="moment-dot orange" aria-hidden="true"></span>
+            <div><strong>Right now</strong><span>Know where to be.</span></div>
           </div>
+          <div class="moment moment-next">
+            <span class="moment-dot blue" aria-hidden="true"></span>
+            <div><strong>Up next</strong><span>See what is coming.</span></div>
+          </div>
+          <div class="moment moment-around">
+            <span class="moment-dot green" aria-hidden="true"></span>
+            <div><strong>Around class</strong><span>Lunch, clubs, games.</span></div>
+          </div>
+          <p class="stage-caption">One clear view of what matters now.</p>
         </div>
       </div>
     </section>
 
-    <section class="section compact" id="release">
-      <div class="shell">
-        <div class="eyebrow reveal">Latest release</div>
-        <h2 class="reveal">What's new in RooMate 6.</h2>
-        <div class="release-panel reveal">
-          <div class="release-version">6.0.4<small>Current release · macOS 14+</small></div>
-          <div>
-            <ul class="release-list">
-              <li>Seven complete themes, including true-black OLED and automatic System appearance</li>
-              <li>A visual theme gallery with live previews in Settings and onboarding</li>
-              <li>A dedicated Announcements center plus one-time alerts for published notices</li>
-              <li>An official School Calendar for special schedules, closures, breaks, and school-year dates</li>
-              <li>Clearer status while a special day is still waiting for exact bell times</li>
-              <li>Stronger remote-feed validation and improved schedule and event states</li>
+    <section class="day-section" id="day">
+      <div class="wrap">
+        <div class="section-intro">
+          <p class="section-label">A day with RooMate</p>
+          <h2>Less checking.<br>More knowing.</h2>
+          <p>RooMate is built around the small questions that come up all day: what is happening, what is next, and what else should I remember?</p>
+        </div>
+
+        <ol class="day-line">
+          <li>
+            <span class="line-number">01</span>
+            <div class="line-copy">
+              <h3>Know what’s happening now.</h3>
+              <p>See your current class, how much time is left, and where you are in the day.</p>
+            </div>
+            <span class="line-status">Now</span>
+          </li>
+          <li>
+            <span class="line-number">02</span>
+            <div class="line-copy">
+              <h3>See the rest of your day.</h3>
+              <p>Keep schedule changes, lunch, club meetings, games, and school events within reach.</p>
+            </div>
+            <span class="line-status">Next</span>
+          </li>
+          <li>
+            <span class="line-number">03</span>
+            <div class="line-copy">
+              <h3>Keep the small things close.</h3>
+              <p>Use reminders, saved events, useful links, and the optional menu bar view when you need them.</p>
+            </div>
+            <span class="line-status">Later</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="inside-section" id="inside">
+      <div class="wrap">
+        <div class="inside-heading">
+          <p class="section-label light-label">Inside RooMate</p>
+          <h2>The whole day.<br>Without the clutter.</h2>
+          <p>The main parts of RooMate, explained the way students use them: right now, around class, and in their own setup.</p>
+        </div>
+
+        <div class="feature-groups">
+          <article class="feature-group feature-today">
+            <div class="group-top"><span>01</span><span class="group-color"></span></div>
+            <h3>Now and next</h3>
+            <p>Today, Schedule, special days, Focus, and reminders keep the shape of your day easy to read.</p>
+            <ul>
+              <li>Today</li><li>Schedule</li><li>Focus</li><li>Reminders</li>
             </ul>
-            <div class="hero-actions" style="margin-top:24px"><a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.4" target="_blank" rel="noopener">View release on GitHub</a></div>
+          </article>
+          <article class="feature-group feature-life">
+            <div class="group-top"><span>02</span><span class="group-color"></span></div>
+            <h3>Life around class</h3>
+            <p>Lunch menus, clubs, sports games, school events, and announcements live alongside your schedule.</p>
+            <ul>
+              <li>Dining</li><li>Clubs</li><li>Sports</li><li>Events</li>
+            </ul>
+          </article>
+          <article class="feature-group feature-yours">
+            <div class="group-top"><span>03</span><span class="group-color"></span></div>
+            <h3>Make it yours</h3>
+            <p>Choose what belongs in your sidebar, track RooPAC progress, save links, and pick an appearance that feels right.</p>
+            <ul>
+              <li>PacTrack</li><li>Links</li><li>Profile</li><li>Themes</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="quiet-section">
+      <div class="wrap quiet-grid">
+        <div class="quiet-copy">
+          <p class="section-label">There when you need it</p>
+          <h2>Check what’s next without keeping the whole app open.</h2>
+          <p>The menu bar companion and floating timer can keep the useful part of your day visible, then get out of the way.</p>
+        </div>
+        <div class="compact-demo" role="img" aria-label="A simple illustration of the optional compact RooMate view">
+          <div class="compact-top"><span class="compact-brand"><img src="images/roo-mark-on-light.svg" alt=""> RooMate</span><span>Next</span></div>
+          <div class="compact-main"><span>Up next</span><strong>Your next block</strong><span>Ready when you are</span></div>
+          <div class="progress-track" aria-hidden="true"><span></span></div>
+          <p>Optional menu bar view</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust-section" id="privacy">
+      <div class="wrap trust-grid">
+        <div>
+          <p class="section-label">Personal by default</p>
+          <h2>Your setup stays yours.</h2>
+        </div>
+        <div class="trust-copy">
+          <p>RooMate does not need an account. Your profile and personal setup stay on your Mac. General app-use and broad loading information may be measured to help improve reliability, but personal school details are not included in RooMate analytics.</p>
+          <div class="trust-facts">
+            <span>No account needed</span>
+            <span>Personal setup stays on your Mac</span>
+            <span>Independent and unofficial</span>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section compact" id="roadmap">
-      <div class="shell">
-        <div class="eyebrow reveal">Roadmap</div>
-        <h2 class="reveal">Ship V6. Keep building from there.</h2>
-        <p class="section-copy reveal">The core V6 experience is here. Future work can focus on refinement and larger ideas without holding up the current release.</p>
-        <div class="roadmap">
-          <article class="road-card reveal"><span class="status now">Now</span><h3>RooMate 6</h3><p>Today, Schedule, Semester Planner, Dining, Sports, Clubs, Events, PacTrack, Links, Profile, notifications, onboarding, announcements, and native Mac tools.</p></article>
-          <article class="road-card reveal"><span class="status next">Next</span><h3>6.x polish</h3><p>Release feedback, bug fixes, data-source improvements, the return of refreshed Sports team pages, and smaller quality-of-life additions.</p></article>
-          <article class="road-card reveal"><span class="status later">Later</span><h3>RooMate 7 and beyond</h3><p>Study Planner and other larger systems that deserve their own release instead of being rushed into V6.</p></article>
+    <section class="questions-section" id="questions">
+      <div class="wrap questions-grid">
+        <div class="questions-heading">
+          <p class="section-label">Questions</p>
+          <h2>The quick answers.</h2>
+          <p>RooMate is an independent student project built for macOS.</p>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Is RooMate free?<span aria-hidden="true">+</span></summary>
+            <p>Yes. RooMate is free to download and use.</p>
+          </details>
+          <details>
+            <summary>What Mac do I need?<span aria-hidden="true">+</span></summary>
+            <p>RooMate 6 requires macOS 14 or later and works on Apple silicon and Intel Macs.</p>
+          </details>
+          <details>
+            <summary>Is RooMate an official school app?<span aria-hidden="true">+</span></summary>
+            <p>No. RooMate is an independent student project and is not affiliated with or endorsed by any school.</p>
+          </details>
+          <details>
+            <summary>Does RooMate need an account?<span aria-hidden="true">+</span></summary>
+            <p>No. You can set up RooMate directly on your Mac without creating an account.</p>
+          </details>
+          <details>
+            <summary>How do updates work?<span aria-hidden="true">+</span></summary>
+            <p>RooMate checks for signed updates in the app. You can also download the latest release directly from GitHub.</p>
+          </details>
         </div>
       </div>
     </section>
 
-    <section class="section compact" id="faq">
-      <div class="shell">
-        <div class="eyebrow reveal">FAQ</div>
-        <h2 class="reveal">A few quick things.</h2>
-        <div class="faq">
-          <details class="reveal"><summary>Is RooMate free?</summary><p>Yes. RooMate is currently free to download and use.</p></details>
-          <details class="reveal"><summary>What Mac do I need?</summary><p>RooMate 6 requires macOS 14 or later and is distributed as a Universal app for Apple silicon and Intel Macs.</p></details>
-          <details class="reveal"><summary>Is RooMate official?</summary><p>No. RooMate is an independent student project and is not affiliated with or endorsed by any school.</p></details>
-          <details class="reveal"><summary>What does RooMate collect?</summary><p>RooMate uses limited, privacy-conscious analytics for feature usage and reliability. Custom analytics do not include names, class names, teachers, rooms, club names, team names, Dining searches, PacTrack choices, or announcement text.</p></details>
+    <section class="download-section" id="download">
+      <div class="wrap download-card">
+        <img src="images/roo-mark-on-dark.svg" alt="RooMate kangaroo mark">
+        <div>
+          <p class="download-version">RooMate 6.0.4 · macOS 14+</p>
+          <h2>Bring your day together.</h2>
+          <p>Free for Apple silicon and Intel Macs.</p>
         </div>
-      </div>
-    </section>
-
-    <section class="section" id="download">
-      <div class="shell">
-        <div class="download-panel reveal">
-          <img class="download-mark" src="images/roo-mark-on-dark.svg" alt="RooMate" />
-          <div class="eyebrow" style="color:#fdab60">RooMate 6.0.4</div>
-          <h2>Ready for your school day?</h2>
-          <p class="lede">Download RooMate for macOS and set up your schedule, clubs, events, notifications, Profile, and more in the new V6 onboarding.</p>
-          <div class="hero-actions">
-            <a class="btn primary" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">Download for macOS</a>
-            <a class="btn ghost" href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.4" target="_blank" rel="noopener">Release notes</a>
-          </div>
-          <div class="compat" style="color:rgba(255,243,222,.45)">macOS 14+ · Free · Direct download</div>
+        <div class="download-actions">
+          <a class="button cream" href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">Download RooMate <span aria-hidden="true">↓</span></a>
+          <a href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.4" target="_blank" rel="noopener">Read the release notes <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="shell">
-      <div class="footer-top">
-        <div>
-          <div class="footer-brandline"><img class="theme-logo" data-light="images/roo-mark-on-light.svg" data-dark="images/roo-mark-on-dark.svg" src="images/roo-mark-on-dark.svg" alt="RooMate mark" /><span>RooMate</span></div>
-          <p class="footer-copy">A native Mac companion that brings the pieces of your school day together. RooMate is an independent student project and is not affiliated with or endorsed by any school.</p>
-        </div>
-        <div class="footer-col">
-          <h4>RooMate</h4>
-          <a href="#v6">What's new</a>
-          <a href="#features">Features</a>
-          <a href="#preview">Screenshots</a>
-          <a href="#roadmap">Roadmap</a>
-        </div>
-        <div class="footer-col">
-          <h4>Download</h4>
-          <a href="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip">RooMate 6.0.4</a>
-          <a href="https://github.com/codearc-studio/RooMate/releases/tag/v6.0.4" target="_blank" rel="noopener">GitHub release</a>
-          <a href="https://tally.so/r/7RalBZ" target="_blank" rel="noopener">Suggest a feature</a>
-        </div>
+    <div class="wrap footer-row">
+      <a class="brand footer-brand" href="#top">
+        <img src="images/roo-mark-on-light.svg" alt="">
+        <span>RooMate</span>
+      </a>
+      <p>Independent. Student-built. Made for Mac.</p>
+      <div class="footer-links">
+        <a href="https://github.com/codearc-studio/RooMate" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://tally.so/r/7RalBZ" target="_blank" rel="noopener">Send feedback</a>
+        <a href="https://codearc.studio" target="_blank" rel="noopener">CodeArc.studio</a>
       </div>
-      <div class="footer-bottom">
-        <span>© 2026 RooMate</span>
-        <span>Built by <a href="https://codearc.studio" target="_blank" rel="noopener" style="text-decoration:none;color:var(--text-2)">CodeArc.studio</a></span>
-      </div>
+      <p class="copyright">© <span id="year">2026</span> RooMate</p>
     </div>
   </footer>
 
-  <script>
-    const html = document.documentElement;
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const showcaseImage = document.getElementById('showcaseImage');
-    let currentView = 'today';
-
-    const screenshots = {
-      'today': 'today',
-      'schedule': 'schedule',
-      'dining': 'dining',
-      'clubs': 'clubs',
-      'events': 'events',
-      'pactrack': 'pactrack',
-      'links': 'links',
-      'settings': 'settings'
-    };
-
-    function setTheme(theme) {
-      html.dataset.theme = theme;
-      localStorage.setItem('roomate-theme', theme);
-      document.querySelectorAll('.theme-image').forEach(img => {
-        img.src = theme === 'dark' ? img.dataset.dark : img.dataset.light;
-      });
-      document.querySelectorAll('.theme-logo').forEach(img => {
-        img.src = theme === 'dark' ? img.dataset.dark : img.dataset.light;
-      });
-      updateShowcase();
-      themeIcon.innerHTML = theme === 'dark'
-        ? '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>'
-        : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-    }
-
-    function updateShowcase() {
-      const theme = html.dataset.theme;
-      const stem = screenshots[currentView] || 'today';
-      showcaseImage.style.opacity = '0';
-      showcaseImage.style.transform = 'translateY(5px)';
-      setTimeout(() => {
-        showcaseImage.src = `screenshots/${stem}-${theme}.jpg`;
-        showcaseImage.alt = `RooMate ${currentView.replace('-', ' ')} screenshot`;
-        showcaseImage.style.opacity = '1';
-        showcaseImage.style.transform = 'none';
-      }, 120);
-    }
-
-    const stored = localStorage.getItem('roomate-theme');
-    const initialTheme = stored || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-    setTheme(initialTheme);
-
-    themeToggle.addEventListener('click', () => setTheme(html.dataset.theme === 'dark' ? 'light' : 'dark'));
-
-    document.getElementById('screenshotTabs').addEventListener('click', event => {
-      const button = event.target.closest('.tab');
-      if (!button) return;
-      currentView = button.dataset.view;
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-selected', 'false');
-      });
-      button.classList.add('active');
-      button.setAttribute('aria-selected', 'true');
-      updateShowcase();
-    });
-
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: .08 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

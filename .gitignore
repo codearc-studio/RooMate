@@ -69,3 +69,5 @@ fastlane/test_output
 *.xcscmblueprint
 *.xccheckout
 xcshareddata/IDEWorkspaceChecks.plist
+.vercel
+.env.local
