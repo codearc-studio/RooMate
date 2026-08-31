@@ -146,12 +146,16 @@ struct DashboardView: View {
     .sorted { $0.startDate < $1.startDate }
   }
 
-  private var primaryDatedBlocks: [DatedBlock] {
-    datedBlocks.filter { $0.block.isPrimaryTimelineBlock }
+  /// Every published special-schedule item contributes to the state of the day.
+  /// Markers have no duration, but a future marker (for example, "School Day Ends")
+  /// still means the day is not complete yet.
+  private var dayStatusDatedBlocks: [DatedBlock] {
+    datedBlocks
   }
 
   private var classBlocks: [DatedBlock] {
-    primaryDatedBlocks.filter { item in
+    dayStatusDatedBlocks.filter { item in
+      guard item.block.isPrimaryTimelineBlock else { return false }
       switch item.block.kind {
       case .level:
         return !item.isFree
@@ -172,12 +176,21 @@ struct DashboardView: View {
     datedBlocks.filter(\.isFree).count
   }
 
+  private var todayScheduleStatus: BellScheduleStatus {
+    BellScheduleStatus.resolve(
+      blocks: todayBlocks,
+      at: Calendar.current.dateComponents([.hour, .minute], from: now)
+    )
+  }
+
   private var currentBlock: DatedBlock? {
-    primaryDatedBlocks.first { now >= $0.startDate && now < $0.endDate }
+    guard let id = todayScheduleStatus.currentItemID else { return nil }
+    return dayStatusDatedBlocks.first { $0.id == id }
   }
 
   private var nextBlock: DatedBlock? {
-    primaryDatedBlocks.first { now < $0.startDate }
+    guard let id = todayScheduleStatus.nextItemID else { return nil }
+    return dayStatusDatedBlocks.first { $0.id == id }
   }
 
   private func shortTime(_ date: Date) -> String {
@@ -195,7 +208,7 @@ struct DashboardView: View {
     if let current = currentBlock {
       let total = max(1, current.endDate.timeIntervalSince(current.startDate))
       let elapsed = max(0, now.timeIntervalSince(current.startDate))
-      let next = primaryDatedBlocks.first { $0.startDate >= current.endDate }
+      let next = dayStatusDatedBlocks.first { $0.startDate > now && $0.id != current.id }
 
       return HeroInfo(
         title: current.title,
@@ -216,7 +229,7 @@ struct DashboardView: View {
 
     if let next = nextBlock {
       let previousEnd =
-        primaryDatedBlocks.last(where: { $0.endDate <= now })?.endDate
+        dayStatusDatedBlocks.last(where: { $0.endDate <= now })?.endDate
         ?? Calendar.current.startOfDay(for: now)
       let totalGap = max(1, next.startDate.timeIntervalSince(previousEnd))
       let elapsed = max(0, now.timeIntervalSince(previousEnd))
@@ -255,7 +268,9 @@ struct DashboardView: View {
   }
 
   private var dayProgress: Double {
-    guard let first = primaryDatedBlocks.first, let last = primaryDatedBlocks.last else { return 0 }
+    guard let first = dayStatusDatedBlocks.first, let last = dayStatusDatedBlocks.last else {
+      return 0
+    }
     let duration = max(1, last.endDate.timeIntervalSince(first.startDate))
     return min(1, max(0, now.timeIntervalSince(first.startDate) / duration))
   }
@@ -1083,9 +1098,14 @@ struct DashboardView: View {
             )
 
             VStack(alignment: .leading, spacing: 3) {
-              Text(info.isBetweenBlocks ? "Next block starts in" : "Period ends at")
-                .font(DesignTokens.Typography.caption)
-                .foregroundStyle(DesignTokens.Colors.secondaryText)
+              Text(
+                info.isBetweenBlocks
+                  ? (nextBlock?.block.isMarker == true
+                    ? "Next event in" : "Next block starts in")
+                  : "Period ends at"
+              )
+              .font(DesignTokens.Typography.caption)
+              .foregroundStyle(DesignTokens.Colors.secondaryText)
               Text(info.isBetweenBlocks ? shortDuration(info.remaining) : (info.endTime ?? "—"))
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                 .foregroundStyle(DesignTokens.Colors.primaryText)
@@ -1341,8 +1361,8 @@ struct DashboardView: View {
   // MARK: - Day overview
 
   private var dayOverviewProgressTitle: String {
-    guard let first = primaryDatedBlocks.first,
-      let last = primaryDatedBlocks.last
+    guard let first = dayStatusDatedBlocks.first,
+      let last = dayStatusDatedBlocks.last
     else {
       return "School day"
     }
@@ -1359,8 +1379,8 @@ struct DashboardView: View {
   }
 
   private var dayOverviewProgressSubtitle: String {
-    guard let first = primaryDatedBlocks.first,
-      let last = primaryDatedBlocks.last
+    guard let first = dayStatusDatedBlocks.first,
+      let last = dayStatusDatedBlocks.last
     else {
       return "No schedule available"
     }
@@ -1378,7 +1398,11 @@ struct DashboardView: View {
       return "\(currentBlock.title) is happening now"
     }
 
-    return "Between blocks"
+    if let nextBlock {
+      return "Next: \(nextBlock.title) at \(shortTime(nextBlock.startDate))"
+    }
+
+    return "Between scheduled items"
   }
 
   private func overviewCountPill(
@@ -1521,7 +1545,16 @@ struct DashboardView: View {
       return upcomingClassCount == 1
         ? "1 class left today" : "\(upcomingClassCount) classes left today"
     }
+    if let nextBlock {
+      return "Next: \(nextBlock.title) at \(shortTime(nextBlock.startDate))"
+    }
+    if currentBlock != nil {
+      return "You're in the middle of the school day"
+    }
     if completedClassCount > 0 {
+      return "School day complete"
+    }
+    if !dayStatusDatedBlocks.isEmpty, now >= (dayStatusDatedBlocks.last?.endDate ?? now) {
       return "School day complete"
     }
     return todayWeekday == nil ? "No school today" : "Ready for the day"

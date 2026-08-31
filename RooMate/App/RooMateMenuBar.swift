@@ -20,6 +20,7 @@
     let start: Date
     let end: Date
     let isPrimaryTimelineBlock: Bool
+    let timelineType: BellBlockTimelineType
   }
 
   @MainActor
@@ -29,7 +30,6 @@
     let startOfDay = calendar.startOfDay(for: reference)
 
     var blocks = store.bellBlocks(for: reference).compactMap { block -> MenuBarBlockInfo? in
-      guard block.isPrimaryTimelineBlock else { return nil }
       var startComponents = calendar.dateComponents([.year, .month, .day], from: startOfDay)
       startComponents.hour = block.start.hour
       startComponents.minute = block.start.minute
@@ -51,7 +51,8 @@
         color: presentation.color,
         start: start,
         end: end,
-        isPrimaryTimelineBlock: true
+        isPrimaryTimelineBlock: block.isPrimaryTimelineBlock,
+        timelineType: block.timelineType
       )
     }
 
@@ -88,7 +89,8 @@
             color: club.displayColor,
             start: start,
             end: end,
-            isPrimaryTimelineBlock: false
+            isPrimaryTimelineBlock: false,
+            timelineType: .extra
           )
         )
       }
@@ -1253,11 +1255,15 @@
             .contentTransition(.numericText())
           }
 
-          Text("Starts \(clockText(next.start))")
-            .font(.system(size: 9, weight: .semibold))
-            .foregroundStyle(
-              DesignTokens.Colors.secondaryText
-            )
+          Text(
+            next.timelineType == .marker
+              ? "At \(clockText(next.start))"
+              : "Starts \(clockText(next.start))"
+          )
+          .font(.system(size: 9, weight: .semibold))
+          .foregroundStyle(
+            DesignTokens.Colors.secondaryText
+          )
         }
       } else {
         completedBody
@@ -1891,9 +1897,13 @@
             .foregroundStyle(next.color)
         }
 
-        Text("Starts at \(timeText(next.start))")
-          .font(.system(size: 9.5))
-          .foregroundStyle(.secondary)
+        Text(
+          next.timelineType == .marker
+            ? "At \(timeText(next.start))"
+            : "Starts at \(timeText(next.start))"
+        )
+        .font(.system(size: 9.5))
+        .foregroundStyle(.secondary)
       }
     }
 

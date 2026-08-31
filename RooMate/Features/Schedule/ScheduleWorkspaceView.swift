@@ -157,30 +157,35 @@
       calendar.isDate(selectedDate, inSameDayAs: now)
     }
 
-    private var primarySelectedEntries: [ScheduleEntry] {
-      unfilteredSelectedEntries.filter { $0.timelineType == .block }
+    private var dayStatusEntries: [ScheduleEntry] {
+      unfilteredSelectedEntries.filter { entry in
+        entry.timelineType != .extra || entry.isSpecial
+      }
     }
 
     private var currentEntry: ScheduleEntry? {
       guard isViewingToday else { return nil }
-      return primarySelectedEntries.first { now >= $0.startDate && now < $0.endDate }
+      let active = dayStatusEntries.filter {
+        $0.timelineType != .marker && now >= $0.startDate && now < $0.endDate
+      }
+      return active.first(where: { $0.timelineType == .block }) ?? active.first
     }
 
     private var nextEntry: ScheduleEntry? {
       let reference = isViewingToday ? now : calendar.startOfDay(for: selectedDate)
-      return primarySelectedEntries.first { $0.startDate > reference }
+      return dayStatusEntries.first { $0.startDate > reference }
     }
 
     private var firstEntry: ScheduleEntry? {
-      primarySelectedEntries.first
+      dayStatusEntries.first
     }
 
     private var lastEntry: ScheduleEntry? {
-      primarySelectedEntries.last
+      dayStatusEntries.last
     }
 
     private var classEntries: [ScheduleEntry] {
-      primarySelectedEntries.filter { $0.level != nil && !$0.isFree }
+      dayStatusEntries.filter { $0.timelineType == .block && $0.level != nil && !$0.isFree }
     }
 
     private var freeEntries: [ScheduleEntry] {
@@ -2155,9 +2160,15 @@
           }
 
           if isViewingToday {
+            let statusMessage =
+              nextEntry.map {
+                "Nothing scheduled right now. Next: \($0.title) at \(timeString($0.startDate))."
+              } ?? "You're between scheduled items right now."
+
             Text(
               currentEntry == nil && nextEntry == nil
-                ? "School is finished for today." : "You're between classes right now."
+                ? "School is finished for today."
+                : statusMessage
             )
             .font(.system(size: 11))
             .foregroundStyle(DesignTokens.Colors.secondaryText)

@@ -283,11 +283,11 @@ struct DayScheduleView: View {
     var nextIndex: Int?
 
     for (idx, item) in list.enumerated() {
-      guard item.original.isPrimaryTimelineBlock else { continue }
+      guard !item.original.isMarker else { continue }
       if reference >= item.startDate && reference < item.endDate {
         currentIndex = idx
         nextIndex = list.indices.dropFirst(idx + 1).first(where: {
-          list[$0].original.isPrimaryTimelineBlock
+          list[$0].startDate > reference
         })
         break
       } else if reference < item.startDate {
@@ -372,11 +372,11 @@ struct DayScheduleView: View {
     var current: DatedBlock?
     var next: DatedBlock?
     for (idx, item) in list.enumerated() {
-      guard item.original.isPrimaryTimelineBlock else { continue }
+      guard !item.original.isMarker else { continue }
       if reference >= item.startDate && reference < item.endDate {
         current = item
         if let nextIndex = list.indices.dropFirst(idx + 1).first(where: {
-          list[$0].original.isPrimaryTimelineBlock
+          list[$0].startDate > reference
         }) {
           next = list[nextIndex]
         }
@@ -425,12 +425,9 @@ struct DayScheduleView: View {
     var future: DatedBlock?
     var previousAnchorTime: Date?
     for (idx, item) in list.enumerated() {
-      guard item.original.isPrimaryTimelineBlock else { continue }
       if reference < item.startDate {
         future = item
-        let previousIndex = list.indices.prefix(idx).reversed().first(where: {
-          list[$0].original.isPrimaryTimelineBlock
-        })
+        let previousIndex = list.indices.prefix(idx).reversed().first
         previousAnchorTime =
           previousIndex.map { list[$0].endDate } ?? Calendar.current.startOfDay(for: item.startDate)
         break
@@ -449,13 +446,15 @@ struct DayScheduleView: View {
     let (ntitle, ncolor, _, _, nspecialLabel) = blockTitleColorSubtitle(for: next.original)
 
     return (
-      headerTitle: "No class right now",
-      headerSubtitle: "Starts soon",
+      headerTitle: "Nothing scheduled right now",
+      headerSubtitle: next.original.isMarker ? "Next event" : "Starts soon",
       headerColor: .secondary,
       progress: progress,
-      remainingText: "Starts in " + formatDuration(remaining),
+      remainingText: (next.original.isMarker ? "Happens in " : "Starts in ")
+        + formatDuration(remaining),
       nextTitle: ntitle,
-      nextStartText: "Starts at " + timeString(next.startDate),
+      nextStartText: (next.original.isMarker ? "At " : "Starts at ")
+        + timeString(next.startDate),
       nextColor: ncolor,
       nextSpecialLabel: nspecialLabel
     )

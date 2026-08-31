@@ -9,34 +9,24 @@ struct RooMateWhatsNewView: View {
 
   private let highlights: [(String, String, String, Color)] = [
     (
-      "paintpalette.fill", "Seven RooMate themes",
-      "Pick from three light themes, three dark themes, or let RooMate follow your Mac.",
+      "flag.fill", "Markers keep the day active",
+      "A future event such as School Day Ends now counts as what’s next instead of ending the day early.",
       DesignTokens.Colors.primary
     ),
     (
-      "circle.inset.filled", "True-black OLED",
-      "Use exact black surfaces, restrained glow, and crisp text for a focused dark look.",
+      "cup.and.saucer.fill", "Clear gaps between events",
+      "When nothing is happening right now, RooMate shows free time and the next published event.",
       DesignTokens.Colors.events
     ),
     (
-      "rectangle.grid.2x2.fill", "A visual theme gallery",
-      "See a real preview and clear appearance details before choosing a theme.",
+      "calendar.day.timeline.left", "Special schedules stay contextual",
+      "Today and Schedule now understand marker-only orientation and retreat-day timelines.",
       DesignTokens.Colors.schedule
     ),
     (
-      "sparkles", "Make it yours from the start",
-      "Choose from the complete theme collection while setting up RooMate.",
+      "menubar.rectangle", "The same answer everywhere",
+      "The menu bar and floating timer now keep future markers visible and use event-aware wording.",
       DesignTokens.Colors.pacTrack
-    ),
-    (
-      "textformat", "Contrast you can count on",
-      "Text, buttons, feature colors, and states stay readable throughout every theme.",
-      DesignTokens.Colors.dining
-    ),
-    (
-      "circle.lefthalf.filled", "System stays effortless",
-      "Keep RooMate in step with your Mac as it moves between light and dark.",
-      DesignTokens.Colors.info
     ),
   ]
 
@@ -47,9 +37,9 @@ struct RooMateWhatsNewView: View {
           .resizable()
           .scaledToFit()
           .frame(width: 66, height: 66)
-        Text("What’s New in RooMate 6.0.4")
+        Text("What’s New in RooMate 6.0.5")
           .font(.system(size: 25, weight: .semibold))
-        Text("A more personal look for every school day.")
+        Text("Special schedules now stay active until the day is actually over.")
           .font(.system(size: 12))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }

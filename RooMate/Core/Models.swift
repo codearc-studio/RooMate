@@ -324,6 +324,41 @@ struct BellBlock: Identifiable, Hashable, Sendable {
   var isExtra: Bool { timelineType == .extra }
 }
 
+/// Resolves the status of a same-day bell schedule without treating point-in-time
+/// markers as active blocks. Future markers remain eligible for `nextItemID`, which
+/// prevents marker-based special schedules from appearing complete too early.
+struct BellScheduleStatus: Equatable, Sendable {
+  let currentItemID: UUID?
+  let nextItemID: UUID?
+
+  static func resolve(blocks: [BellBlock], at time: DateComponents) -> BellScheduleStatus {
+    let referenceMinutes = minutes(time)
+    let ordered = blocks.sorted { lhs, rhs in
+      let lhsStart = minutes(lhs.start)
+      let rhsStart = minutes(rhs.start)
+      if lhsStart != rhsStart { return lhsStart < rhsStart }
+      if lhs.isPrimaryTimelineBlock != rhs.isPrimaryTimelineBlock {
+        return lhs.isPrimaryTimelineBlock
+      }
+      return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    let active = ordered.filter { block in
+      !block.isMarker
+        && referenceMinutes >= minutes(block.start)
+        && referenceMinutes < minutes(block.end)
+    }
+    let current = active.first(where: \.isPrimaryTimelineBlock) ?? active.first
+    let next = ordered.first { minutes($0.start) > referenceMinutes }
+
+    return BellScheduleStatus(currentItemID: current?.id, nextItemID: next?.id)
+  }
+
+  private static func minutes(_ components: DateComponents) -> Int {
+    (components.hour ?? 0) * 60 + (components.minute ?? 0)
+  }
+}
+
 enum ClubIconOption: String, CaseIterable, Identifiable, Codable, Hashable {
   case group = "person.3.fill"
   case service = "heart.fill"

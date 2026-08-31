@@ -157,6 +157,35 @@ final class RooMateCoreTests: XCTestCase {
     XCTAssertFalse(atEnd >= start && atEnd < end)
   }
 
+  func testFutureMarkerKeepsSpecialSchoolDayActive() throws {
+    let earlierMarker = RemoteSpecialScheduleItem(
+      order: 3,
+      start: DateComponents(hour: 10, minute: 30),
+      end: nil,
+      kind: .custom("Seniors Depart for Retreat"),
+      titleOverride: "Seniors Depart for Retreat",
+      timelineType: .marker
+    ).bellBlock()
+    let endMarker = RemoteSpecialScheduleItem(
+      order: 4,
+      start: DateComponents(hour: 15, minute: 10),
+      end: nil,
+      kind: .custom("School Day Ends"),
+      titleOverride: "School Day Ends",
+      detail: "Athletics begin afterward",
+      timelineType: .marker
+    ).bellBlock()
+
+    let status = BellScheduleStatus.resolve(
+      blocks: [earlierMarker, endMarker],
+      at: DateComponents(hour: 10, minute: 58)
+    )
+
+    XCTAssertNil(status.currentItemID, "Markers are not duration blocks")
+    XCTAssertEqual(status.nextItemID, endMarker.id, "The 3:10 marker keeps the day active")
+    XCTAssertEqual(endMarker.end, endMarker.start, "A marker stays instantaneous")
+  }
+
   func testThemeCollectionBalancesLightAndDarkChoices() {
     let customThemes = RooMateTheme.allCases.filter { $0 != .system }
     XCTAssertEqual(customThemes.filter { !$0.isDark }.count, 3)

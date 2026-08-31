@@ -3,6 +3,19 @@
     <channel>
         <title>RooMate</title>
         <item>
+            <title>6.0.5</title>
+            <pubDate>Mon, 31 Aug 2026 17:30:00 -0400</pubDate>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>6.0.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.5 fixes marker-based special schedules so future
+                events keep the school day active across Today, Schedule, the
+                menu bar, and the floating timer.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.5/RooMate-6.0.5.zip" length="12316346" type="application/octet-stream" sparkle:edSignature="utzy6t0BdCQqn4wYjhpWsNAP8Eel+fI1q+Zx4kT8Sb/tKoZCGXmFdhU3DK36Em/R0JxZGaQuRHnbls5qrANlBA=="/>
+        </item>
+        <item>
             <title>6.0.4</title>
             <pubDate>Wed, 26 Aug 2026 18:59:46 -0400</pubDate>
             <sparkle:version>7</sparkle:version>
