@@ -9,23 +9,23 @@ struct RooMateWhatsNewView: View {
 
   private let highlights: [(String, String, String, Color)] = [
     (
-      "flag.fill", "Markers keep the day active",
-      "A future event such as School Day Ends now counts as what’s next instead of ending the day early.",
+      "calendar.badge.clock", "The new level rotation",
+      "RooMate now follows the school’s updated Monday–Friday level order.",
       DesignTokens.Colors.primary
     ),
     (
-      "cup.and.saucer.fill", "Clear gaps between events",
-      "When nothing is happening right now, RooMate shows free time and the next published event.",
+      "clock.fill", "Bell times stay familiar",
+      "The timing of each school-day block stays the same; the Levels in those blocks are updated.",
       DesignTokens.Colors.events
     ),
     (
-      "calendar.day.timeline.left", "Special schedules stay contextual",
-      "Today and Schedule now understand marker-only orientation and retreat-day timelines.",
+      "person.text.rectangle.fill", "Your classes move automatically",
+      "Existing class names, teachers, rooms, colors, and notes follow their Level to its new time.",
       DesignTokens.Colors.schedule
     ),
     (
-      "menubar.rectangle", "The same answer everywhere",
-      "The menu bar and floating timer now keep future markers visible and use event-aware wording.",
+      "rectangle.3.group.fill", "Updated everywhere",
+      "Today, Schedule, Semester Planner, the menu bar, and reminders all use the same new rotation.",
       DesignTokens.Colors.pacTrack
     ),
   ]
@@ -37,9 +37,9 @@ struct RooMateWhatsNewView: View {
           .resizable()
           .scaledToFit()
           .frame(width: 66, height: 66)
-        Text("What’s New in RooMate 6.0.5")
+        Text("What’s New in RooMate 6.0.6")
           .font(.system(size: 25, weight: .semibold))
-        Text("Special schedules now stay active until the day is actually over.")
+        Text("RooMate is ready for the school’s updated Level schedule.")
           .font(.system(size: 12))
           .foregroundStyle(DesignTokens.Colors.secondaryText)
       }

@@ -3,6 +3,19 @@
     <channel>
         <title>RooMate</title>
         <item>
+            <title>6.0.6</title>
+            <pubDate>Tue, 01 Sep 2026 17:47:15 -0400</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>6.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.6 updates the Monday–Friday Level rotation to match
+                the school’s newly published schedule while preserving the
+                existing bell times and each student’s saved class details.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.6/RooMate-6.0.6.zip" length="12316541" type="application/octet-stream" sparkle:edSignature="X3L7PQ8MBIjlVuQHHU9fhEp12WoMqh6IYe+9XfN1T+9EtJOY9/H95wumkCLDumjy1dao64Pm19CQgIlXJvumDg=="/>
+        </item>
+        <item>
             <title>6.0.5</title>
             <pubDate>Mon, 31 Aug 2026 17:30:00 -0400</pubDate>
             <sparkle:version>8</sparkle:version>

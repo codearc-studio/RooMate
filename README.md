@@ -51,7 +51,7 @@ RooMate also reads remote public/shared data sources used by its features, inclu
 
 ## Distribution status
 
-RooMate 6.0.5 is the current release source. Its notarized universal archive contains bundle version 6.0.5, build 8, requires macOS 14 or later, and is represented by the matching signed item in `appcast.xml`. The earlier archive labeled RooMate 6.0.1 contains bundle version 6.0, build 4; that historical identity is preserved in the feed so Sparkle compares the actual released bundles correctly.
+RooMate 6.0.6 is the current release source. Its notarized universal archive contains bundle version 6.0.6, build 9, requires macOS 14 or later, and is represented by the matching signed item in `appcast.xml`. The earlier archive labeled RooMate 6.0.1 contains bundle version 6.0, build 4; that historical identity is preserved in the feed so Sparkle compares the actual released bundles correctly.
 
 ## Development note
 

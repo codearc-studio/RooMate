@@ -1493,7 +1493,7 @@ struct ContentView: View {
     acknowledgeWhatsNew()
   }
 
-  private let currentWhatsNewVersion = "6.0.5"
+  private let currentWhatsNewVersion = "6.0.6"
 
   private func maybeShowWhatsNew() {
     guard v6OnboardingCompleted,

@@ -137,11 +137,49 @@ final class RooMateCoreTests: XCTestCase {
     }
   }
 
-  func testMondayBlockBoundariesUseHalfOpenIntervals() throws {
+  func testWeeklyScheduleMatchesPublishedLevelOrder() {
+    let expected: [Weekday: [BlockKind]] = [
+      .monday: [
+        .special(.assembly), .level(.level2), .level(.level5), .special(.officeHours),
+        .level(.level6), .level(.level3), .special(.musicClubs), .special(.lunch),
+        .level(.level7), .level(.level4),
+      ],
+      .tuesday: [
+        .special(.assembly), .level(.level3), .level(.level1), .special(.officeHours),
+        .level(.music), .level(.level2), .special(.advisory), .special(.lunch),
+        .level(.level5), .level(.level6),
+      ],
+      .wednesday: [
+        .level(.level5), .level(.level6), .special(.officeHours), .level(.level4),
+        .level(.level7), .special(.worship), .special(.lunchAndClubs), .level(.level1),
+        .level(.level3),
+      ],
+      .thursday: [
+        .special(.assembly), .level(.level7), .level(.level4), .special(.officeHours),
+        .level(.music), .level(.level2), .special(.consciousCommunities), .special(.lunch),
+        .level(.level3), .level(.level1),
+      ],
+      .friday: [
+        .level(.music), .level(.level7), .level(.level4), .special(.officeHours),
+        .level(.level1), .level(.level5), .special(.lunch), .level(.level6),
+        .level(.level2),
+      ],
+    ]
+
+    for weekday in Weekday.allCases {
+      XCTAssertEqual(
+        BellSchedule.weekly[weekday]?.map(\.kind),
+        expected[weekday],
+        "Published block order changed for \(weekday.title)"
+      )
+    }
+  }
+
+  func testMondayFirstClassBoundariesUseHalfOpenIntervals() throws {
     let monday = try XCTUnwrap(BellSchedule.weekly[.monday])
     let firstClass = try XCTUnwrap(
       monday.first(where: {
-        if case .level(.level1) = $0.kind { return true }
+        if case .level(.level2) = $0.kind { return true }
         return false
       }))
     XCTAssertEqual(firstClass.start.hour, 8)
