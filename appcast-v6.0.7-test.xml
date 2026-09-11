@@ -1,0 +1,17 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>RooMate 6.0.7 Test Feed</title>
+        <item>
+            <title>6.0.7</title>
+            <pubDate>Fri, 11 Sep 2026 09:12:32 -0400</pubDate>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>6.0.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.7 fixes a crash caused by duplicate Special Schedule dates.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.7/RooMate-6.0.7.zip" length="12249112" type="application/octet-stream" sparkle:edSignature="CItDZO35A0hTya1ZPHCk2/pKTh/TI+aBbhZc8uQnHIUod+bMYAFpAqFDUHTpqHiQOjQWig+KXhud1nNz4xpGCQ=="/>
+        </item>
+    </channel>
+</rss>
