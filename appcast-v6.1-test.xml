@@ -1,0 +1,135 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>RooMate</title>
+        <item>
+            <title>6.1</title>
+            <pubDate>Thu, 17 Sep 2026 17:18:40 -0400</pubDate>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.1 adds printable schedules with PDF export and native
+                printing, prepares Clubs for stable identities and future official
+                meeting times while preserving manual meetings, and includes
+                improvements across Today, announcements, planning, and reliability.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.1/RooMate-6.1.zip" length="14182286" type="application/octet-stream" sparkle:edSignature="a0LPSHaEZLJ92MfkrI+nd6zmR2ePvR5lsy1oksp1BxF4sifLIOe0ai4aMxxxwCU9M0wP7jPY6UGyd1c5jm/wBA=="/>
+        </item>
+        <item>
+            <title>6.0.7</title>
+            <pubDate>Fri, 11 Sep 2026 09:12:32 -0400</pubDate>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>6.0.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.7 fixes a crash caused by duplicate Special Schedule dates.
+                It repairs affected saved schedule data automatically and safely ignores
+                duplicate published dates if they appear in the remote schedule index.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.7/RooMate-6.0.7.zip" length="12249112" type="application/octet-stream" sparkle:edSignature="CItDZO35A0hTya1ZPHCk2/pKTh/TI+aBbhZc8uQnHIUod+bMYAFpAqFDUHTpqHiQOjQWig+KXhud1nNz4xpGCQ=="/>
+        </item>
+        <item>
+            <title>6.0.6</title>
+            <pubDate>Tue, 01 Sep 2026 17:47:15 -0400</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>6.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.6 updates the Monday–Friday Level rotation to match
+                the school’s newly published schedule while preserving the
+                existing bell times and each student’s saved class details.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.6/RooMate-6.0.6.zip" length="12316541" type="application/octet-stream" sparkle:edSignature="X3L7PQ8MBIjlVuQHHU9fhEp12WoMqh6IYe+9XfN1T+9EtJOY9/H95wumkCLDumjy1dao64Pm19CQgIlXJvumDg=="/>
+        </item>
+        <item>
+            <title>6.0.5</title>
+            <pubDate>Mon, 31 Aug 2026 17:30:00 -0400</pubDate>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>6.0.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.5 fixes marker-based special schedules so future
+                events keep the school day active across Today, Schedule, the
+                menu bar, and the floating timer.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.5/RooMate-6.0.5.zip" length="12316346" type="application/octet-stream" sparkle:edSignature="utzy6t0BdCQqn4wYjhpWsNAP8Eel+fI1q+Zx4kT8Sb/tKoZCGXmFdhU3DK36Em/R0JxZGaQuRHnbls5qrANlBA=="/>
+        </item>
+        <item>
+            <title>6.0.4</title>
+            <pubDate>Wed, 26 Aug 2026 18:59:46 -0400</pubDate>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>6.0.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.4 adds seven complete themes, a dedicated
+                Announcements center and alerts, clearer official school-date
+                and special-schedule status, and stronger remote-feed handling.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.4/RooMate-6.0.4.zip" length="12297136" type="application/octet-stream" sparkle:edSignature="b78OrS5Yk1AN1n8ubLGRWPjEPk6wPr5ypmRmOrMUTz7BD2zDukVAGQlsN4yA6F8EbMbgfZCteqKT9QGJXAKuCw=="/>
+        </item>
+        <item>
+            <title>6.0.3</title>
+            <pubDate>Wed, 26 Aug 2026 09:16:27 -0400</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>6.0.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.3 brings clearer wording and friendlier messages,
+                removes duplicate schedule context from the sidebar, keeps
+                Sports focused on games, and improves update reliability.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.3/RooMate-6.0.3.zip" length="11729572" type="application/octet-stream" sparkle:edSignature="5NauARuxml37DGoiRpOSH9noSMnDioSygUNGhPJXH/UV4Sgggl9ssH64F/yVIE9fbC7jPJIv5LF/QvYROCRSCw=="/>
+        </item>
+        <item>
+            <title>6.0.2</title>
+            <pubDate>Wed, 26 Aug 2026 00:22:00 -0400</pubDate>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>6.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.2 improves offline reliability, update safety,
+                Command-K navigation, feedback, What's New, game reminders,
+                notifications, onboarding, and floating timer presentation.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.2/RooMate-6.0.2.zip" length="11730149" type="application/octet-stream" sparkle:edSignature="hDKuwXqxuh9cYRNuNqts6BOCF8zssxWorCSESRnJ3mAnZ4XfVc/vbIH7gILq6n6+2j+Oh8M0BAItQfjtfwJJBg=="/>
+        </item>
+        <item>
+            <title>6.0.1</title>
+            <pubDate>Thu, 20 Aug 2026 14:39:00 -0400</pubDate>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>6.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                RooMate 6.0.1 introduces the V6 experience, including Today,
+                Semester Planner, Dining, Sports, Clubs, PacTrack, global search,
+                notifications, announcements, and more customization.
+            ]]></description>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v6.0.1/RooMate-6.0.1.zip" length="11570579" type="application/octet-stream" sparkle:edSignature="IdzE8sc/jLHXU6JdOm64TtffKzceR/HCc5QrJs9+N2wyEnJnyergJl2M4GF4A+rJ4dEfb8ue5MWkxwObgCJlAQ=="/>
+        </item>
+        <item>
+            <title>5.1</title>
+            <pubDate>Wed, 13 May 2026 07:31:46 -0400</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v5.1-b3/RooMate-5.1-b3.zip" length="5228293" type="application/octet-stream" sparkle:edSignature="71VHh9K3Lr9GQzNd3806JECXQc/EjzoZL4isfMgqA+ijoUXL6/8s+0q4yJA4EZhPrM5Uv5WxsLHiKeBIx3TMBw=="/>
+        </item>
+        <item>
+            <title>5</title>
+            <pubDate>Tue, 12 May 2026 19:31:58 -0400</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v5.0/RooMate-5.0.zip" length="3250797" type="application/octet-stream" sparkle:edSignature="A2nOjGLQHrUDPYY3ijYoWH3UslqPWJkjM+eho5j3ST6GipjLhKA7XLvsAcxJTXPEp2LEKRVPDAB8kOfAPng1Dw=="/>
+        </item>
+        <item>
+            <title>4.0</title>
+            <pubDate>Tue, 12 May 2026 14:05:22 -0400</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.5</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/codearc-studio/RooMate/releases/download/v4.0/RooMate-4.0.zip" length="5347288" type="application/octet-stream" sparkle:edSignature="UaA8UwM42reSf3U00uJa2P4MMAilINf4eCOQjXuAqXP0TB9ULqpW9T/w5EG4Gv6YdMRlLO4y/i2d1OJQ5yK6BA=="/>
+        </item>
+    </channel>
+</rss>
